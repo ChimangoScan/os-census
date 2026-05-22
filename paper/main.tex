@@ -125,6 +125,43 @@ pipeline and the first OS-base-focused multi-scanner dataset.
 % ============================================================
 \section{Related Work}
 \label{sec:related}
+
+\begin{table}[t]
+\centering
+\caption{Prior OS/base-image and container-scanner measurements.}
+\label{tab:related}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l r c c l c c}
+\toprule
+\textbf{Study} & \textbf{Images} & \textbf{Tools} & \textbf{Dims} & \textbf{Source} & \textbf{OS} & \textbf{X-sc.} \\
+\midrule
+\cite{shu2017dockerhub} & 356{,}218 & 1 & V & Hub crawl & \xmark & \xmark \\
+\cite{zerouali2019outdated} & 7{,}380   & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
+\cite{liu2020understanding} & 2.2\,M$^{\ast}$ & 1 & V & Hub crawl & \xmark & \xmark \\
+\cite{ibrahim2020toomany} & 936       & 1 & V & Hub, per-sys & \xmark & \xmark \\
+\cite{kaur2021scientific} & 44        & 4 & V & curated & \xmark & \cmark \\
+\cite{zerouali2021techlag} & 140{,}498 & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
+\cite{haque2022wellbegun} & 261       & 1 & V & Hub, official & \cmark & \xmark \\
+\cite{dahlmanns2023secrets} & 337{,}171 & 1 & S & Hub crawl & \xmark & \xmark \\
+\cite{malhotra2023vulnerability} & n/r   & 4 & V & Hub off./ver. & \xmark & \cmark \\
+\cite{mills2023longitudinal} & 380       & 6 & V & Hub categories & \xmark & \cmark \\
+\cite{boles2024deciphering} & 927       & 2 & V & Hub official & \cmark & \cmark \\
+\cite{kawaguchi2024sbom} & 3{,}514   & 2 & B & Hub popular & \xmark & \cmark \\
+\cite{bufalino2025sbomproof} & 20$^{\dagger}$ & 7 & V & Hub Deb/Alp & \cmark & \cmark \\
+\cite{shi2025drdocker} & 33{,}952$^{\ast}$ & 1 & V,S,C,M & Hub pull-rank & \xmark & \xmark \\
+\cite{churakova2026vex} & 48        & 7 & V & Hub curated & \xmark & \cmark \\
+\midrule
+\textbf{This work} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \textbf{Hub category} & \cmark & \cmark \\
+\bottomrule
+\end{tabular}}\\[3pt]
+{\footnotesize Dims: V~vuln, B~SBOM, S~secrets, C~config, M~malware. X-sc.: cross-scanner.
+$\ast$~vulnerability scan on a subset; $\dagger$~top-20 Debian/Alpine image families;
+$\ddagger$~Debian Security Tracker (metadata), not a scanner.}
+\end{table}
+
 \noindent\textit{Large-scale measurements.} A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
 introduced the first large-scale study, scanning 356{,}218 images and showing
 that vulnerabilities propagate from a base image to everything built on it.
@@ -169,42 +206,6 @@ the Linux OS base images of Docker Hub specifically with a heterogeneous
 multi-scanner battery as a current census, nor one that quantifies the
 prevalence and popularity of \emph{end-of-life} OS images that remain in heavy
 use. This paper addresses both.
-
-\begin{table}[!htbp]
-\centering
-\caption{Prior OS/base-image and container-scanner measurements.}
-\label{tab:related}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.12}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{l r c c l c c}
-\toprule
-\textbf{Study} & \textbf{Images} & \textbf{Tools} & \textbf{Dims} & \textbf{Source} & \textbf{OS} & \textbf{X-sc.} \\
-\midrule
-\cite{shu2017dockerhub} & 356{,}218 & 1 & V & Hub crawl & \xmark & \xmark \\
-\cite{zerouali2019outdated} & 7{,}380   & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
-\cite{liu2020understanding} & 2.2\,M$^{\ast}$ & 1 & V & Hub crawl & \xmark & \xmark \\
-\cite{ibrahim2020toomany} & 936       & 1 & V & Hub, per-sys & \xmark & \xmark \\
-\cite{kaur2021scientific} & 44        & 4 & V & curated & \xmark & \cmark \\
-\cite{zerouali2021techlag} & 140{,}498 & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
-\cite{haque2022wellbegun} & 261       & 1 & V & Hub, official & \cmark & \xmark \\
-\cite{dahlmanns2023secrets} & 337{,}171 & 1 & S & Hub crawl & \xmark & \xmark \\
-\cite{malhotra2023vulnerability} & n/r   & 4 & V & Hub off./ver. & \xmark & \cmark \\
-\cite{mills2023longitudinal} & 380       & 6 & V & Hub categories & \xmark & \cmark \\
-\cite{boles2024deciphering} & 927       & 2 & V & Hub official & \cmark & \cmark \\
-\cite{kawaguchi2024sbom} & 3{,}514   & 2 & B & Hub popular & \xmark & \cmark \\
-\cite{bufalino2025sbomproof} & 20$^{\dagger}$ & 7 & V & Hub Deb/Alp & \cmark & \cmark \\
-\cite{shi2025drdocker} & 33{,}952$^{\ast}$ & 1 & V,S,C,M & Hub pull-rank & \xmark & \xmark \\
-\cite{churakova2026vex} & 48        & 7 & V & Hub curated & \xmark & \cmark \\
-\midrule
-\textbf{This work} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \textbf{Hub category} & \cmark & \cmark \\
-\bottomrule
-\end{tabular}}\\[3pt]
-{\footnotesize Dims: V~vuln, B~SBOM, S~secrets, C~config, M~malware. X-sc.: cross-scanner.
-$\ast$~vulnerability scan on a subset; $\dagger$~top-20 Debian/Alpine image families;
-$\ddagger$~Debian Security Tracker (metadata), not a scanner.}
-\end{table}
 
 % ============================================================
 \section{Methodology}
@@ -408,7 +409,6 @@ data~\cite{zhou2026realitycheck}. We scan \texttt{linux/amd64} only, characteris
 each image as of its scan time, and cover only the \emph{Operating systems}
 category; the released dataset lets others re-run the analysis under other
 choices.
-
 \textbf{Conclusion.} We measured the security posture of Docker Hub's Linux OS
 base images with 14 scanners rather than one. Posture varies by an order of
 magnitude across distributions and rises with image age; the four
