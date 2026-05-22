@@ -236,14 +236,11 @@ TruffleHog, Gitleaks, detect-secrets and Whispers. \emph{Malware/IOC}:
 ClamAV and YARA\-Hunter. We exclude the SAST, dynamic (DAST) and network axes,
 which need application source or a running service a base image lacks.
 
-\noindent\textit{Harness and scan order.} Each image is pulled \emph{pinned by its \texttt{amd64} digest}, exported once
-to a local tar archive, and analysed by all 14 scanners reading that archive;
-the image is removed afterwards to bound disk. Every scanner runs in its own
-Docker container and a per-scanner adapter normalises the raw output to a
-common \texttt{Finding} schema; raw outputs are kept verbatim. The scan queue is
-ordered \emph{round-robin} across the 21 repositories, alternating
-newest$\leftrightarrow$oldest by last-push date within each, so every
-distribution and age range is evenly represented.
+\noindent\textit{Harness.} Each image is pulled pinned by its \texttt{amd64}
+digest and exported once to a tar archive that all 14 scanners read, so result
+differences reflect the scanner rather than the pull; a per-scanner adapter
+normalises output to a common schema and raw outputs are kept verbatim for
+reproducibility.
 % TODO: nota de reprodutibilidade/escala (workers, ETA) ao fechar.
 
 % ============================================================
