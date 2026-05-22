@@ -71,17 +71,17 @@ release the pipeline and dataset on acceptance.
 \label{sec:intro}
 Containers are now a default unit of software delivery: Docker reports more
 than 20~million developers using its tools and, in its 2025 survey, 92\% of IT
-professionals using containers~\cite{docker2025stateofappdev}, while the Cloud
+professionals using containers\footnote{Docker, \emph{2025 State of Application Development}. \url{https://www.docker.com}}, while the Cloud
 Native Computing Foundation finds most organisations running the majority of
-their applications in containers~\cite{cncf2024survey}. Underneath them sits
+their applications in containers\footnote{CNCF, \emph{Cloud Native 2024 Annual Survey}. \url{https://www.cncf.io}}. Underneath them sits
 Docker Hub, the largest public registry, with on the order of 8.3~million
 image repositories and hundreds of billions of cumulative
-pulls~\cite{dockerindex2024}. Every one of those images ultimately begins with
+pulls\footnote{Docker, \emph{Docker Index} (2024). \url{https://www.docker.com}}. Every one of those images ultimately begins with
 a single line, \texttt{FROM} an operating-system (OS) base image, and a
 handful of bases are the common root of nearly all of them: \texttt{alpine},
 \texttt{ubuntu}, \texttt{debian} and \texttt{busybox} each record more than a
 billion pulls, and Debian, Alpine and Ubuntu dominate the base-image choice of
-the ecosystem~\cite{anchore2024osbreakdown}. Because a flaw in a base image is
+the ecosystem\footnote{Anchore, \emph{Breakdown of the Operating Systems of Docker Hub} (2024). \url{https://anchore.com}}. Because a flaw in a base image is
 inherited, unchanged, by every image built on it~\cite{shu2017dockerhub}, the
 security posture of these few OS bases is a property the whole ecosystem
 inherits.
@@ -90,12 +90,12 @@ That inherited posture is poor and consequential. Base images are the root of
 the software supply chain, so their known vulnerabilities are a supply-chain
 risk in their own right, alongside the malicious-injection attacks that dominate
 headlines (projected to cost USD~60~billion in
-2025~\cite{cybersecurityventures2023supplychain} and predicted by Gartner to hit
-45\% of organisations by 2025~\cite{gartner2021supplychain}). And the inherited
+2025\footnote{Cybersecurity Ventures (2023). \url{https://cybersecurityventures.com}} and predicted by Gartner to hit
+45\% of organisations by 2025\footnote{Gartner (2021), press release on software supply-chain attacks.}). And the inherited
 risk is large: popular Docker Hub images carry hundreds of known vulnerabilities
-on average, many of them years old~\cite{netrise2024}, against a backdrop of
+on average, many of them years old\footnote{NetRise (2024), analysis of vulnerabilities in popular container images.}, against a backdrop of
 record CVE disclosure (46{,}407 CVEs in 2025, about 127 per
-day)~\cite{nvd2025growth}. Worse, some of
+day)\footnote{NIST National Vulnerability Database, \emph{NVD Dashboard} (2025). \url{https://nvd.nist.gov}}. Worse, some of
 the most-pulled OS bases are no longer maintained (every official
 \texttt{centos} tag reached end-of-life in June~2024) yet remain in heavy
 use.
@@ -413,7 +413,6 @@ modern Docker while end-of-life bases stay heavily pulled. We release the
 pipeline and dataset\footnote{Released on acceptance.} so the measurement can be
 reproduced and kept current.
 
-{\footnotesize
 \bibliographystyle{sbc}
 \begingroup
 \makeatletter
@@ -429,5 +428,4 @@ reproduced and kept current.
 \makeatother
 \bibliography{paper}
 \endgroup
-}
 \end{document}
