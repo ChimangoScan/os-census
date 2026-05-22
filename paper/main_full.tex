@@ -211,6 +211,19 @@ use. This paper addresses both.
 \label{sec:method}
 % Esta secao e NOSSA, escrita original.
 
+\noindent\textbf{Threat model and scope.} We measure the security posture an OS
+base image presents to the two parties who choose and run it: the developer who
+writes \texttt{FROM} and the operator who pulls a digest. The risk we
+characterise is \emph{inherited} exposure, the latent, known-vulnerable surface
+that an unchanged base propagates to every image built on it, as it would appear
+to a posture scan at selection or pull time. We do not model an active attacker
+injecting malicious code (the domain of typo-squatting and malicious-package
+work); the legacy-schema and end-of-life findings (Section~\ref{sec:rq4}) bear on
+supply-chain integrity and the reproducibility of historical builds rather than
+on remote exploitation. ``Insecure'' here means \emph{carries known
+vulnerabilities a defender would have to triage}, not \emph{remotely
+exploitable}.
+
 \noindent\textbf{Corpus.} We take as our corpus the operating-system base images
 Docker Hub lists under its \emph{Operating systems} category: \textbf{20}
 repositories with an \texttt{amd64} image (\texttt{alpine}, \texttt{ubuntu},
