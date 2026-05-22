@@ -70,18 +70,17 @@ release the pipeline and dataset on acceptance.
 \section{Introduction}
 \label{sec:intro}
 Containers are now a default unit of software delivery: Docker reports more
-than 20~million developers using its tools and, in its 2025 survey, 92\% of IT
-professionals using containers\footnote{Docker, \emph{2025 State of Application Development}. \url{https://www.docker.com}}, while the Cloud
-Native Computing Foundation finds most organisations running the majority of
-their applications in containers\footnote{CNCF, \emph{Cloud Native 2024 Annual Survey}. \url{https://www.cncf.io}}. Underneath them sits
-Docker Hub, the largest public registry, with on the order of 8.3~million
-image repositories and hundreds of billions of cumulative
-pulls\footnote{Docker, \emph{Docker Index} (2024). \url{https://www.docker.com}}. Every one of those images ultimately begins with
+than 20~million developers\footnote{\url{https://www.docker.com/press-release/unveils-2024-state-of-application-development-report/}}
+and, in its 2025 survey, 92\% of IT professionals using
+containers\footnote{\url{https://www.docker.com/blog/2025-docker-state-of-app-dev/}}.
+Underneath them sits Docker Hub, the largest public registry, with on the order
+of 8.3~million image repositories and hundreds of billions of cumulative
+pulls\footnote{\url{https://www.docker.com/blog/docker-index-shows-continued-massive-developer-adoption-and-activity-to-build-and-share-apps-with-docker/}}. Every one of those images ultimately begins with
 a single line, \texttt{FROM} an operating-system (OS) base image, and a
 handful of bases are the common root of nearly all of them: \texttt{alpine},
 \texttt{ubuntu}, \texttt{debian} and \texttt{busybox} each record more than a
 billion pulls, and Debian, Alpine and Ubuntu dominate the base-image choice of
-the ecosystem\footnote{Anchore, \emph{Breakdown of the Operating Systems of Docker Hub} (2024). \url{https://anchore.com}}. Because a flaw in a base image is
+the ecosystem\footnote{\url{https://anchore.com/blog/breakdown-of-operating-systems-of-dockerhub/}}. Because a flaw in a base image is
 inherited, unchanged, by every image built on it~\cite{shu2017dockerhub}, the
 security posture of these few OS bases is a property the whole ecosystem
 inherits.
@@ -90,12 +89,11 @@ That inherited posture is poor and consequential. Base images are the root of
 the software supply chain, so their known vulnerabilities are a supply-chain
 risk in their own right, alongside the malicious-injection attacks that dominate
 headlines (projected to cost USD~60~billion in
-2025\footnote{Cybersecurity Ventures (2023). \url{https://cybersecurityventures.com}} and predicted by Gartner to hit
-45\% of organisations by 2025\footnote{Gartner (2021), press release on software supply-chain attacks.}). And the inherited
+2025\footnote{\url{https://cybersecurityventures.com/software-supply-chain-attacks-to-cost-the-world-60-billion-by-2025/}} and predicted by Gartner to hit
+45\% of organisations by 2025\footnote{Gartner, \emph{Gartner Predicts 45\% of Organizations Worldwide Will Have Experienced Attacks on Their Software Supply Chains by 2025} (2021).}). And the inherited
 risk is large: popular Docker Hub images carry hundreds of known vulnerabilities
-on average, many of them years old\footnote{NetRise (2024), analysis of vulnerabilities in popular container images.}, against a backdrop of
-record CVE disclosure (46{,}407 CVEs in 2025, about 127 per
-day)\footnote{NIST National Vulnerability Database, \emph{NVD Dashboard} (2025). \url{https://nvd.nist.gov}}. Worse, some of
+on average, many of them years old\footnote{NetRise, \emph{Analysis of Vulnerabilities in Popular Container Images} (2024).}, against a backdrop of
+record CVE disclosure (over 48{,}000 CVEs in 2025)\footnote{\url{https://www.cvedetails.com/browse-by-date.php}}. Worse, some of
 the most-pulled OS bases are no longer maintained (every official
 \texttt{centos} tag reached end-of-life in June~2024) yet remain in heavy
 use.
