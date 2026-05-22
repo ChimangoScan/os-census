@@ -329,8 +329,10 @@ distribution's advisory coverage and patch cadence than by image size.
 A multiple regression makes the ranking explicit (Figure~\ref{fig:rq5}(b)): with
 both predictors standardized, image age dominates ($\beta\approx0.44$) over
 package count ($\beta\approx0.17$), and the partial correlations agree
-($0.44$ vs.\ $0.19$); the vulnerability load tracks patch cadence, not image
-size. Popularity offers no protection either: a repository's pull count is
+($0.44$ vs.\ $0.19$), though a per-distribution mixed model shows distribution
+identity dominates both (intraclass correlation $0.53$, with package count
+becoming a strong within-distribution driver). Popularity offers no protection
+either: a repository's pull count is
 essentially uncorrelated with its vulnerability count (Spearman
 $\rho\approx0$, Figure~\ref{fig:rq5}(c)), so the most-pulled bases are no safer
 than the rest.

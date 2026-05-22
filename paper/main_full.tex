@@ -410,6 +410,17 @@ patch cadence, not its girth, sets its posture.
 \end{tabular*}
 \end{table}
 
+A single-level regression is, however, confounded by distribution: older bases
+(the RHEL family) are also larger and staler. A linear mixed model with a random
+intercept per distribution disentangles the two. Distribution identity alone
+accounts for about half the variance (intraclass correlation $0.53$), and once
+it is absorbed, package count becomes a \emph{strong} within-distribution driver
+($\beta=0.51$), comparable to age ($\beta=0.42$; both $p<10^{-29}$, $n=2{,}397$,
+13 distributions). The naive ``age beats size'' reading therefore overstates:
+most of it is between-distribution variation, while \emph{within} a distribution
+more packages do mean more vulnerabilities. The actionable lever is the
+distribution; within it, both currency and minimalism help.
+
 \subsection{Beyond vulnerabilities: secrets, misconfiguration, malware}
 \label{sec:other}
 The battery also covers four non-vulnerability axes.
