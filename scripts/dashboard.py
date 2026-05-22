@@ -2,13 +2,14 @@
 """Dashboard ao vivo do censo de imagens de SO. Tema ChimangoScan (report_lab).
 stdlib only. Lê work/os.db (jobs + reports). Rodar:  python3 scripts/dashboard.py [porta]
 """
-import json, sqlite3, sys, shutil, time, glob, threading
+import json, sqlite3, sys, shutil, time, glob, threading, os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DB = ROOT / "work/os.db"
-OUT = Path("/mnt/win_ssd/scanners-data/out_so")
+DB = Path(os.environ.get("OSCENSUS_DB") or ROOT / "work/os.db")
+_legacy = Path("/mnt/win_ssd/scanners-data/out_so")
+OUT = Path(os.environ.get("OSCENSUS_OUT") or (_legacy if _legacy.exists() else ROOT/"scan-out"/"out_so"))
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8911
 
 def q(db, sql, args=()):
@@ -41,7 +42,10 @@ def snapshot():
     recent = q(DB, "SELECT name,finished_at FROM jobs WHERE status='done' AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 14")
     failed = q(DB, "SELECT name,error FROM jobs WHERE status='failed' ORDER BY finished_at DESC LIMIT 8")
     running = q(DB, "SELECT name FROM jobs WHERE status='running' ORDER BY started_at LIMIT 10")
-    duw, dud = shutil.disk_usage("/mnt/win_ssd"), shutil.disk_usage("/var/lib/docker")
+    try: duw = shutil.disk_usage(str(OUT) if OUT.exists() else str(ROOT))
+    except Exception: duw = shutil.disk_usage("/")
+    try: dud = shutil.disk_usage("/var/lib/docker")
+    except Exception: dud = duw
     out_sz = len(glob.glob(str(OUT / "*/report.json"))) if OUT.exists() else 0  # nº imgs c/ report (barato)
     # ETA
     fa = [r[0] for r in q(DB, "SELECT finished_at FROM jobs WHERE status='done' AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 60")]

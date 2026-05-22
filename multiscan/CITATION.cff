@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: "multiscan: A Cross-Scanner Comparison of Open-Source Container & Application Security Tools"
+message: "If you use this artifact, please cite it."
+type: software
+authors:
+  - name: "multiscan (anonymous — under review)"
+abstract: >-
+  A reproducible, Docker-only study that runs a battery of ~36 open-source
+  security scanners over a fixed corpus of 130 deliberately-vulnerable
+  containers and compares the tools, within each analysis axis, along three
+  dimensions — agreement, coverage, and cost. Accuracy is out of scope: with no
+  reliable ground truth at corpus scale, the study characterizes how scanners
+  relate to one another rather than which tool is correct.
+keywords:
+  - security scanners
+  - scanner comparison
+  - container security
+  - software composition analysis
+  - reproducibility
+license: MIT

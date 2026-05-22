@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multiscan"
+version = "0.1.0"
+description = "Multi-scanner security analysis corpus of vulnerable containers"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+# Dependencies of the analysis scripts under scripts/ (consolidate.py,
+# paper_figures.py, advanced_figures.py). Installed into a separate venv by
+# scripts/reproduce-reduced.sh so the engine stays standard-library + PyYAML.
+analysis = [
+    "matplotlib>=3.7",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "matplotlib-venn>=1.1",
+    "krippendorff>=0.6",
+]
+
+[project.scripts]
+scanners = "scanners.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scanners = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

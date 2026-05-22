@@ -2,10 +2,12 @@
 """Agrega os report.json em data/analysis/per_image.csv e imprime um resumo das
 RQs. Roda em dados parciais (a cada momento do scan). stdlib only.
 """
-import json, csv, glob, statistics, collections
+import json, csv, glob, statistics, collections, os
 from pathlib import Path
 
-OUT = Path("/mnt/win_ssd/scanners-data/out_so")
+ROOT = Path(__file__).resolve().parent.parent
+_legacy = Path("/mnt/win_ssd/scanners-data/out_so")
+OUT = Path(os.environ.get("OSCENSUS_OUT") or (_legacy if _legacy.exists() else ROOT/"scan-out"/"out_so"))
 ANA = Path(__file__).resolve().parent.parent / "data/analysis"
 ANA.mkdir(parents=True, exist_ok=True)
 SCA = {"trivy", "grype", "osv", "clair"}

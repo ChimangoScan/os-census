@@ -8,25 +8,20 @@ clone to figures.
 - Docker (Engine 24+), Python 3.12, [`uv`](https://docs.astral.sh/uv/), `git`.
 - A Docker Hub account access token (to avoid anonymous pull rate limits).
 
-## 1. Clone with the engine
+## 1. Clone
 ```bash
-git clone --recursive https://github.com/ChimangoScan/os-census
-cd os-census          # the multiscan engine is in ./multiscan
+git clone https://github.com/ChimangoScan/os-census
+cd os-census          # the scan engine is vendored in ./multiscan
 ```
 
-## 2. Adjust paths to your machine
-The config and scripts use two absolute base paths from the authors'
-environment. Point them at your clone and a scratch directory for scan output:
-
-| What | Default in this repo | Change to |
-|---|---|---|
-| repo root | `/mnt/win_ssd/so-dockerhub-paper` | your clone of `os-census` |
-| scan output / cache | `/mnt/win_ssd/scanners-data` | any large scratch dir |
-
-Files to update: `config/os.yaml` and `scripts/{analyze,make_figs,dashboard,compress_outputs}.py`, `scripts/deploy_worker.sh`. For example, on a fresh clone:
+## 2. Generate the run config (paths are automatic)
+The scripts derive the repo root from their own location, so no path editing is
+needed. Scan output goes to `./scan-out/` by default; point it at a larger
+scratch directory with `OSCENSUS_OUT` / `OSCENSUS_CACHE` if you like. Generate
+the engine config for this clone:
 ```bash
-grep -rl /mnt/win_ssd . | xargs sed -i "s#/mnt/win_ssd/so-dockerhub-paper#$PWD#g; s#/mnt/win_ssd/scanners-data#$PWD/scan-out#g"
-mkdir -p scan-out/{out_so,cache_so}
+# optional: export OSCENSUS_OUT=/big/scratch/out_so OSCENSUS_CACHE=/big/scratch/cache_so
+python3 scripts/render_config.py     # writes config/os.yaml with this clone's paths
 ```
 
 ## 3. Docker Hub credentials

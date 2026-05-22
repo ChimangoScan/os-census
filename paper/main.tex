@@ -2,6 +2,8 @@
 \usepackage{sbc-template}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx,url,booktabs}
+\makeatletter\g@addto@macro\UrlBreaks{\do\-\do\/\do\.\do\_}\makeatother
+\Urlmuskip=0mu plus 1mu\relax
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{enumitem}
@@ -101,13 +103,14 @@ the most-pulled OS bases are no longer maintained (every official
 \texttt{centos} tag reached end-of-life in June~2024) yet remain in heavy
 use.
 
-Despite this central role, the security posture of OS base images is usually
-measured with a \emph{single} scanner and on samples that age quickly. The
-large-scale Docker Hub measurements rely on one detector each~\cite{shu2017dockerhub,zerouali2019outdated,liu2020understanding,shi2025drdocker},
-and the studies that \emph{do} compare scanners run on small, controlled
-samples (44 and 380 images)~\cite{kaur2021scientific,mills2023longitudinal}.
-No recent work measures the OS base images specifically, with a heterogeneous
-multi-scanner battery, as a current census. This paper fills that gap.
+Despite this central role, the security posture of OS base images has usually
+been characterised with a \emph{single} scanner and on samples that age
+quickly: the large-scale Docker Hub measurements have typically used one
+detector~\cite{shu2017dockerhub,zerouali2019outdated,liu2020understanding,shi2025drdocker},
+and the studies that \emph{do} compare scanners have done so on focused
+samples~\cite{kaur2021scientific,mills2023longitudinal}. No recent work measures
+the Linux OS base images specifically, with a heterogeneous multi-scanner
+battery, as a current census. This paper fills that gap.
 
 \paragraph{Contributions.}
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
@@ -133,44 +136,49 @@ extended (released on acceptance).
 \section{Related Work}
 \label{sec:related}
 \paragraph{Large-scale Docker Hub and base-image measurements.}
-The security of Docker Hub has been measured at scale since Shu et
-al.~\cite{shu2017dockerhub}, who scanned 356{,}218 images with a single
-detector and documented that a flaw in a base image propagates to every image
-built on it. Subsequent measurements kept the single-detector design: Liu et
-al.~\cite{liu2020understanding} reached 2.2~million images, Zerouali et
-al.~\cite{zerouali2019outdated} measured \emph{technical lag} in 7{,}380
-Debian-based images and found no release free of vulnerabilities, Wist et
-al.~\cite{wist2021vulnerability} analysed 2{,}500 images, and the recent
-Dr.~Docker~\cite{shi2025drdocker} ranked 33{,}952 influential images by pull
-count yet sub-sampled only 3{,}000 for vulnerabilities with one engine.
-Closest to our subject, Haque and Babar~\cite{haque2022wellbegun} studied the
-exploitability and impact of vulnerabilities across 261 official base images
-and reported a counter-intuitive result we revisit in Section~\ref{sec:rq5}:
-highly-exploitable vulnerabilities are \emph{more} frequent in minimal images
-such as Alpine and BusyBox, while large distributions carry the higher-impact
-ones. Every one of these studies relies on a single vulnerability scanner, so
-its reported posture inherits that tool's blind spots.
+A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
+introduced the first large-scale study, scanning 356{,}218 images and showing
+that vulnerabilities propagate from a base image to everything built on it.
+\cite{liu2020understanding} extended the scale to 2.2~million images;
+\cite{zerouali2019outdated} introduced the notion of \emph{technical lag} on
+7{,}380 Debian-based images, later generalised to a multi-dimensional analysis
+over 140{,}000 images~\cite{zerouali2021techlag}. \cite{wist2021vulnerability}
+analysed 2{,}500 images across image classes, \cite{ibrahim2020toomany} examined
+how images for the same system differ across base distributions, and the recent
+\cite{shi2025drdocker} ranked influential images by pull count at the scale of
+the full registry. Most relevant to us, \cite{haque2022wellbegun} characterised
+the exploitability and impact of vulnerabilities in 261 official base images and
+reported a result we revisit in Section~\ref{sec:rq5}: highly-exploitable
+vulnerabilities are \emph{more} frequent in minimal images such as Alpine, while
+larger distributions carry the higher-impact ones. These studies established the
+prevalence and propagation of vulnerabilities in the ecosystem; each draws on a
+single vulnerability detector, and our multi-scanner design complements them by
+also quantifying how much the measured posture depends on the chosen scanner.
 
 \paragraph{Inter-scanner divergence.}
-A second line shows that a scan result depends heavily on the scanner. Imtiaz
-et al.~\cite{imtiaz2021comparative} run nine software-composition-analysis
-tools over the same projects and observe counts spanning an order of
-magnitude; Javed and Toor~\cite{javed2021evaluation,javed2021quality} report
-that container scanners miss a large fraction of vulnerabilities. On containers
-the side-by-side comparisons have been small: Kaur et
-al.~\cite{kaur2021scientific} use four scanners over 44 images and Mills et
-al.~\cite{mills2023longitudinal} six over 380. The closest and most recent,
-Churakova et al.~\cite{churakova2026vex}, evaluate seven scanner and VEX tools
-on 48 images and find counts ranging from 191 to 18{,}680, with the
-best-agreeing pair (Trivy and Grype) overlapping on only about 69\%. We measure
-the same divergence at two orders of magnitude more images, restricted to the
-OS-base subset, including Clair, and crossed with image age and distribution.
+A second line studies how much a scan result depends on the tool used.
+\cite{imtiaz2021comparative} compared nine software-composition-analysis tools on
+the same projects and found counts spanning an order of magnitude, and
+\cite{javed2021evaluation,javed2021quality} report comparable variation among
+container scanners. For containers, careful side-by-side comparisons have been
+conducted on focused samples: \cite{kaur2021scientific} use four scanners over 44
+images, \cite{mills2023longitudinal} six over 380, and the recent
+\cite{churakova2026vex} evaluate seven scanner and VEX tools on 48 images,
+finding counts from 191 to 18{,}680 and a best-pair (Trivy and Grype) agreement
+of about 69\%. On the OS-package layer specifically, \cite{bufalino2025sbomproof}
+report that current scanners are largely incompatible because of
+package-identifier mismatches, and \cite{zhou2026realitycheck,rosso2026svstest}
+document high false-positive rates and silent tool failures in SBOM-based
+scanning. Our work is complementary, bringing this multi-scanner lens to the
+OS-base layer at census scale, adding Clair, and relating the divergence to image
+age and distribution.
 
 \paragraph{Gap.}
-No recent study measures the operating-system base images of Docker Hub
-specifically, with a heterogeneous multi-scanner battery, as a current census;
-and the prevalence and popularity of \emph{end-of-life} OS images that remain
-in heavy use has, to our knowledge, not been measured. We address both.
+Building on this body of work, we are not aware of a recent study that measures
+the Linux OS base images of Docker Hub specifically with a heterogeneous
+multi-scanner battery as a current census, nor one that quantifies the
+prevalence and popularity of \emph{end-of-life} OS images that remain in heavy
+use. This paper addresses both.
 
 \begin{table}[!htbp]
 \centering
@@ -182,13 +190,13 @@ in heavy use has, to our knowledge, not been measured. We address both.
 \toprule
 \textbf{Work} & \textbf{Year} & \textbf{Images} & \textbf{Scanners} & \textbf{OS-focused} & \textbf{Cross-scanner} \\
 \midrule
-Shu et al.~\cite{shu2017dockerhub}        & 2017 & 356{,}218 & 1 & \xmark & \xmark \\
-Zerouali et al.~\cite{zerouali2019outdated} & 2019 & 7{,}380 & 1 & \cmark{}\,(Debian) & \xmark \\
-Kaur et al.~\cite{kaur2021scientific}     & 2021 & 44 & 4 & \xmark & \cmark \\
-Mills et al.~\cite{mills2023longitudinal} & 2023 & 380 & 6 & \xmark & \cmark \\
-Haque \& Babar~\cite{haque2022wellbegun} & 2022 & 261 & 1 & \cmark & \xmark \\
-Shi et al.\ (Dr.\ Docker)~\cite{shi2025drdocker} & 2025 & 33{,}952 & 1 & \xmark & \xmark \\
-Churakova et al.~\cite{churakova2026vex} & 2026 & 48 & 7 & \xmark & \cmark \\
+\cite{shu2017dockerhub}        & 2017 & 356{,}218 & 1 & \xmark & \xmark \\
+\cite{zerouali2019outdated} & 2019 & 7{,}380 & 1 & \cmark{}\,(Debian) & \xmark \\
+\cite{kaur2021scientific}     & 2021 & 44 & 4 & \xmark & \cmark \\
+\cite{mills2023longitudinal} & 2023 & 380 & 6 & \xmark & \cmark \\
+\cite{haque2022wellbegun} & 2022 & 261 & 1 & \cmark & \xmark \\
+\cite{shi2025drdocker} & 2025 & 33{,}952 & 1 & \xmark & \xmark \\
+\cite{churakova2026vex} & 2026 & 48 & 7 & \xmark & \cmark \\
 \midrule
 \textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{13} & \cmark & \cmark \\
 \bottomrule
@@ -275,7 +283,7 @@ Vulnerability count rises monotonically with image age
 a mean of $\approx$255 total vulnerability findings, climbing through
 $\approx$273 (one to two years) and $\approx$457 (two to four years) to
 $\approx$692 for images not rebuilt in over four years. This reproduces the
-technical-lag effect of Zerouali et al.~\cite{zerouali2019outdated} on the
+technical-lag effect of \cite{zerouali2019outdated} on the
 OS-base subset and across 21 distributions at once.
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
@@ -289,7 +297,7 @@ OSV-Scanner targets language-ecosystem advisories (96k), and Clair maps only
 specific distributions to its feeds (43k, and zero on Rocky and AlmaLinux,
 which it does not map to the RHEL feeds). The reported security posture of an
 OS image is thus, to a large degree, a property of the chosen scanner, echoing
-Churakova et al.~\cite{churakova2026vex} at far larger scale and on the OS
+\cite{churakova2026vex} at far larger scale and on the OS
 layer specifically.
 
 \subsection{RQ4: End-of-life and un-pullable images}
@@ -313,7 +321,7 @@ The intuition that a smaller image is a safer one does not hold cleanly
 vulnerability count is not monotonic: BusyBox, with a single package, carries
 only a handful of findings, but Mageia, with around 250 packages, carries about
 a dozen, while Debian carries hundreds of critical and high findings with fewer
-packages than Mageia. This refines Haque and Babar~\cite{haque2022wellbegun}:
+packages than Mageia. This refines \cite{haque2022wellbegun}:
 on our multi-scanner data the vulnerability count is governed more by a
 distribution's advisory coverage and patch cadence than by image size.
 
@@ -326,19 +334,22 @@ scanner-agreement results that single-tool studies could not.
 
 \begin{table}[!htbp]
 \centering
-\caption{Prior analyses reproduced on our OS-base corpus.}
+\caption{Concrete analyses from prior work, reproduced on our OS-base corpus.
+The direction holds in every case; the multi-scanner setting additionally lets
+us refine the minimal-image and scanner-agreement findings.}
 \label{tab:repro}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabular}{@{}p{0.15\columnwidth} p{0.27\columnwidth} p{0.24\columnwidth} p{0.26\columnwidth}@{}}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}p{0.15\columnwidth} p{0.24\columnwidth} p{0.26\columnwidth} p{0.27\columnwidth}@{}}
 \toprule
-\textbf{Study} & \textbf{Analysis} & \textbf{Reported there} & \textbf{This corpus} \\
+\textbf{Study} & \textbf{Analysis reproduced} & \textbf{As originally reported} & \textbf{On our corpus (13 scanners)} \\
 \midrule
-Shu et al.~\cite{shu2017dockerhub} & worst-severity prevalence & $>$80\% high-severity & critical/high pervasive; Debian $\approx$344 crit+high per img \\
-Zerouali et al.~\cite{zerouali2019outdated} & staleness vs.\ vulns (Debian) & lag grows with age & monotone $\approx$255 to $\approx$692 across 21 distros (RQ2) \\
-Haque \& Babar~\cite{haque2022wellbegun} & minimal vs.\ large base & minimal not safer & vulns not monotone in package count (RQ5) \\
-Churakova et al.~\cite{churakova2026vex} & scanner agreement, 48 img & Trivy/Grype Jaccard 0.69 & 0.30 over OS images; OSV/Clair disjoint (RQ3) \\
+\cite{shu2017dockerhub} & worst-severity class and per-image vulnerability counts & $>$80\% of images with a high-severity flaw; over 180 vulnerabilities per image on average & critical and high findings near-universal; Debian carries a mean of $\approx$344 critical+high per image (RQ1) \\
+\cite{zerouali2019outdated,zerouali2021techlag} & technical lag: image age vs vulnerabilities (Debian) & no release free of vulnerabilities; lag grows with age & total findings rise monotonically from $\approx$255 (under 6 months) to $\approx$692 (over 4 years), across all 21 distributions (RQ2) \\
+\cite{ibrahim2020toomany} & how images for the same system differ across base distributions & posture varies markedly with the chosen base & per-distribution critical+high spans an order of magnitude: Debian and the RHEL family high, Alpine low (RQ1) \\
+\cite{haque2022wellbegun} & minimal vs large base images & minimal images are not safer (carry more highly-exploitable CVEs) & vulnerability count is non-monotonic in package count (BusyBox, 1 package, versus Mageia, $\approx$250) (RQ5) \\
+\cite{churakova2026vex} & agreement among container scanners (48 images) & best pair (Trivy/Grype) Jaccard 0.69; all tools near 0\% & Trivy/Grype Jaccard 0.30 over (image, CVE, package) on 5.6k OS images; OSV and Clair near-disjoint (RQ3) \\
 \bottomrule
 \end{tabular}
 \end{table}

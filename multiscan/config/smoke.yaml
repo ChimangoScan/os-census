@@ -1,0 +1,32 @@
+# multiscan — smoke-test configuration. Runs the scanner battery against a
+# tiny representative inventory (data/inventory/smoke.csv) to validate that
+# each adapter executes and produces parseable output before a full D1 run.
+
+queue:
+  backend: sqlite
+  sqlite_path: work/smoke.db
+
+source:
+  type: csv
+  path: data/inventory/smoke.csv
+  image_column: image
+  name_column: container
+  ip_column: ip
+  meta_columns: [category, port, risk]
+
+scanners:
+  registry: config/scanners.yaml
+  static: true
+  dynamic: true
+
+output:
+  dir: out-smoke
+  cache_dir: cache
+
+workers:
+  count: 2
+  scan_timeout: 1800
+
+runtime:
+  remove_image_after: false
+  max_image_mb: 12000

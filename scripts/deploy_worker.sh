@@ -6,9 +6,10 @@
 set -e
 H="$1"; [ -z "$H" ] && { echo "uso: deploy_worker.sh <host>"; exit 1; }
 COORD=8918
-LOCAL_REPO=/mnt/win_ssd/chimango-upstream/multiscan
-LOCAL_CFG=/mnt/win_ssd/so-dockerhub-paper/config
-MATCHER=/mnt/win_ssd/scanners-data/cache_so/clair/matcher.db
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"          # raiz do repo (auto)
+LOCAL_REPO="${OSCENSUS_ENGINE:-$ROOT/multiscan}"  # engine: submodulo por padrao
+LOCAL_CFG="$ROOT/config"
+MATCHER="${OSCENSUS_MATCHER:-${OSCENSUS_CACHE:-/mnt/win_ssd/scanners-data/cache_so}/clair/matcher.db}"
 RD=os-worker   # dir no remoto (relativo ao home)
 
 echo "[$H] 1. dirs"

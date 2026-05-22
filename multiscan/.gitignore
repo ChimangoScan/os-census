@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+.venv*/
+venv/
+
+# Runtime state / artifacts
+*.db
+*.db-wal
+*.db-shm
+work/
+out/
+out-*/
+output/
+runs/
+reports_out/
+cache/
+/figures/
+*.tar
+
+# the paper sources are kept out of this repo (anonymous submission, separate)
+paper/
+*.log
+targets.txt
+collect/
+
+# Local config (the example is committed; the live one is not)
+config/config.yaml
+config/config.local.yaml
+.env
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+
+# tooling
+.pytest_cache/
+uv.lock.bak
+
+# docker hub account pools (credentials — never commit)
+accounts*.json
+config/config.*.yaml
+
+# reproduction outputs (reproduce-reduced.sh)
+results/
+results-*/
+released/
+
+# raw-output archive: published as a GitHub release asset, fetched by dataset/raw/fetch.sh
+dataset/raw/multiscan-raw.tar.gz
+dataset/raw/multiscan-raw/

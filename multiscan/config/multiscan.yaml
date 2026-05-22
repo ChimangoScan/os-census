@@ -1,0 +1,46 @@
+# multiscan — run configuration for the D1 multi-scanner dataset.
+# 130 deliberately-vulnerable / outdated containers, scanned by the full
+# scanner battery. Every scanner is a pinned Docker image; nothing is
+# installed on the host.
+
+queue:
+  backend: sqlite
+  sqlite_path: work/multiscan.db
+
+source:
+  type: csv
+  path: data/inventory/d1.csv
+  image_column: image
+  name_column: container
+  ip_column: ip
+  meta_columns: [category, port, risk]
+
+scanners:
+  registry: config/scanners.yaml
+  static: true
+  dynamic: true
+
+output:
+  dir: out
+  cache_dir: cache
+  keep_image_tarball: false
+
+workers:
+  count: 2
+  scan_timeout: 1800
+
+runtime:
+  remove_image_after: true       # bound disk: drop each target image once scanned
+  max_image_mb: 12000
+  dockerhub_accounts: accounts.json   # gitignored; authenticated pulls dodge the rate limit
+  scan_parallelism: 2            # dynamic phase keeps the target container up — bound RAM
+
+imports:
+  openvas: data/openvas         # OpenVAS D1 baseline, vendored in-repo
+
+# Hosts used for the distributed run. Restrict the list to nodes that have
+# free space on the Docker partition.
+cluster:
+  hosts: [host1, host2]
+  remote_dir: ~/multiscan
+  workers_per_host: 2

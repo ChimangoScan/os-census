@@ -3,13 +3,16 @@
 data/analysis/per_image.csv e dos report.json.
 Rodar:  uv run --with matplotlib python make_figs.py
 """
-import csv, json, glob, collections
+import csv, json, glob, collections, os
+from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-CSV = "/mnt/win_ssd/so-dockerhub-paper/data/analysis/per_image.csv"
-OUT = "/mnt/win_ssd/scanners-data/out_so"
-FIG = "/mnt/win_ssd/so-dockerhub-paper/paper/figures"
+ROOT = Path(__file__).resolve().parent.parent
+CSV = str(ROOT / "data/analysis/per_image.csv")
+_legacy = Path("/mnt/win_ssd/scanners-data/out_so")
+OUT = str(os.environ.get("OSCENSUS_OUT") or (_legacy if _legacy.exists() else ROOT/"scan-out"/"out_so"))
+FIG = str(Path(__file__).resolve().parent / "figures")
 plt.rcParams.update({"font.size": 7, "axes.grid": True, "grid.alpha": 0.25,
                      "axes.axisbelow": True, "savefig.bbox": "tight",
                      "axes.titlesize": 7.5, "xtick.labelsize": 6, "ytick.labelsize": 6})
