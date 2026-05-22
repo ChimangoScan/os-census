@@ -63,7 +63,7 @@ Census of Linux Operating-System Images on Docker Hub}
 Every container starts from an operating-system (OS) base image, yet these are
 usually measured with a single scanner. We present a recent multi-scanner
 census of Docker Hub's Linux OS base images: \textbf{5{,}606} unique
-\texttt{amd64} images across \textbf{21} repositories, scanned with \textbf{14}
+\texttt{amd64} images across \textbf{20} repositories, scanned with \textbf{14}
 open-source tools. Vulnerability posture varies by an order of magnitude across
 distributions and grows with image age; the four package-vulnerability engines
 barely agree (Jaccard $\le0.35$); and about one in five historically-published
@@ -212,11 +212,11 @@ $\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 % Esta secao e NOSSA, escrita original.
 
 \noindent\textit{Corpus.} We take as our corpus the operating-system base images
-Docker Hub lists under its \emph{Operating systems} category: \textbf{21}
+Docker Hub lists under its \emph{Operating systems} category: \textbf{20}
 repositories with an \texttt{amd64} image (\texttt{alpine}, \texttt{ubuntu},
 \texttt{debian}, \texttt{centos}, \texttt{busybox}, \texttt{amazonlinux},
 \texttt{fedora}, \texttt{oraclelinux}, \texttt{rockylinux}, \texttt{almalinux},
-\texttt{photon}, \texttt{opensuse}, \texttt{archlinux}, \texttt{kali}, \dots).
+\texttt{photon}, \texttt{archlinux}, \texttt{tumbleweed}, \texttt{kali-rolling}, \dots).
 Deduplicating tags by \texttt{amd64} content digest (e.g.\ \texttt{24.04},
 \texttt{noble} and \texttt{latest} are one image) leaves \textbf{5{,}606} unique
 images, the unit of measurement.
@@ -279,7 +279,7 @@ $\approx$457 (two to four years) to $\approx$692 for images not rebuilt in over
 four years. The per-image rank correlation is positive but modest (Spearman
 $\rho=0.16$, $p<0.001$), reflecting wide within-bucket variance even as the
 bucketed means rise monotonically (the technical lag of
-\cite{zerouali2019outdated}, here across 21 distributions).
+\cite{zerouali2019outdated}, here across 20 distributions).
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
