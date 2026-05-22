@@ -138,8 +138,8 @@ Table~\ref{tab:related} positions our work against prior measurements along six 
 \label{tab:related}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.12}
-\resizebox{\columnwidth}{!}{%
+\renewcommand{\arraystretch}{0.92}
+\resizebox{0.92\columnwidth}{!}{%
 \begin{tabular}{l r c c l c c}
 \toprule
 \textbf{Study} & \textbf{Images} & \textbf{Tools} & \textbf{Dims} & \textbf{Source} & \textbf{OS} & \textbf{X-sc.} \\
@@ -164,7 +164,7 @@ $\ast$~vulnerability scan on a subset; $\dagger$~top-20 Debian/Alpine image fami
 $\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 \end{table}
 
-\noindent\textbf{Large-scale measurements.} A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
+A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
 introduced the first large-scale study, scanning 356{,}218 images and showing
 that vulnerabilities propagate from a base image to everything built on it.
 \cite{liu2020understanding} extended the scale to 2.2~million images;
@@ -182,13 +182,10 @@ larger distributions carry the higher-impact ones. These studies established the
 prevalence and propagation of vulnerabilities in the ecosystem; each draws on a
 single vulnerability detector, and our multi-scanner design complements them by
 also quantifying how much the measured posture depends on the chosen scanner.
-
-\noindent\textbf{Inter-scanner divergence.} Prior scanner comparisons on focused
-samples report large disagreement~\cite{boles2024deciphering,bufalino2025sbomproof};
-we revisit this as a secondary result, at OS-base census scale
-(Section~\ref{sec:rq3}).
-
-\noindent\textbf{Gap.} Building on this body of work, we are not aware of a recent study that measures
+Prior scanner comparisons on focused samples report large
+disagreement~\cite{boles2024deciphering,bufalino2025sbomproof}, which we revisit
+as a secondary result at OS-base census scale (Section~\ref{sec:rq3}).
+Building on this body of work, we are not aware of a recent study that measures
 the Linux OS base images of Docker Hub specifically with a heterogeneous
 multi-scanner battery as a current census, nor one that quantifies the
 prevalence and popularity of \emph{end-of-life} OS images that remain in heavy
@@ -199,7 +196,7 @@ use. This paper addresses both.
 \label{sec:method}
 % Esta secao e NOSSA, escrita original.
 
-\noindent\textbf{Corpus.} We take as our corpus the operating-system base images
+We take as our corpus the operating-system base images
 Docker Hub lists under its \emph{Operating systems} category: \textbf{20}
 repositories with an \texttt{amd64} image (\texttt{alpine}, \texttt{ubuntu},
 \texttt{debian}, \texttt{centos}, \texttt{busybox}, \texttt{amazonlinux},
@@ -209,9 +206,7 @@ repositories with an \texttt{amd64} image (\texttt{alpine}, \texttt{ubuntu},
 \texttt{clearlinux}, \texttt{sl}).
 Deduplicating tags by \texttt{amd64} content digest (e.g.\ \texttt{24.04},
 \texttt{noble} and \texttt{latest} are one image) leaves \textbf{5{,}606} unique
-images, the unit of measurement.
-
-\noindent\textbf{Scanner battery.} An OS base image is a static root filesystem with no application source code
+images, the unit of measurement. An OS base image is a static root filesystem with no application source code
 and no running service, so we select the static-analysis axes that apply to
 such an artifact and run \emph{14} open-source
 scanners.\footnote{Each scanner runs from a version-pinned container image; the
