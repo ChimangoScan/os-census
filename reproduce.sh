@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Reproducao do censo multi-scanner das imagens base de SO do Docker Hub.
+# Um comando por coisa:
 #
-#   ./reproduce.sh figures   (padrao) Regenera TODAS as figuras a partir dos
-#                            dados pre-computados versionados em data/
+#   ./reproduce.sh           SO COM OS DADOS: regenera TODAS as figuras a partir
+#   (ou ./reproduce.sh data) dos dados pre-computados versionados em data/
 #                            (per_image.csv + rq3_sca_sets.json.gz). Nao roda scan.
-#   ./reproduce.sh analysis  Reagrega os report.json brutos -> per_image.csv
-#                            e imprime o resumo das RQs (precisa do scan feito).
-#   ./reproduce.sh full      Estudo inteiro: crawl da API -> fila -> scan com os
-#                            14 scanners -> analise -> figuras. Demorado; precisa
-#                            de Docker e de um token Docker Hub em config/accounts.json.
+#
+#   ./reproduce.sh all       ESTUDO INTEIRO do zero: crawl da API -> fila -> scan
+#                            (14 scanners) -> analise -> as mesmas figuras.
+#                            Demorado; precisa de Docker e token Docker Hub.
+#
+#   ./reproduce.sh analysis  (intermediario) report.json brutos -> per_image.csv -> figuras.
 #
 # Requisitos: python3, uv (https://docs.astral.sh/uv/). O modo full precisa de Docker.
 set -euo pipefail
@@ -23,12 +25,12 @@ figures() {
 }
 
 case "$MODE" in
-  figures)  figures ;;
+  data|figures)  figures ;;
   analysis)
     echo "[reproduce] reagregando report.json -> data/analysis/per_image.csv"
     python3 scripts/analyze.py
     figures ;;
-  full)
+  all|full)
     echo "[reproduce] estudo completo: crawl -> fila -> scan -> analise -> figuras"
     python3 scripts/crawl_hub.py                       # API Docker Hub -> data/hub_*.jsonl
     python3 scripts/build_queue.py                     # -> data/jobs_unique.jsonl
@@ -37,5 +39,5 @@ case "$MODE" in
                    && "$UV" run scanners run  --config ../config/os.yaml )
     python3 scripts/analyze.py                         # -> data/analysis/per_image.csv
     figures ;;
-  *) echo "uso: $0 [figures|analysis|full]"; exit 1 ;;
+  *) echo "uso: $0 [data|analysis|all]   (data=so figuras dos dados; all=estudo inteiro)"; exit 1 ;;
 esac

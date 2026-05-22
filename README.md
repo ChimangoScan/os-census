@@ -38,16 +38,17 @@ paper/                  LaTeX source (SBC template) + figures
 
 ## Reproducing
 
-One entry point, `reproduce.sh`, with three modes:
+One command each:
 
 ```bash
-./reproduce.sh figures    # (default) regenerate ALL figures from the
-                          # pre-computed data in data/ (no scan needed):
-                          # per_image.csv + rq3_sca_sets.json.gz
-./reproduce.sh analysis   # re-aggregate raw report.json -> per_image.csv (needs scan done)
-./reproduce.sh full       # whole study: crawl Docker Hub API -> queue -> scan
-                          # (14 scanners) -> analysis -> figures
+./reproduce.sh         # FROM THE DATA ONLY: regenerate every figure from the
+                       # pre-computed data in data/ (no scan; ~1 min)
+./reproduce.sh all     # THE WHOLE STUDY from scratch: crawl Docker Hub API ->
+                       # queue -> scan (14 scanners) -> analysis -> same figures
 ```
+
+(`./reproduce.sh analysis` is the intermediate step: raw `report.json` ->
+`per_image.csv` -> figures.)
 
 Pipeline stages (what `full` runs), all also callable standalone:
 
