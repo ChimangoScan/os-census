@@ -1,0 +1,584 @@
+% paper.bib -- Related work for ChimangoScan
+% Large-scale empirical security measurement of Docker Hub images.
+% Style: compatible with SBC bibstyle (sbc.bst). Target venue: SBSeg.
+
+% ===== Family A: Large-scale Docker Hub security measurement =====
+
+@inproceedings{shu2017dockerhub,
+  author    = {Shu, Rui and Gu, Xiaohui and Enck, William},
+  title     = {A Study of Security Vulnerabilities on {Docker} {Hub}},
+  booktitle = {Proceedings of the Seventh ACM Conference on Data and Application Security and Privacy (CODASPY '17)},
+  year      = {2017},
+  pages     = {269--280},
+  publisher = {ACM},
+  doi       = {10.1145/3029806.3029832}
+}
+
+@inproceedings{liu2020understanding,
+  author    = {Liu, Peiyu and Ji, Shouling and Fu, Lirong and Lu, Kangjie and Zhang, Xuhong and Lee, Wei-Han and Lu, Tao and Chen, Wenzhi and Beyah, Raheem},
+  title     = {Understanding the Security Risks of {Docker} {Hub}},
+  booktitle = {Computer Security -- ESORICS 2020},
+  year      = {2020},
+  pages     = {257--276},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {12308},
+  publisher = {Springer},
+  doi       = {10.1007/978-3-030-58951-6_13}
+}
+
+@inproceedings{shi2025drdocker,
+  author    = {Shi, Hequan and Ying, Lingyun and Chen, Libo and Duan, Hai-Xin and Liu, Ming and Xue, Zhi},
+  title     = {Dr. {Docker}: A Large-Scale Security Measurement of the {Docker} Image Ecosystem},
+  booktitle = {Proceedings of the ACM Web Conference 2025 (WWW '25)},
+  year      = {2025},
+  publisher = {ACM},
+  doi       = {10.1145/3696410.3714653}
+}
+
+@inproceedings{wist2021vulnerability,
+  author    = {Wist, Katrine and Helsem, Malene and Gligoroski, Danilo},
+  title     = {Vulnerability Analysis of 2500 {Docker} {Hub} Images},
+  booktitle = {Advances in Security, Networks, and Internet of Things},
+  year      = {2021},
+  pages     = {307--327},
+  series    = {Transactions on Computational Science and Computational Intelligence},
+  publisher = {Springer},
+  doi       = {10.1007/978-3-030-71017-0_22}
+}
+
+@article{kwon2020divds,
+  author  = {Kwon, Soonhong and Lee, Jong-Hyouk},
+  title   = {{DIVDS}: {Docker} Image Vulnerability Diagnostic System},
+  journal = {IEEE Access},
+  volume  = {8},
+  pages   = {42666--42673},
+  year    = {2020},
+  doi     = {10.1109/ACCESS.2020.2976874}
+}
+
+% ===== Family C: Secrets / credentials in container images =====
+
+@inproceedings{dahlmanns2023secrets,
+  author    = {Dahlmanns, Markus and Sander, Constantin and Decker, Robin and Wehrle, Klaus},
+  title     = {Secrets Revealed in Container Images: An Internet-wide Study on Occurrence and Impact},
+  booktitle = {Proceedings of the 2023 ACM Asia Conference on Computer and Communications Security (ASIA CCS '23)},
+  year      = {2023},
+  pages     = {797--811},
+  publisher = {ACM},
+  doi       = {10.1145/3579856.3590329}
+}
+
+@inproceedings{meli2019gitleaks,
+  author    = {Meli, Michael and McNiece, Matthew R. and Reaves, Bradley},
+  title     = {How Bad Can It Git? Characterizing Secret Leakage in Public {GitHub} Repositories},
+  booktitle = {Proceedings of the 26th Network and Distributed System Security Symposium (NDSS 2019)},
+  year      = {2019},
+  publisher = {Internet Society},
+  doi       = {10.14722/ndss.2019.23418}
+}
+
+@inproceedings{basak2023secretbench,
+  author    = {Basak, Setu Kumar and Cox, Lorenzo and Reaves, Bradley and Williams, Laurie},
+  title     = {{SecretBench}: A Dataset of Software Secrets},
+  booktitle = {Proceedings of the 20th International Conference on Mining Software Repositories (MSR 2023)},
+  year      = {2023},
+  pages     = {347--351},
+  publisher = {IEEE},
+  doi       = {10.1109/MSR59073.2023.00053}
+}
+
+% ===== Family D: Misconfigurations / Dockerfile smells =====
+
+@inproceedings{cito2017empirical,
+  author    = {Cito, J{\"u}rgen and Schermann, Gerald and Wittern, John Erik and Leitner, Philipp and Zumberi, Sali and Gall, Harald C.},
+  title     = {An Empirical Analysis of the {Docker} Container Ecosystem on {GitHub}},
+  booktitle = {Proceedings of the 14th International Conference on Mining Software Repositories (MSR 2017)},
+  year      = {2017},
+  pages     = {323--333},
+  publisher = {IEEE},
+  doi       = {10.1109/MSR.2017.67}
+}
+
+@article{wu2020dockerfilesmells,
+  author  = {Wu, Yiwen and Zhang, Yang and Wang, Tao and Wang, Huaimin},
+  title   = {Characterizing the Occurrence of {Dockerfile} Smells in Open-Source Software: An Empirical Study},
+  journal = {IEEE Access},
+  volume  = {8},
+  pages   = {34127--34139},
+  year    = {2020},
+  doi     = {10.1109/ACCESS.2020.2973750}
+}
+
+@inproceedings{rosa2022fixing,
+  author    = {Rosa, Giovanni and Scalabrino, Simone and Bavota, Gabriele},
+  title     = {Fixing {Dockerfile} Smells: An Empirical Study},
+  booktitle = {Proceedings of the IEEE International Conference on Software Maintenance and Evolution (ICSME 2022)},
+  year      = {2022},
+  publisher = {IEEE},
+  doi       = {10.48550/arXiv.2208.09097}
+}
+
+@inproceedings{henkel2020learning,
+  author    = {Henkel, Jordan and Bird, Christian and Lahiri, Shuvendu K. and Reps, Thomas},
+  title     = {Learning from, Understanding, and Supporting {DevOps} Artifacts for {Docker}},
+  booktitle = {Proceedings of the 42nd International Conference on Software Engineering (ICSE 2020)},
+  year      = {2020},
+  pages     = {38--49},
+  publisher = {ACM},
+  doi       = {10.1145/3377811.3380406}
+}
+
+% ===== Family E: Vulnerability scanner comparison / agreement =====
+
+@article{javed2021quality,
+  author  = {Javed, Omar and Toor, Salman},
+  title   = {Understanding the Quality of Container Security Vulnerability Detection Tools},
+  journal = {arXiv preprint arXiv:2101.03844},
+  year    = {2021},
+  doi     = {10.48550/arXiv.2101.03844}
+}
+
+@article{oconnor2025vexed,
+  author  = {Churakova, Yekatierina and Ekstedt, Mathias and Schmid, Larissa},
+  title   = {Vexed by {VEX} Tools: Consistency Evaluation of Container Vulnerability Scanners},
+  journal = {arXiv preprint arXiv:2503.14388},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2503.14388}
+}
+
+@inproceedings{shu2019exploit,
+  author    = {Shu, Rui and Wang, Peipei and Gu, Sigmund A. and Gu, Xiaohui and Enck, William},
+  title     = {A Study on Container Vulnerability Exploit Detection},
+  booktitle = {Proceedings of the IEEE International Conference on Cloud Engineering (IC2E 2019)},
+  year      = {2019},
+  pages     = {162--168},
+  publisher = {IEEE},
+  doi       = {10.1109/IC2E.2019.00026}
+}
+
+% ===== Family F: Supply-chain security / SBOM =====
+
+@inproceedings{ladisa2023sok,
+  author    = {Ladisa, Piergiorgio and Plate, Henrik and Martinez, Matias and Barais, Olivier},
+  title     = {{SoK}: Taxonomy of Attacks on Open-Source Software Supply Chains},
+  booktitle = {Proceedings of the 2023 IEEE Symposium on Security and Privacy (S\&P 2023)},
+  year      = {2023},
+  pages     = {1509--1526},
+  publisher = {IEEE},
+  doi       = {10.1109/SP46215.2023.10179304}
+}
+
+@misc{cybersecurityventures2023supplychain,
+  author       = {{Cybersecurity Ventures}},
+  title        = {Software Supply Chain Attacks To Cost The World \$60 Billion By 2025},
+  howpublished = {\url{https://cybersecurityventures.com/software-supply-chain-attacks-to-cost-the-world-60-billion-by-2025/}},
+  year         = {2023},
+  note         = {Accessed: May 2026}
+}
+
+@misc{gartner2021supplychain,
+  author       = {{Gartner, Inc.}},
+  title        = {Gartner Predicts 45\% of Organizations Worldwide Will Have Experienced Attacks on Their Software Supply Chains by 2025},
+  howpublished = {Gartner Press Release},
+  year         = {2021},
+  note         = {Accessed: May 2026}
+}
+
+@misc{sonatype2024supplychain,
+  author       = {{Sonatype}},
+  title        = {State of the Software Supply Chain Report: 10 Year Look},
+  howpublished = {\url{https://www.sonatype.com/state-of-the-software-supply-chain/}},
+  year         = {2024},
+  note         = {Accessed: May 2026}
+}
+
+@article{zahan2025sbomslr,
+  author  = {Zahan, Nusrat and Shohan, Shohanuzzaman and Harris, Dan and Williams, Laurie},
+  title   = {Software Bill of Materials in Software Supply Chain Security: A Systematic Literature Review},
+  journal = {arXiv preprint arXiv:2506.03507},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2506.03507}
+}
+
+@article{balliu2023challenges,
+  author  = {Balliu, Musard and Baudry, Benoit and Bobadilla, Sofia and Ekstedt, Mathias and Monperrus, Martin and Ron, Javier and Sharma, Aman and Skoglund, Gabriel and Soto-Valero, C{\'e}sar and Wittlinger, Martin},
+  title   = {Challenges of Producing Software Bill of Materials for {Java}},
+  journal = {IEEE Security \& Privacy},
+  volume  = {21},
+  number  = {6},
+  pages   = {12--23},
+  year    = {2023},
+  doi     = {10.1109/MSEC.2023.3302956}
+}
+
+@article{zerouali2021techlag,
+  author  = {Zerouali, Ahmed and Mens, Tom and Decan, Alexandre and Gonzalez-Barahona, Jes{\'u}s and Robles, Gregorio},
+  title   = {A Multi-dimensional Analysis of Technical Lag in {Debian}-based {Docker} Images},
+  journal = {Empirical Software Engineering},
+  volume  = {26},
+  number  = {2},
+  pages   = {19},
+  year    = {2021},
+  doi     = {10.1007/s10664-020-09908-6}
+}
+
+@inproceedings{zerouali2019outdated,
+  author    = {Zerouali, Ahmed and Mens, Tom and Robles, Gregorio and Gonzalez-Barahona, Jes{\'u}s M.},
+  title     = {On the Relation between Outdated {Docker} Containers, Severity Vulnerabilities, and Bugs},
+  booktitle = {Proceedings of the IEEE 26th International Conference on Software Analysis, Evolution and Reengineering (SANER 2019)},
+  year      = {2019},
+  pages     = {491--501},
+  publisher = {IEEE},
+  doi       = {10.1109/SANER.2019.8668013}
+}
+
+@article{zerouali2019javascript,
+  author  = {Zerouali, Ahmed and Mens, Tom and Gonzalez-Barahona, Jes{\'u}s and Decan, Alexandre and Constantinou, Eleni and Robles, Gregorio},
+  title   = {A Formal Framework for Measuring Technical Lag in Component Repositories -- and Its Application to {npm}},
+  journal = {Journal of Software: Evolution and Process},
+  year    = {2019},
+  volume  = {31},
+  number  = {8},
+  pages   = {e2157},
+  doi     = {10.1002/smr.2157}
+}
+
+% ===== Family G: Vulnerability prioritization / scoring =====
+
+@article{jacobs2021epss,
+  author  = {Jacobs, Jay and Romanosky, Sasha and Edwards, Benjamin and Adjerid, Idris and Roytman, Michael},
+  title   = {Exploit Prediction Scoring System ({EPSS})},
+  journal = {Digital Threats: Research and Practice},
+  volume  = {2},
+  number  = {3},
+  pages   = {1--17},
+  year    = {2021},
+  publisher = {ACM},
+  doi     = {10.1145/3436242}
+}
+
+@article{scoring2025conflicting,
+  author  = {Anonymous},
+  title   = {Conflicting Scores, Confusing Signals: An Empirical Study of Vulnerability Scoring Systems},
+  journal = {arXiv preprint arXiv:2508.13644},
+  year    = {2025},
+  doi     = {10.48550/arXiv.2508.13644}
+}
+
+@article{spring2021cvss,
+  author  = {Spring, Jonathan M. and Hatleback, Eric and Householder, Allen D. and Manion, Art and Shick, Deana},
+  title   = {Time to Change the {CVSS}?},
+  journal = {IEEE Security \& Privacy},
+  volume  = {19},
+  number  = {2},
+  pages   = {74--78},
+  year    = {2021},
+  doi     = {10.1109/MSEC.2020.3044475}
+}
+
+% ===== Industry / market reports (use only for market statistics) =====
+
+@misc{sysdig2023malicious,
+  author       = {{Sysdig Threat Research Team}},
+  title        = {Analysis on {Docker} {Hub} Malicious Images: Attacks Through Public Container Images},
+  howpublished = {Sysdig Threat Research Report},
+  year         = {2023},
+  note         = {Accessed: 2026-05-17}
+}
+
+% ===== Referencias adicionais (coautores) -- adicionado 2026-05-17 =====
+
+@inproceedings{khasanov2025davs,
+  author    = {Khasanov, Ilnar and Sadovykh, Andrey},
+  title     = {Evaluating {DAVS} Approach for {Docker} Images Static Analysis},
+  booktitle = {Availability, Reliability and Security (ARES 2025)},
+  year      = {2025},
+  pages     = {181--195},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer Nature Switzerland},
+  doi       = {10.1007/978-3-032-00644-8_11},
+  isbn      = {978-3-032-00644-8}
+}
+
+@inproceedings{khadse2024analysis,
+  author    = {Khadse, Mrinal Ashish and Dakhane, Dhananjay Manohar},
+  title     = {Analysis of {Docker} Images on Static and Dynamic Vulnerability Scanning Tools},
+  booktitle = {Proceedings of the 2024 2nd International Conference on Signal Processing, Communication, Power and Embedded System (SCOPES)},
+  year      = {2024},
+  pages     = {1--6},
+  publisher = {IEEE},
+  doi       = {10.1109/SCOPES64467.2024.10991185}
+}
+
+@inproceedings{mohankumar2025securecontainers,
+  author    = {{Mohan Kumar T G} and {Sanjay H A}},
+  title     = {Secure Containers: A {DevSecOps}-Based Approach for Comprehensive {Docker} Image Vulnerability Assessment},
+  booktitle = {Proceedings of the 2025 Global Conference on Information Technology and Communication Networks (GITCON)},
+  year      = {2025},
+  pages     = {1--6},
+  publisher = {IEEE},
+  doi       = {10.1109/GITCON65266.2025.11478531}
+}
+
+@inproceedings{sudeep2026scanningcentric,
+  author    = {Sudeep, V. and Nishant, V. and {Mohamed Jasir Faiez}, M. M. and Monish, T. and {Yuvaraj Kumar}, G. P. and Akhil, K. J. and Praveen, K.},
+  title     = {{Docker} Container Security: A Scanning-Centric Security Framework},
+  booktitle = {ICT Analysis and Applications},
+  year      = {2026},
+  pages     = {254--262},
+  series    = {Lecture Notes in Networks and Systems},
+  publisher = {Springer Nature Switzerland},
+  doi       = {10.1007/978-3-032-06688-6_25},
+  isbn      = {978-3-032-06688-6}
+}
+
+@inproceedings{ohaeche2025automating,
+  author    = {Ohaeche, Joseph U. and Wang, Xinli},
+  title     = {Automating Vulnerability Scanning and Patching Along with {OWASP} and {CVE} Databases on {Docker} Container Images},
+  booktitle = {Proceedings of the Third International Conference on Advances in Computing Research (ACR'25)},
+  year      = {2025},
+  pages     = {375--390},
+  series    = {Lecture Notes in Networks and Systems},
+  publisher = {Springer Nature Switzerland},
+  doi       = {10.1007/978-3-031-87647-9_32},
+  isbn      = {978-3-031-87647-9}
+}
+
+@misc{docker2025layers,
+  author       = {{Docker, Inc.}},
+  title        = {Understanding the Image Layers},
+  howpublished = {Docker Docs -- Docker Concepts: Building Images},
+  year         = {2025},
+  note         = {\url{https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/}. Accessed: 2026-05-17}
+}
+
+@inproceedings{berkovich2020ubcis,
+  author    = {Berkovich, Shay and Kam, Jeffrey and Wurster, Glenn},
+  title     = {{UBCIS}: Ultimate Benchmark for Container Image Scanning},
+  booktitle = {Proceedings of the 13th USENIX Workshop on Cyber Security Experimentation and Test (CSET '20)},
+  year      = {2020},
+  publisher = {USENIX Association},
+  note      = {\url{https://www.usenix.org/conference/cset20/presentation/berkovich}}
+}
+
+@article{haque2021wellbegun,
+  author  = {Haque, Mubin Ul and Babar, M. Ali},
+  title   = {Well Begun is Half Done: An Empirical Study of Exploitability and Impact of Base-Image Vulnerabilities},
+  journal = {arXiv preprint arXiv:2112.12597},
+  year    = {2021},
+  doi     = {10.48550/arXiv.2112.12597}
+}
+
+% ===== Family E: Newly added related work (2026-05-17 batch) =====
+
+@article{kaur2021scientific,
+  author  = {Kaur, Bhupinder and Dugr{\'e}, Mathieu and Hanna, Aiman and Glatard, Tristan},
+  title   = {An Analysis of Security Vulnerabilities in Container Images for Scientific Data Analysis},
+  journal = {GigaScience},
+  volume  = {10},
+  number  = {6},
+  pages   = {giab025},
+  year    = {2021},
+  publisher = {Oxford University Press},
+  doi     = {10.1093/gigascience/giab025}
+}
+
+@inproceedings{zhang2025techoverview,
+  author    = {Zhang, Xinhui and Zhang, Weiyong and Jiang, Qiu and Lin, Zihao and Lai, Baowang and Lu, Hui},
+  title     = {Technical Overview of Container Vulnerabilities},
+  booktitle = {Proceedings of the 2025 IEEE 10th International Conference on Data Science in Cyberspace (DSC)},
+  year      = {2025},
+  pages     = {441--448},
+  publisher = {IEEE},
+  doi       = {10.1109/DSC67331.2025.00063}
+}
+
+@inproceedings{zhao2019largescale,
+  author    = {Zhao, Nannan and Tarasov, Vasily and Albahar, Hadeel and Anwar, Ali and Rupprecht, Lukas and Skourtis, Dimitrios and Warke, Amit S. and Mohamed, Mohamed and Butt, Ali R.},
+  title     = {Large-Scale Analysis of the {Docker} {Hub} Dataset},
+  booktitle = {Proceedings of the 2019 IEEE International Conference on Cluster Computing (CLUSTER)},
+  year      = {2019},
+  publisher = {IEEE},
+  doi       = {10.1109/CLUSTER.2019.8891006}
+}
+
+@article{mills2023longitudinal,
+  author  = {Mills, Alan and White, Jonathan and Legg, Phil},
+  title   = {Longitudinal Risk-Based Security Assessment of Docker Software Container Images},
+  journal = {Computers \& Security},
+  volume  = {135},
+  pages   = {103478},
+  year    = {2023},
+  publisher = {Elsevier},
+  doi     = {10.1016/j.cose.2023.103478}
+}
+
+@inproceedings{mohayeji2025crosstag,
+  author    = {Mohayeji, Hamid and Constantinou, Eleni and Serebrenik, Alexander},
+  title     = {Security Vulnerabilities in {Docker} Images: A Cross-Tag Study of Application Dependencies},
+  booktitle = {Proceedings of the 2025 IEEE International Conference on Software Maintenance and Evolution (ICSME)},
+  year      = {2025},
+  pages     = {405--417},
+  publisher = {IEEE},
+  doi       = {10.1109/ICSME64153.2025.00044}
+}
+
+@misc{dockerhub2025usage,
+  author       = {{Docker, Inc.}},
+  title        = {Docker {Hub} Usage and Limits},
+  howpublished = {\url{https://docs.docker.com/docker-hub/usage/}},
+  year         = {2026},
+  note         = {Accessed: May 2026}
+}
+
+@misc{cncf2024survey,
+  author       = {{Cloud Native Computing Foundation}},
+  title        = {{CNCF} Annual Survey 2024},
+  howpublished = {\url{https://www.cncf.io/reports/cncf-annual-survey-2024/}},
+  year         = {2025},
+  note         = {Accessed: May 2026}
+}
+
+@inproceedings{zhou2025realitycheck,
+  author    = {Zhou, Li and Dacier, Marc and Konstantinou, Charalambos},
+  title     = {A Reality Check on {SBOM}-Based Vulnerability Management: An Empirical Study and a Path Forward},
+  booktitle = {Proceedings of the Sixteenth ACM Conference on Data and Application Security and Privacy (CODASPY '26)},
+  year      = {2026},
+  publisher = {ACM},
+  doi       = {10.1145/3800506.3803490}
+}
+
+@inproceedings{durieux2024smellsize,
+  author    = {Durieux, Thomas},
+  title     = {Empirical Study of the {Docker} Smells Impact on the Image Size},
+  booktitle = {Proceedings of the IEEE/ACM 46th International Conference on Software Engineering (ICSE 2024)},
+  year      = {2024},
+  publisher = {ACM},
+  doi       = {10.1145/3597503.3639143}
+}
+
+@misc{akhavani2025opensource,
+  author    = {Akhavani, Seyed Ali and Ousat, Behzad and Kharraz, Amin},
+  title     = {Open Source, Open Threats? Investigating Security Challenges in Open-Source Software},
+  year      = {2025},
+  howpublished = {arXiv preprint arXiv:2506.12995},
+  doi       = {10.48550/arXiv.2506.12995}
+}
+
+@misc{dockerhub2025product,
+  author       = {{Docker, Inc.}},
+  title        = {{Docker Hub}: Container {Image} Registry},
+  howpublished = {\url{https://www.docker.com/products/docker-hub/}},
+  year         = {2026},
+  note         = {Accessed: May 2026}
+}
+
+@misc{docker2025stateofappdev,
+  author       = {{Docker, Inc.}},
+  title        = {The 2025 {Docker} State of Application Development Report},
+  howpublished = {\url{https://www.docker.com/blog/2025-docker-state-of-app-dev/}},
+  year         = {2025},
+  note         = {Accessed: May 2026}
+}
+
+@inproceedings{opdebeeck2023inheritance,
+  author    = {Opdebeeck, Ruben and Lesy, Jonas and Zerouali, Ahmed and De Roover, Coen},
+  title     = {The {Docker Hub} Image Inheritance Network: Construction and Empirical Insights},
+  booktitle = {Proceedings of the IEEE International Working Conference on Source Code Analysis and Manipulation (SCAM)},
+  year      = {2023},
+  publisher = {IEEE},
+  doi       = {10.1109/SCAM59687.2023.00029}
+}
+
+@inproceedings{imtiaz2021comparative,
+  author    = {Imtiaz, Nasif and others},
+  title     = {A Comparative Study of Vulnerability Reporting by Software Composition Analysis Tools},
+  booktitle = {Proceedings of the 15th ACM/IEEE International Symposium on Empirical Software Engineering and Measurement (ESEM)},
+  year      = {2021},
+  doi       = {10.1145/3475716.3475769}
+}
+
+@inproceedings{ruan2025vpss,
+  author    = {Ruan, Bonan and Lin, Zhiwei and Liu, Jiahao and Zhang, Chuqi and Ji, Kaihang and Liang, Zhenkai},
+  title     = {Propagation-Based Vulnerability Impact Assessment for Software Supply Chains},
+  booktitle = {Proceedings of the 40th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  year      = {2025},
+  doi       = {10.48550/arXiv.2506.01342}
+}
+
+@inproceedings{pu2026noisetosignal,
+  author    = {Pu, Yingyuan and Ying, Lingyun and Gu, Yacong},
+  title     = {From Noise to Signal: Precisely Identify Affected Packages of Known Vulnerabilities in the npm Ecosystem},
+  booktitle = {Proceedings of the Network and Distributed System Security Symposium (NDSS)},
+  year      = {2026},
+  doi       = {10.14722/ndss.2026.241902}
+}
+
+@misc{haq2025ripple,
+  author       = {Ul Haq, Ehtisham and Wang, Song and Allison, Robert S.},
+  title        = {The Ripple Effect of Vulnerabilities in {Maven} Central: Prevalence, Propagation, and Mitigation Challenges},
+  year         = {2025},
+  howpublished = {arXiv preprint arXiv:2504.04175},
+  doi          = {10.48550/arXiv.2504.04175}
+}
+
+@misc{dockerindex2024,
+  author = {{Docker, Inc.}},
+  title = {Docker Index: Continued Massive Developer Adoption and Activity},
+  year = {2024},
+  note = {Docker Hub: 8.3M image repositories, 318B cumulative pulls, 7.3M accounts},
+  howpublished = {\url{https://www.docker.com/blog/docker-index-shows-continued-massive-developer-adoption-and-activity-to-build-and-share-apps-with-docker/}}
+}
+
+@misc{anchore2024osbreakdown,
+  author = {{Anchore}},
+  title = {A Breakdown of the Operating Systems of Docker Hub},
+  year = {2024},
+  howpublished = {\url{https://anchore.com/blog/breakdown-of-operating-systems-of-dockerhub/}}
+}
+
+@misc{netrise2024,
+  author = {{NetRise}},
+  title = {Analysis of Vulnerabilities in Popular Container Images},
+  year = {2024},
+  note = {Popular Docker Hub images average 604 known vulnerabilities, over 45\% older than two years}
+}
+
+@misc{nvd2025growth,
+  author = {{NIST National Vulnerability Database}},
+  title = {NVD Dashboard: CVE Publication Statistics},
+  year = {2025},
+  note = {46,407 CVEs published in 2025, about 127 per day; 263\% growth 2020--2025},
+  howpublished = {\url{https://nvd.nist.gov/general/nvd-dashboard}}
+}
+
+@inproceedings{haque2022wellbegun,
+  author    = {Haque, Mubin Ul and Babar, M. Ali},
+  title     = {Well Begun is Half Done: An Empirical Study of Exploitability and Impact of Base-Image Vulnerabilities},
+  booktitle = {2022 IEEE Intl. Conf. on Software Analysis, Evolution and Reengineering (SANER)},
+  pages     = {1100--1111}, year = {2022}, publisher = {IEEE},
+  doi       = {10.1109/SANER53432.2022.00128}
+}
+@article{churakova2026vex,
+  author  = {Churakova, Yekatierina and Ekstedt, Mathias and Schmid, Larissa},
+  title   = {Vexed by {VEX} Tools: Consistency Evaluation of Container Vulnerability Scanners},
+  journal = {arXiv preprint arXiv:2503.14388}, year = {2026}, note = {version 3}
+}
+@article{ibrahim2020toomany,
+  author  = {Ibrahim, Md Hasan and Sayagh, Mohammed and Hassan, Ahmed E.},
+  title   = {Too many images on {DockerHub}! How different are images for the same system?},
+  journal = {Empirical Software Engineering}, volume = {25}, number = {5},
+  pages   = {4250--4281}, year = {2020}, doi = {10.1007/s10664-020-09873-0}
+}
+@inproceedings{javed2021evaluation,
+  author    = {Javed, Omar and Toor, Salman},
+  title     = {An Evaluation of Container Security Vulnerability Detection Tools},
+  booktitle = {Proc. 2021 5th Intl. Conf. on Cloud and Big Data Computing (ICCBDC)},
+  pages     = {95--101}, year = {2021}, publisher = {ACM}, doi = {10.1145/3481646.3481661}
+}
+@inproceedings{odonoghue2024sbom,
+  author    = {O'Donoghue, Eric and Boles, Brittany and Izurieta, Clemente and Reinhold, Ann Marie},
+  title     = {Impacts of Software Bill of Materials (SBOM) Generation on Vulnerability Detection},
+  booktitle = {Proc. 2024 Workshop on Software Supply Chain Offensive Research and Ecosystem Defenses (SCORED)},
+  year      = {2024}, publisher = {ACM}
+}

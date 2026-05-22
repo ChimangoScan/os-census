@@ -1,0 +1,15 @@
+work/
+config/accounts.json
+__pycache__/
+*.pyc
+*.db
+*.db-shm
+*.db-wal
+related_work_pdfs/
+paper/main.aux
+paper/main.log
+paper/main.out
+paper/main.bbl
+paper/main.blg
+paper/*.log
+figures/_*.pdf

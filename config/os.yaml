@@ -1,0 +1,40 @@
+# Run config do estudo de imagens de SO — usa o ENGINE do multiscan sem modificá-lo.
+# Rodar (do diretório do multiscan, que tem o pyproject/uv):
+#   cd /mnt/win_ssd/chimango-upstream/multiscan
+#   uv run scanners --config /mnt/win_ssd/so-dockerhub-paper/config/os.yaml seed
+#   uv run scanners --config /mnt/win_ssd/so-dockerhub-paper/config/os.yaml run
+
+queue:
+  backend: sqlite
+  sqlite_path: /mnt/win_ssd/so-dockerhub-paper/work/os.db
+
+source:
+  type: jsonl
+  path: /mnt/win_ssd/so-dockerhub-paper/data/jobs_unique.jsonl   # {image,name,weight,...}
+
+scanners:
+  registry: /mnt/win_ssd/so-dockerhub-paper/config/scanners.yaml   # cópia nossa: clair com --image-ref corrigido (multiscan intocado)
+  # `only` sobrepõe o flag enabled (registry.py:53). Só estáticos aplicáveis a SO base:
+  only: [syft, cdxgen, trivy, grype, osv, clair, dockle, checkov,
+         trufflehog, gitleaks, detect-secrets, whispers, clamav, yarahunter]
+  static: true
+  dynamic: false        # SO base não sobe serviço -> sem DAST/network
+
+output:
+  dir: /mnt/win_ssd/scanners-data/out_so        # BIND MOUNT no win_ssd, fora do docker-ext4.img
+  cache_dir: /mnt/win_ssd/scanners-data/cache_so
+  keep_image_tarball: false
+  skip_done: true                               # resume-friendly
+
+workers:
+  count: 4              # 12 cores -> 4 targets simultâneos
+  scan_timeout: 1800
+
+runtime:
+  remove_image_after: true   # solta cada imagem após o scan -> disco limitado
+  max_image_mb: 2000         # maior imagem de SO ~518 MB
+  prune_every: 25
+  scan_parallelism: 3        # scanners simultâneos por target (4x3 = 12 containers)
+  pull_retries: 4
+  pull_backoff: 30
+  dockerhub_accounts: /mnt/win_ssd/so-dockerhub-paper/config/accounts.json  # evita rate limit
