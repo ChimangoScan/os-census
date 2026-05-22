@@ -122,25 +122,13 @@ samples~\cite{kaur2021scientific,mills2023longitudinal}. No recent work measures
 the Linux OS base images specifically, with a heterogeneous multi-scanner
 battery, as a current census. This paper fills that gap.
 
-\noindent We make the following contributions:
-\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item A \textbf{recent multi-scanner census} of OS base images on Docker Hub:
-14 scanners over 5{,}606 unique \texttt{amd64} images of the 21
-\emph{Operating systems} repositories (Section~\ref{sec:method}).
-\item A \textbf{per-distribution security posture} and a measured
-\textbf{staleness-vulnerability} relationship (Sections~\ref{sec:rq1},~\ref{sec:rq2}).
-\item A \textbf{four-engine divergence} measurement on the OS-package layer,
-including Clair, showing the chosen scanner dominates the reported posture
-(Section~\ref{sec:rq3}).
-\item An \textbf{image-longevity finding}: a large share of
-historically-published OS images can no longer be installed by a modern Docker
-(legacy manifest schema), while end-of-life bases remain heavily pulled.
-\item \textbf{A released artifact and dataset.} We release the scan pipeline
-and the consolidated multi-scanner dataset, the per-image reports of all 14
-scanners over the OS census; to our knowledge it is the first OS-base-focused
-multi-scanner dataset, letting the measurement be audited, reproduced and
-extended (released on acceptance).
-\end{itemize}
+\noindent\textbf{Contributions.} We present (i)~a recent multi-scanner census of
+Docker Hub's Linux OS base images (Section~\ref{sec:method}); (ii)~a
+per-distribution posture and a staleness-vulnerability relationship
+(Sections~\ref{sec:rq1},~\ref{sec:rq2}); (iii)~a four-engine divergence
+measurement on the OS-package layer (Section~\ref{sec:rq3});
+(iv)~an image-longevity finding (Section~\ref{sec:rq4}); and (v)~a released
+pipeline and the first OS-base-focused multi-scanner dataset.
 
 % ============================================================
 \section{Related Work}
@@ -181,8 +169,8 @@ report that current scanners are largely incompatible because of
 package-identifier mismatches, and \cite{zhou2026realitycheck,rosso2026svstest}
 document high false-positive rates and silent tool failures in SBOM-based
 scanning. Our work is complementary, bringing this multi-scanner lens to the
-OS-base layer at census scale, adding Clair, and relating the divergence to image
-age and distribution.
+OS-base layer at census scale and relating the divergence to image age and
+distribution.
 
 Building on this body of work, we are not aware of a recent study that measures
 the Linux OS base images of Docker Hub specifically with a heterogeneous
@@ -308,8 +296,8 @@ vulnerability findings, climbing through $\approx$273 (one to two years) and
 $\approx$457 (two to four years) to $\approx$692 for images not rebuilt in over
 four years. The per-image rank correlation is positive but modest (Spearman
 $\rho=0.16$, $p<0.001$), reflecting wide within-bucket variance even as the
-bucketed means rise monotonically. This reproduces the technical-lag effect of
-\cite{zerouali2019outdated} across 21 distributions at once.
+bucketed means rise monotonically (the technical lag of
+\cite{zerouali2019outdated}, here across 21 distributions).
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
@@ -331,8 +319,7 @@ report by far the most image-CVE pairs (196k and 148k), OSV-Scanner targets
 language-ecosystem advisories (9k) and Clair maps only specific distributions to
 its feeds (8k, and zero on Rocky and AlmaLinux, which it does not map to the RHEL
 feeds). The reported security posture of an OS image is thus, to a large degree,
-a property of the chosen scanner, echoing \cite{churakova2026vex} at far larger
-scale and on the OS layer specifically.
+a property of the chosen scanner.
 
 \subsection{RQ4: End-of-life and un-pullable images}
 \label{sec:rq4}
@@ -434,39 +421,28 @@ minimal-image and scanner-agreement findings.
 $\ast$~critical or high (Shu reports high-severity); $\rho$: Spearman.}
 \end{table}
 
-\subsection{Threats to validity}
-\label{sec:threats}
-Several threats bound these results. \emph{Coverage:} the census is still
-running, so the numbers reflect the 1{,}927 images processed to date; the
-round-robin order keeps every distribution represented, but the smaller
-repositories carry wide uncertainty and their means may shift as the run
-completes. \emph{Scanner error:} we report raw scanner output and do not
-adjudicate false positives or negatives, and the divergence we measure (RQ3)
-itself implies that no single engine is ground truth; severity, moreover, rests
-on CVSS scores that can overstate operational risk without VEX or reachability
-information~\cite{zhou2026realitycheck}. \emph{Architecture:} we scan
-\texttt{linux/amd64} only, so the findings may not transfer to \texttt{arm64}.
-\emph{Temporal drift:} a tag can be re-pushed during the census, so each image
-is characterised as of its scan time. \emph{Generality:} the corpus is Docker
-Hub's \emph{Operating systems} category, so other registries (Quay, GHCR) and
-non-base images are out of scope. The released dataset lets others re-run the
-analysis under different choices.
-
 % ============================================================
-\section{Conclusion}
+\section{Limitations and conclusion}
 \label{sec:conclusion}
-We presented a recent, multi-scanner census of the operating-system base images
-of Docker Hub, the bases on which nearly every container is built, scanned with
-14 independent open-source tools rather than one. Across the images measured so
-far, vulnerability posture varies by an order of magnitude across distributions
-and rises steadily with image age; the four package-vulnerability engines agree
-on almost nothing, so the posture a single tool reports is in large part a
-property of that tool; a smaller image is not reliably a safer one; and about a
-fifth of historically-published OS images can no longer be installed by a
-modern Docker, while end-of-life bases such as CentOS remain heavily pulled. We
-release the pipeline and the consolidated dataset\footnote{The scan pipeline,
-analysis code and the consolidated multi-scanner dataset will be released on
-acceptance.} so the measurement can be reproduced and kept current.
+\textbf{Limitations.} The census is still running, so the numbers reflect the
+1{,}927 images processed to date and small repositories carry wide uncertainty.
+We report raw scanner output without adjudicating false positives or negatives;
+the divergence of RQ3 implies no engine is ground truth, and severity rests on
+CVSS scores that can overstate risk without VEX or reachability
+data~\cite{zhou2026realitycheck}. We scan \texttt{linux/amd64} only, characterise
+each image as of its scan time, and cover only the \emph{Operating systems}
+category; the released dataset lets others re-run the analysis under other
+choices.
+
+\textbf{Conclusion.} We measured the security posture of Docker Hub's Linux OS
+base images with 14 scanners rather than one. Posture varies by an order of
+magnitude across distributions and rises with image age; the four
+package-vulnerability engines agree on almost nothing, so a single tool's count
+is largely a property of that tool; a smaller image is not reliably safer; and
+about a fifth of historically-published images can no longer be installed by a
+modern Docker while end-of-life bases stay heavily pulled. We release the
+pipeline and dataset\footnote{Released on acceptance.} so the measurement can be
+reproduced and kept current.
 
 {\footnotesize
 \bibliographystyle{sbc}
