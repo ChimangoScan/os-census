@@ -156,14 +156,24 @@ px=[r["packages"] for r in rows if r["packages"] and r["vuln_total"] is not None
 py=[r["vuln_total"] for r in rows if r["packages"] and r["vuln_total"] is not None]
 ax[0].scatter(px,py,s=5,alpha=.25,color="#1a9850",edgecolors="none"); ax[0].set_xscale("symlog"); ax[0].set_yscale("symlog")
 ax[0].set_xlim(left=0); ax[0].set_ylim(bottom=0); ax[0].set_xlabel("packages"); ax[0].set_ylabel("total vulns"); ax[0].set_title("(a) Packages vs vulns", loc="left")
-pc=[r["packages"] for r in rows if r["packages"] and r["vuln_critical"] is not None]
-yc=[(r["vuln_critical"] or 0)+(r["vuln_high"] or 0) for r in rows if r["packages"] and r["vuln_critical"] is not None]
-ax[1].scatter(pc,yc,s=5,alpha=.25,color="#b2182b",edgecolors="none"); ax[1].set_xscale("symlog"); ax[1].set_yscale("symlog")
-ax[1].set_xlim(left=0); ax[1].set_ylim(bottom=0); ax[1].set_xlabel("packages"); ax[1].set_ylabel("crit+high"); ax[1].set_title("(b) Packages vs crit+high", loc="left")
+# (b) regressao multipla padronizada: idade vs pacotes (driver dominante)
+def _pear(xs,ys):
+    n=len(xs); mx=sum(xs)/n; my=sum(ys)/n
+    sx=(sum((x-mx)**2 for x in xs))**.5; sy=(sum((y-my)**2 for y in ys))**.5
+    return sum((x-mx)*(y-my) for x,y in zip(xs,ys))/(sx*sy) if sx and sy else 0
+trip=[(r["packages"],r["age_days"],r["vuln_total"]) for r in rows if r["packages"] and r["age_days"] is not None and r["vuln_total"] is not None]
+P=[t[0] for t in trip]; A=[t[1] for t in trip]; Vv=[t[2] for t in trip]
+ry1=_pear(Vv,P); ry2=_pear(Vv,A); r12=_pear(P,A); den=(1-r12*r12) or 1
+b_pkg=(ry1-ry2*r12)/den; b_age=(ry2-ry1*r12)/den
+ax[1].bar(["age","packages"],[b_age,b_pkg],color=["#2166ac","#1a9850"]); ax[1].axhline(0,color="k",lw=.5)
+ax[1].set_ylabel("standardized $\\beta$"); ax[1].set_title("(b) Drivers of vuln. load", loc="left")
+# (c) popularidade: pulls vs vulns (popularidade nao protege)
+pu=[(r["pull_count"],r["vuln_total"]) for r in rows if r["pull_count"] and r["vuln_total"] is not None]
+ax[2].scatter([p for p,_ in pu],[v for _,v in pu],s=5,alpha=.25,color="#b2182b",edgecolors="none")
+ax[2].set_xscale("symlog"); ax[2].set_xlim(left=0); ax[2].set_ylim(bottom=0)
+ax[2].set_xlabel("pulls"); ax[2].set_ylabel("total vulns"); ax[2].set_title("(c) Popularity vs vulns", loc="left")
+# (d) vulns/package por distro
 vpp=sorted(distros,key=lambda d: dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0))[-11:]
-ax[2].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
-ax[2].set_xlabel("vulns / package"); ax[2].set_title("(c) Density / distro", loc="left"); ax[2].set_xlim(left=0); ax[2].tick_params(axis="y",labelsize=5.5)
-pk=sorted(distros,key=lambda d: dmean(d, lambda r:r["packages"]))[-11:]
-ax[3].barh(pk,[dmean(d, lambda r:r["packages"]) for d in pk],color="#238b45")
-ax[3].set_xlabel("mean packages"); ax[3].set_title("(d) Packages / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y",labelsize=5.5)
-fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq5.pdf"); plt.close(fig); print("fig_rq5 ok")
+ax[3].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
+ax[3].set_xlabel("vulns / package"); ax[3].set_title("(d) Density / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y",labelsize=5.5)
+fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq5.pdf"); plt.close(fig); print(f"fig_rq5 ok (b_age={b_age:.2f} b_pkg={b_pkg:.2f})")

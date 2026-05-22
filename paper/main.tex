@@ -25,6 +25,10 @@
 \newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
 \usepackage[hidelinks,colorlinks=true,allcolors=black]{hyperref}
+% footnotes menores
+\makeatletter
+\renewcommand\@makefntext[1]{\parindent 1em\noindent\hb@xt@1.8em{\hss\@makefnmark}\scriptsize #1}
+\makeatother
 
 % patch p/ o bug \bbl@normalsf (sbc-template + babel em TeXLive recente)
 \makeatletter
@@ -313,13 +317,14 @@ measured before.
 \label{fig:rq4}
 \end{figure}
 
-\subsection{RQ5: Is a minimal image safer?}
+\subsection{RQ5: What drives the vulnerability load?}
 \label{sec:rq5}
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_rq5.pdf}
-\caption{(a)~packages vs.\ total; (b)~packages vs.\ critical+high;
-(c)~vulnerabilities per package by distribution; (d)~packages per distribution.}
+\caption{(a)~packages vs.\ total; (b)~standardized regression coefficients
+(age vs.\ packages); (c)~popularity (pulls) vs.\ total; (d)~vulnerabilities per
+package by distribution.}
 \label{fig:rq5}
 \end{figure}
 The intuition that a smaller image is a safer one does not hold cleanly
@@ -330,6 +335,15 @@ a dozen, while Debian carries hundreds of critical and high findings with fewer
 packages than Mageia. This refines \cite{haque2022wellbegun}:
 on our multi-scanner data the vulnerability count is governed more by a
 distribution's advisory coverage and patch cadence than by image size.
+
+A multiple regression makes the ranking explicit (Figure~\ref{fig:rq5}(b)): with
+both predictors standardized, image age dominates ($\beta\approx0.44$) over
+package count ($\beta\approx0.17$), and the partial correlations agree
+($0.44$ vs.\ $0.19$); the vulnerability load tracks patch cadence, not image
+size. Popularity offers no protection either: a repository's pull count is
+essentially uncorrelated with its vulnerability count (Spearman
+$\rho\approx0$, Figure~\ref{fig:rq5}(c)), so the most-pulled bases are no safer
+than the rest.
 
 \subsection{Beyond vulnerabilities: secrets, misconfiguration, malware}
 \label{sec:other}
