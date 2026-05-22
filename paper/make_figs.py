@@ -187,3 +187,20 @@ vpp=sorted(distros,key=lambda d: dmean(d, lambda r:(r["vuln_total"] or 0)/r["pac
 ax[3].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
 ax[3].set_xlabel("vulns / package"); ax[3].set_title("(d) Density / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y",labelsize=5.5)
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq5.pdf"); plt.close(fig); print(f"fig_rq5 ok (b_age={b_age:.2f} b_pkg={b_pkg:.2f})")
+
+# ----------------------------------------------------------------- Reproducoes (prior vs ours)
+def _frac(pred, dom):
+    v=[r for r in rows if dom(r)]; return 100*sum(1 for r in v if pred(r))/len(v) if v else 0
+hs =_frac(lambda r:((r["vuln_critical"] or 0)+(r["vuln_high"] or 0))>0, lambda r:r["vuln_total"] is not None)
+sec=_frac(lambda r:(r["secrets"] or 0)>0, lambda r:r["secrets"] is not None)
+kv =_frac(lambda r:(r["vuln_total"] or 0)>0, lambda r:r["vuln_total"] is not None)
+labels=["Shu '17\n(high-sev)","Dahlmanns '23\n(secrets, raw)","Dr.Docker '25\n(known-vuln)"]
+prior=[80.0,8.5,93.7]; ours=[hs,sec,kv]; xs=[0,1,2]; w=0.38
+fig, ax = plt.subplots(figsize=(4.7,2.3))
+ax.bar([x-w/2 for x in xs],prior,w,label="reported",color="#9ecae1",edgecolor="#3182bd",lw=.4)
+ax.bar([x+w/2 for x in xs],ours,w,label="ours",color="#08519c")
+ax.set_xticks(xs); ax.set_xticklabels(labels,fontsize=5.5); ax.set_ylabel("% of images"); ax.set_ylim(0,108)
+ax.legend(fontsize=6,loc="upper center"); ax.set_title("(a) Prior reported vs ours", loc="left")
+for x,v in zip(xs,prior): ax.text(x-w/2,v+1.5,f"{v:g}",ha="center",fontsize=5)
+for x,v in zip(xs,ours):  ax.text(x+w/2,v+1.5,f"{v:.0f}",ha="center",fontsize=5)
+fig.tight_layout(pad=0.4); fig.savefig(f"{FIG}/fig_repro.pdf"); plt.close(fig); print(f"fig_repro ok (hs={hs:.0f} sec={sec:.0f} kv={kv:.0f})")

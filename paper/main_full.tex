@@ -418,9 +418,17 @@ Dockle and Checkov flag at least one CIS-style issue in essentially every image
 (missing \texttt{HEALTHCHECK}, content-trust disabled, running as \texttt{root});
 these are structural properties, so the near-universal rate is robust.
 \emph{Secrets:} TruffleHog and Gitleaks raise at least one detection in
-\textbf{72\%} of images, but these are raw hits; as \cite{dahlmanns2023secrets}
-(8.5\% validated) and Dr.\ Docker~\cite{shi2025drdocker} (99.3\% of hits filtered
-as invalid) show, the validated rate is far lower, and validation is future work.
+\textbf{72\%} of images, but these are raw hits. We manually reviewed a seeded
+random sample of \textbf{1{,}100} of the 26{,}892 detections (stratified by
+scanner, 95\% CI $\pm3\%$), reading each one rather than filtering by rule:
+\textbf{none} was a real credential (true-positive rate $\le0.35\%$, 95\% Wilson
+CI). Every hit was a test key (e.g.\ GnuTLS fixtures in \texttt{libgnutls.so}), a
+package checksum matched as a token, a documentation example, a public key, or a
+C identifier (\texttt{TPM2B\_ENCRYPTED\_SECRET}). The validated secret rate for OS
+base images is thus effectively zero (even below \cite{dahlmanns2023secrets}'s
+8.5\% and Dr.\ Docker's $\sim$0.7\% valid~\cite{shi2025drdocker}), because real
+secrets live in application layers, not the base. The labelled sample is released
+for re-use.
 \emph{Malware/IOC:} ClamAV and YARA-Hunter match on many images, but inspection
 shows these are mostly signatures hitting benign system binaries, so we treat
 them as triage candidates, not confirmed malware (Dr.\ Docker confirmed only 24
@@ -467,7 +475,7 @@ single-distribution lens understates the ecosystem-wide picture.
 \cite{ibrahim2020toomany} & spread across base distributions & \xmark & varies & 10$\times$ range \\
 \cite{wist2021vulnerability} & where severe vulns concentrate & \xmark & language ecosys.\ & OS-package layer \\
 \cite{haque2022wellbegun} & is a minimal image safer? & \cmark & no & no (non-monotonic) \\
-\cite{dahlmanns2023secrets} & images carrying secrets & \xmark & 8.5\% (valid.) & 72\% (raw) \\
+\cite{dahlmanns2023secrets} & images carrying secrets & \xmark & 8.5\% valid & 72\% raw, 0\% valid \\
 \cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & \xmark & rise; Debian $\gg$ & rise; Debian top \\
 \cite{boles2024deciphering} & scanner divergence on OS images & \cmark & agree 15\% & Jaccard 0.35 \\
 \cite{shi2025drdocker} & known-vulnerability prevalence & \xmark & 93.7\% & 98.7\% \\
