@@ -1,65 +1,86 @@
 #!/usr/bin/env python3
-"""Figuras do paper: UM painel horizontal 1x4 (altura minima) a partir de
-data/analysis/per_image.csv e dos report.json.
+"""Figuras do paper: uma figura 1x4 por RQ (linha horizontal, altura minima).
+Saidas: fig_rq1..fig_rq5, fig_other em figures/.
 Rodar:  uv run --with matplotlib python make_figs.py
 """
-import csv, json, glob, collections, os, statistics as _st
+import csv, json, glob, collections, os, sqlite3, statistics as st
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent
-CSV = str(ROOT / "data/analysis/per_image.csv")
-_legacy = Path("/mnt/win_ssd/scanners-data/out_so")
-OUT = str(os.environ.get("OSCENSUS_OUT") or (_legacy if _legacy.exists() else ROOT/"scan-out"/"out_so"))
-FIG = str(Path(__file__).resolve().parent / "figures")
-plt.rcParams.update({"font.size": 7, "axes.grid": True, "grid.alpha": 0.25,
-                     "axes.axisbelow": True, "savefig.bbox": "tight",
-                     "axes.titlesize": 7.5, "xtick.labelsize": 6, "ytick.labelsize": 6})
+CSV  = str(ROOT / "data/analysis/per_image.csv")
+FIG  = str(Path(__file__).resolve().parent / "figures")
+_leg = Path("/mnt/win_ssd/scanners-data/out_so")
+OUT  = str(os.environ.get("OSCENSUS_OUT") or (_leg if _leg.exists() else ROOT/"scan-out"/"out_so"))
+DB   = os.environ.get("OSCENSUS_DB") or str(ROOT / "work/os.db")
+plt.rcParams.update({"font.size": 7, "axes.grid": True, "grid.alpha": 0.25, "axes.axisbelow": True,
+                     "savefig.bbox": "tight", "axes.titlesize": 7.5, "xtick.labelsize": 6, "ytick.labelsize": 6})
+FS = (12.6, 2.25)   # 1x4 horizontal, baixo
 
-def short(r): return r.split("/")[-1]
+def short(r): return (r or "?").split("/")[-1]
+def fnum(x):
+    try: return float(x)
+    except: return None
+
 rows = list(csv.DictReader(open(CSV)))
 for r in rows:
-    for k in ("age_days","packages","vuln_critical","vuln_high","vuln_total"):
-        try: r[k] = float(r[k]) if r[k] not in ("","None") else None
-        except: r[k] = None
+    for k in ("age_days","pull_count","packages","vuln_critical","vuln_high","vuln_medium","vuln_low",
+              "vuln_total","secrets","misconfig","malware"):
+        r[k] = fnum(r.get(k))
 
-fig, ax = plt.subplots(1, 4, figsize=(13.2, 2.05))
+# agrega por distro (>=10 imgs)
+byd = collections.defaultdict(list)
+for r in rows: byd[short(r["repo"])].append(r)
+distros = [d for d in byd if len(byd[d]) >= 10]
 
-# (a) RQ1: media criticas+altas por distro (top 11), com +-SD e n
-by = collections.defaultdict(list)
-for r in rows:
-    if r["vuln_critical"] is not None and r["vuln_high"] is not None:
-        by[short(r["repo"])].append(r["vuln_critical"]+r["vuln_high"])
-agg = sorted(((k, sum(v)/len(v), (_st.pstdev(v) if len(v)>1 else 0), len(v)) for k,v in by.items()), key=lambda x:x[1])[-11:]
-labels=[k for k,_,_,_ in agg]; means=[m for _,m,_,_ in agg]; sds=[s for _,_,s,_ in agg]; ns=[n for _,_,_,n in agg]
-lo = [min(s, m) for m, s in zip(means, sds)]   # capa barra de erro inferior em 0
-ax[0].barh(labels, means, xerr=[lo, sds], color="#b2182b", error_kw=dict(elinewidth=0.6, ecolor="#777"))
-for i,(m,n) in enumerate(zip(means,ns)): ax[0].text(m, i, f"  n={n}", va="center", fontsize=4.5, color="#333")
-ax[0].set_xlim(left=0)
-ax[0].set_xlabel("mean crit+high / img (±SD)"); ax[0].set_title("(a) Posture by distro",loc="left")
+def dmean(d, fn):
+    v = [fn(r) for r in byd[d] if fn(r) is not None]
+    return st.mean(v) if v else 0
 
-# (b) RQ2: staleness, com +-SD por bucket
+# ----------------------------------------------------------------- RQ1
+fig, ax = plt.subplots(1, 4, figsize=FS)
+ch = sorted(distros, key=lambda d: dmean(d, lambda r: (r["vuln_critical"] or 0)+(r["vuln_high"] or 0)))[-11:]
+ax[0].barh(ch, [dmean(d, lambda r:(r["vuln_critical"] or 0)+(r["vuln_high"] or 0)) for d in ch], color="#b2182b")
+ax[0].set_xlabel("mean crit+high"); ax[0].set_title("(a) Crit+high / distro", loc="left"); ax[0].set_xlim(left=0); ax[0].tick_params(axis="y", labelsize=5.5)
+# (b) composicao de severidade (% empilhado) p/ top distros por total
+tt = sorted(distros, key=lambda d: dmean(d, lambda r:r["vuln_total"]))[-9:]
+sev = ["vuln_critical","vuln_high","vuln_medium","vuln_low"]; cols=["#67000d","#ef3b2c","#fc9272","#fee0d2"]
+bot=[0]*len(tt)
+for s,c in zip(sev,cols):
+    vals=[dmean(d, lambda r,s=s:r[s]) for d in tt]
+    tot=[max(dmean(d, lambda r:r["vuln_total"]),1) for d in tt]
+    pct=[100*v/t for v,t in zip(vals,tot)]
+    ax[1].barh(tt,pct,left=bot,color=c,label=s.split("_")[1]); bot=[b+p for b,p in zip(bot,pct)]
+ax[1].set_xlabel("% of findings"); ax[1].set_title("(b) Severity mix", loc="left"); ax[1].tick_params(axis="y", labelsize=5.5); ax[1].legend(fontsize=4.5, ncol=2, loc="lower right")
+# (c) % com >=1 critica por distro
+pc = sorted(distros, key=lambda d: 100*sum(1 for r in byd[d] if (r["vuln_critical"] or 0)>0)/len(byd[d]))[-11:]
+ax[2].barh(pc, [100*sum(1 for r in byd[d] if (r["vuln_critical"] or 0)>0)/len(byd[d]) for d in pc], color="#d94801")
+ax[2].set_xlabel("% with >=1 critical"); ax[2].set_title("(c) Critical prevalence", loc="left"); ax[2].set_xlim(0,100); ax[2].tick_params(axis="y", labelsize=5.5)
+# (d) mean total vulns por distro
+tv = sorted(distros, key=lambda d: dmean(d, lambda r:r["vuln_total"]))[-11:]
+ax[3].barh(tv, [dmean(d, lambda r:r["vuln_total"]) for d in tv], color="#08519c")
+ax[3].set_xlabel("mean total vulns"); ax[3].set_title("(d) Total / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y", labelsize=5.5)
+fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq1.pdf"); plt.close(fig); print("fig_rq1 ok")
+
+# ----------------------------------------------------------------- RQ2 (compacto 1x2)
+fig, ax = plt.subplots(1, 2, figsize=(6.6, 2.2))
 bk=[(0,180,"0-6m"),(180,365,"6-12m"),(365,730,"1-2y"),(730,1460,"2-4y"),(1460,1e9,"4y+")]
-xs,ys,es=[],[],[]
-for lo,hi,lb in bk:
-    g=[r["vuln_total"] for r in rows if r["age_days"] is not None and r["vuln_total"] is not None and lo<=r["age_days"]<hi]
-    if g: xs.append(lb); ys.append(sum(g)/len(g)); es.append(_st.pstdev(g) if len(g)>1 else 0)
-loe = [min(e, y) for y, e in zip(ys, es)]   # capa barra inferior em 0
-ax[1].errorbar(xs,ys,yerr=[loe, es],fmt="o-",color="#2166ac",lw=2,capsize=2,elinewidth=0.7); ax[1].set_ylabel("mean vulns (±SD)")
-ax[1].set_ylim(bottom=0)
-ax[1].set_title("(b) Staleness ρ=0.16",loc="left"); ax[1].tick_params(axis="x",rotation=30)
+def bucket(col):
+    xs,ys,es=[],[],[]
+    for lo,hi,lb in bk:
+        g=[r[col] for r in rows if r["age_days"] is not None and r[col] is not None and lo<=r["age_days"]<hi]
+        if g: xs.append(lb); ys.append(st.mean(g)); es.append(st.pstdev(g) if len(g)>1 else 0)
+    return xs,ys,es
+xs,ys,es=bucket("vuln_total"); lo=[min(e,y) for y,e in zip(ys,es)]
+ax[0].errorbar(xs,ys,yerr=[lo,es],fmt="o-",color="#2166ac",lw=2,capsize=2,elinewidth=.7); ax[0].set_ylim(bottom=0)
+ax[0].set_ylabel("mean total"); ax[0].set_title("(a) Total vs age (rho=0.16)", loc="left"); ax[0].tick_params(axis="x",rotation=30)
+xs2,ys2,_=bucket("vuln_critical"); xh,yh,_=bucket("vuln_high")
+ax[1].plot(xs2,ys2,"o-",label="crit",color="#67000d"); ax[1].plot(xh,yh,"s-",label="high",color="#ef3b2c")
+ax[1].set_ylim(bottom=0); ax[1].set_ylabel("mean"); ax[1].set_title("(b) Crit/high vs age", loc="left"); ax[1].tick_params(axis="x",rotation=30); ax[1].legend(fontsize=5)
+fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq2.pdf"); plt.close(fig); print("fig_rq2 ok")
 
-# (c) RQ5: pacotes x vulns
-px=[r["packages"] for r in rows if r["packages"] and r["vuln_total"] is not None]
-py=[r["vuln_total"] for r in rows if r["packages"] and r["vuln_total"] is not None]
-ax[2].scatter(px,py,s=5,alpha=0.25,color="#1a9850",edgecolors="none")
-ax[2].set_xscale("symlog"); ax[2].set_yscale("symlog")
-ax[2].set_xlim(left=0); ax[2].set_ylim(bottom=0)   # sem regiao negativa
-ax[2].set_xlabel("packages"); ax[2].set_ylabel("vulns"); ax[2].set_title("(c) Minimal safer?",loc="left")
-
-# (d) RQ3: Jaccard 4 engines SCA, por (imagem, CVE) -- justo entre esquemas de
-# nome de pacote (Clair usa pacote-fonte; Trivy/Grype, binario)
+# ----------------------------------------------------------------- RQ3 (le report.json)
 SCA=["trivy","grype","osv","clair"]; sets={s:set() for s in SCA}
 for rj in glob.glob(f"{OUT}/*/report.json"):
     try: r=json.load(open(rj))
@@ -69,49 +90,78 @@ for rj in glob.glob(f"{OUT}/*/report.json"):
         if f.get("category")=="pkg-vuln" and f.get("scanner") in sets:
             cid=f.get("id") or (f.get("cves") or [None])[0]
             if cid and str(cid).startswith("CVE"): sets[f["scanner"]].add((img,cid))
-M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]
-im=ax[3].imshow(M,cmap="YlOrRd",vmin=0,vmax=1)
-ax[3].set_xticks(range(4)); ax[3].set_yticks(range(4))
 _nm={"trivy":"Trivy","grype":"Grype","osv":"OSV","clair":"Clair"}
-ax[3].set_xticklabels([_nm[s] for s in SCA], rotation=30); ax[3].set_yticklabels([_nm[s] for s in SCA])
+fig, ax = plt.subplots(1, 4, figsize=FS)
+M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]
+im=ax[0].imshow(M,cmap="YlOrRd",vmin=0,vmax=1); ax[0].set_xticks(range(4)); ax[0].set_yticks(range(4))
+ax[0].set_xticklabels([_nm[s] for s in SCA],rotation=30); ax[0].set_yticklabels([_nm[s] for s in SCA])
 for i in range(4):
-    for j in range(4):
-        ax[3].text(j,i,f"{M[i][j]:.2f}",ha="center",va="center",fontsize=6,
-                   color="white" if M[i][j]>0.5 else "black")
-ax[3].set_title("(d) CVE agreement (Jaccard)",loc="left"); ax[3].grid(False)
+    for j in range(4): ax[0].text(j,i,f"{M[i][j]:.2f}",ha="center",va="center",fontsize=5.5,color="white" if M[i][j]>.5 else "black")
+ax[0].set_title("(a) Jaccard (CVE)", loc="left"); ax[0].grid(False)
+ax[1].bar([_nm[s] for s in SCA],[len(sets[s]) for s in SCA],color="#7b3294"); ax[1].set_yscale("log")
+ax[1].set_ylabel("image-CVE pairs"); ax[1].set_title("(b) Coverage", loc="left"); ax[1].tick_params(axis="x",rotation=30)
+allp=collections.Counter()
+for s in SCA:
+    for k in sets[s]: allp[k]+=1
+hist=collections.Counter(allp.values())
+ax[2].bar([1,2,3,4],[hist.get(i,0) for i in (1,2,3,4)],color="#238b45"); ax[2].set_yscale("log")
+ax[2].set_xlabel("# scanners agreeing"); ax[2].set_xticks([1,2,3,4]); ax[2].set_ylabel("CVE-image pairs"); ax[2].set_title("(c) Agreement", loc="left")
+uniq=[]
+for s in SCA:
+    others=set().union(*[sets[o] for o in SCA if o!=s]) if any(o!=s for o in SCA) else set()
+    uniq.append(len(sets[s]-others))
+ax[3].bar([_nm[s] for s in SCA],uniq,color="#b2182b"); ax[3].set_yscale("log")
+ax[3].set_ylabel("unique pairs"); ax[3].set_title("(d) Scanner-only", loc="left"); ax[3].tick_params(axis="x",rotation=30)
+fig.tight_layout(pad=0.4, w_pad=0.9); fig.savefig(f"{FIG}/fig_rq3.pdf"); plt.close(fig)
+print("fig_rq3 ok | sizes:", {s:len(v) for s,v in sets.items()})
 
-fig.tight_layout(pad=0.4, w_pad=0.8)
-fig.savefig(f"{FIG}/fig_panels.pdf"); plt.close(fig)
-print("fig_panels.pdf ok | SCA sizes:", {s:len(v) for s,v in sets.items()})
-
-# ---------- Figura 2 (RQ4): nao-pulaveis (schema legado) por distro ----------
-import sqlite3
-DB = os.environ.get("OSCENSUS_DB") or str(ROOT / "work/os.db")
+# ----------------------------------------------------------------- RQ4 (fila: skip + pulls)
+fig, ax = plt.subplots(1, 4, figsize=FS)
 try:
-    c = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
-    tot = collections.Counter(); skp = collections.Counter(); pulls = {}
-    for stt, tj in c.execute("SELECT status,target_json FROM jobs"):
-        try:
-            d = json.loads(tj); m = d.get("meta") or {}; rp = (m.get("repo") or "?").split("/")[-1]
-        except Exception: rp, m = "?", {}
-        tot[rp] += 1
-        if stt == "skipped": skp[rp] += 1
-        if m.get("pull_count") and rp not in pulls: pulls[rp] = m["pull_count"]
+    c=sqlite3.connect(f"file:{DB}?mode=ro",uri=True); tot=collections.Counter(); skp=collections.Counter(); pulls={}
+    for stt,tj in c.execute("SELECT status,target_json FROM jobs"):
+        try: d=json.loads(tj); m=d.get("meta") or {}; rp=short(m.get("repo"))
+        except: rp,m="?",{}
+        tot[rp]+=1
+        if stt=="skipped": skp[rp]+=1
+        if m.get("pull_count") and rp not in pulls: pulls[rp]=m["pull_count"]
     c.close()
-    reps = [r for r in tot if tot[r] >= 20]
-    unp = {r: 100*skp[r]/tot[r] for r in reps}
-    f2, a2 = plt.subplots(1, 3, figsize=(11.5, 2.15))
-    it = sorted(reps, key=lambda r: unp[r])
-    a2[0].barh(it, [unp[r] for r in it], color="#7b3294")
-    a2[0].set_xlabel("% un-pullable"); a2[0].set_title("(a) Legacy schema", loc="left"); a2[0].tick_params(axis="y", labelsize=5.5)
-    it2 = sorted([r for r in reps if pulls.get(r)], key=lambda r: pulls[r])
-    a2[1].barh(it2, [pulls[r] for r in it2], color="#1b7837"); a2[1].set_xscale("log")
-    a2[1].set_xlabel("repository pulls"); a2[1].set_title("(b) Popularity", loc="left"); a2[1].tick_params(axis="y", labelsize=5.5)
-    rc = [r for r in reps if pulls.get(r)]
-    a2[2].scatter([unp[r] for r in rc], [pulls[r] for r in rc], s=14, color="#762a83", edgecolors="none")
-    a2[2].set_yscale("log"); a2[2].set_xlabel("% un-pullable"); a2[2].set_ylabel("pulls")
-    a2[2].set_title("(c) Popular & legacy", loc="left")
-    f2.tight_layout(pad=0.4, w_pad=0.9); f2.savefig(f"{FIG}/fig_eol.pdf"); plt.close(f2)
-    print("fig_eol.pdf ok (3 panels)")
+    reps=[r for r in tot if tot[r]>=20]; unp={r:100*skp[r]/tot[r] for r in reps}
+    it=sorted(reps,key=lambda r:unp[r])
+    ax[0].barh(it,[unp[r] for r in it],color="#7b3294"); ax[0].set_xlabel("% un-pullable"); ax[0].set_title("(a) Legacy schema",loc="left"); ax[0].tick_params(axis="y",labelsize=5.5)
+    it2=sorted([r for r in reps if pulls.get(r)],key=lambda r:pulls[r])
+    ax[1].barh(it2,[pulls[r] for r in it2],color="#1b7837"); ax[1].set_xscale("log"); ax[1].set_xlabel("repo pulls"); ax[1].set_title("(b) Popularity",loc="left"); ax[1].tick_params(axis="y",labelsize=5.5)
+    its=sorted(reps,key=lambda r:skp[r])
+    ax[2].barh(its,[skp[r] for r in its],color="#54278f"); ax[2].set_xlabel("un-pullable count"); ax[2].set_title("(c) Absolute",loc="left"); ax[2].tick_params(axis="y",labelsize=5.5)
+    rc=[r for r in reps if pulls.get(r)]
+    ax[3].scatter([unp[r] for r in rc],[pulls[r] for r in rc],s=14,color="#762a83",edgecolors="none"); ax[3].set_yscale("log")
+    ax[3].set_xlabel("% un-pullable"); ax[3].set_ylabel("pulls"); ax[3].set_title("(d) Popular & legacy",loc="left")
+    fig.tight_layout(pad=0.4, w_pad=0.9); fig.savefig(f"{FIG}/fig_rq4.pdf"); plt.close(fig); print("fig_rq4 ok")
 except Exception as e:
-    print("fig_eol skip:", e)
+    print("fig_rq4 skip:", e)
+
+# ----------------------------------------------------------------- RQ5 (compacto 1x2)
+fig, ax = plt.subplots(1, 2, figsize=(6.6, 2.2))
+px=[r["packages"] for r in rows if r["packages"] and r["vuln_total"] is not None]
+py=[r["vuln_total"] for r in rows if r["packages"] and r["vuln_total"] is not None]
+ax[0].scatter(px,py,s=5,alpha=.25,color="#1a9850",edgecolors="none"); ax[0].set_xscale("symlog"); ax[0].set_yscale("symlog")
+ax[0].set_xlim(left=0); ax[0].set_ylim(bottom=0); ax[0].set_xlabel("packages"); ax[0].set_ylabel("total vulns"); ax[0].set_title("(a) Packages vs vulns", loc="left")
+vpp=sorted(distros,key=lambda d: dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0))[-11:]
+ax[1].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
+ax[1].set_xlabel("vulns / package"); ax[1].set_title("(b) Density / distro", loc="left"); ax[1].set_xlim(left=0); ax[1].tick_params(axis="y",labelsize=5.5)
+fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq5.pdf"); plt.close(fig); print("fig_rq5 ok")
+
+# ----------------------------------------------------------------- Beyond vulnerabilities
+fig, ax = plt.subplots(1, 3, figsize=(9.5, 2.2))
+def prev(col):
+    v=[r[col] for r in rows if r[col] is not None]; return 100*sum(1 for x in v if x>0)/len(v) if v else 0
+ax[0].bar(["secrets","misconfig","IOC"],[prev("secrets"),prev("misconfig"),prev("malware")],color=["#e08214","#8073ac","#b2182b"])
+ax[0].set_ylim(0,100); ax[0].set_ylabel("% of images >=1"); ax[0].set_title("(a) Prevalence (raw)", loc="left")
+def cdf(ax_,col,color,lbl):
+    v=sorted(x for r in rows if (x:=r[col]) is not None)
+    if not v: return
+    ax_.plot(v,[100*i/len(v) for i in range(len(v))],color=color); ax_.set_xscale("symlog")
+    ax_.set_xlim(left=0); ax_.set_ylim(0,100); ax_.set_xlabel(lbl); ax_.set_ylabel("% images <= x")
+cdf(ax[1],"secrets","#e08214","secret hits / image"); ax[1].set_title("(b) Secrets CDF", loc="left")
+cdf(ax[2],"misconfig","#8073ac","misconfig / image"); ax[2].set_title("(c) Misconfig CDF", loc="left")
+fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_other.pdf"); plt.close(fig); print("fig_other ok")

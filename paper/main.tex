@@ -99,14 +99,16 @@ inherited, unchanged, by every image built on it~\cite{shu2017dockerhub}, the
 security posture of these few OS bases is a property the whole ecosystem
 inherits.
 
-That inherited posture is poor and consequential. Software-supply-chain
-attacks are projected to cost USD~60~billion in
-2025~\cite{cybersecurityventures2023supplychain} and Gartner predicted that
-45\% of organisations would suffer such an attack by
-2025~\cite{gartner2021supplychain}; meanwhile popular Docker Hub images carry
-hundreds of known vulnerabilities on average, many of them years
-old~\cite{netrise2024}, against a backdrop of record CVE disclosure
-(46{,}407 CVEs in 2025, about 127 per day)~\cite{nvd2025growth}. Worse, some of
+That inherited posture is poor and consequential. Base images are the root of
+the software supply chain, so their known vulnerabilities are a supply-chain
+risk in their own right, alongside the malicious-injection attacks that dominate
+headlines (projected to cost USD~60~billion in
+2025~\cite{cybersecurityventures2023supplychain} and predicted by Gartner to hit
+45\% of organisations by 2025~\cite{gartner2021supplychain}). And the inherited
+risk is large: popular Docker Hub images carry hundreds of known vulnerabilities
+on average, many of them years old~\cite{netrise2024}, against a backdrop of
+record CVE disclosure (46{,}407 CVEs in 2025, about 127 per
+day)~\cite{nvd2025growth}. Worse, some of
 the most-pulled OS bases are no longer maintained (every official
 \texttt{centos} tag reached end-of-life in June~2024) yet remain in heavy
 use.
@@ -271,18 +273,17 @@ range of every distribution is covered early.
 The census is still running; the figures and numbers below are computed over
 the \textbf{1{,}927} images scanned so far and are regenerated as it completes.
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{fig_panels.pdf}
-\caption{Posture by distribution~(a), staleness~(b), packages vs.\
-vulnerabilities~(c), SCA-engine Jaccard~(d). Bars: $\pm$1~SD.}
-\label{fig:panels}
-\end{figure}
-
 \subsection{RQ1: Security posture by distribution}
 \label{sec:rq1}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_rq1.pdf}
+\caption{(a)~mean critical+high per distribution; (b)~severity mix;
+(c)~critical prevalence; (d)~mean total vulnerabilities.}
+\label{fig:rq1}
+\end{figure}
 Critical- and high-severity vulnerability findings vary by an order of
-magnitude across distributions (Figure~\ref{fig:panels}(a)). Debian carries the
+magnitude across distributions (Figure~\ref{fig:rq1}(a)). Debian carries the
 most (mean $\approx$344 critical+high per image, $n=270$), followed by the RHEL
 family (CentOS $\approx$206, OracleLinux $\approx$189, AmazonLinux $\approx$152,
 RockyLinux $\approx$115); Alpine sits lower ($\approx$84), and Arch, ALT, Kali,
@@ -294,7 +295,14 @@ few critical or high findings (Section~\ref{sec:rq5}).
 
 \subsection{RQ2: Staleness vs.\ vulnerability}
 \label{sec:rq2}
-Vulnerability count tends to rise with image age (Figure~\ref{fig:panels}(b)).
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_rq2.pdf}
+\caption{(a)~mean total vulnerabilities by image age ($\pm$1~SD);
+(b)~critical and high by age.}
+\label{fig:rq2}
+\end{figure}
+Vulnerability count tends to rise with image age (Figure~\ref{fig:rq2}(a)).
 Images rebuilt within the last six months carry a mean of $\approx$255 total
 vulnerability findings, climbing through $\approx$273 (one to two years) and
 $\approx$457 (two to four years) to $\approx$692 for images not rebuilt in over
@@ -305,7 +313,14 @@ bucketed means rise monotonically. This reproduces the technical-lag effect of
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
-The four package-vulnerability engines barely agree (Figure~\ref{fig:panels}).
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{fig_rq3.pdf}
+\caption{(a)~pairwise CVE Jaccard; (b)~CVEs per engine; (c)~CVEs by number of
+agreeing engines; (d)~engine-only CVEs.}
+\label{fig:rq3}
+\end{figure}
+The four package-vulnerability engines barely agree (Figure~\ref{fig:rq3}).
 We compare at the \mbox{(image, CVE)} level because the engines name packages
 differently (Clair reports source packages, Trivy and Grype binary packages), so
 a package-level key would understate agreement. Even so, the best-agreeing pair
@@ -326,7 +341,7 @@ digest-pinned OS images attempted so far fail to pull on a current Docker Engine
 with \texttt{manifest schema unsupported}: they are old images in the deprecated
 Docker image-manifest schema~1, whose support modern Docker removed. The digests
 still exist on Docker Hub, but the images are no longer installable, and the rate
-varies sharply by distribution (Figure~\ref{fig:eol}): over half of the
+varies sharply by distribution (Figure~\ref{fig:rq4}): over half of the
 \texttt{centos} and \texttt{busybox} digests and about a third of \texttt{ubuntu}
 are affected, against under 3\% for \texttt{debian}, \texttt{archlinux} and
 \texttt{rockylinux}. Second, end-of-life distributions remain in heavy use:
@@ -337,15 +352,23 @@ measured before.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{fig_eol.pdf}
-\caption{(a)~un-pullable rate by distribution; (b)~repository pulls; (c)~rate vs.\ pulls.}
-\label{fig:eol}
+\includegraphics[width=\textwidth]{fig_rq4.pdf}
+\caption{(a)~un-pullable rate by distribution; (b)~repository pulls;
+(c)~un-pullable count; (d)~rate vs.\ pulls.}
+\label{fig:rq4}
 \end{figure}
 
 \subsection{RQ5: Is a minimal image safer?}
 \label{sec:rq5}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_rq5.pdf}
+\caption{(a)~packages vs.\ total vulnerabilities; (b)~vulnerabilities per
+package by distribution.}
+\label{fig:rq5}
+\end{figure}
 The intuition that a smaller image is a safer one does not hold cleanly
-(Figure~\ref{fig:panels}(c)). The relationship between package count and
+(Figure~\ref{fig:rq5}(a)). The relationship between package count and
 vulnerability count is not monotonic: BusyBox, with a single package, carries
 only a handful of findings, but Mageia, with around 250 packages, carries about
 a dozen, while Debian carries hundreds of critical and high findings with fewer
@@ -355,7 +378,14 @@ distribution's advisory coverage and patch cadence than by image size.
 
 \subsection{Beyond vulnerabilities: secrets, misconfiguration, malware}
 \label{sec:other}
-The battery also covers four non-vulnerability axes. \emph{Misconfiguration:}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_other.pdf}
+\caption{(a)~raw detector prevalence; (b)~secrets per image; (c)~misconfigurations per image.}
+\label{fig:other}
+\end{figure}
+The battery also covers four non-vulnerability axes (Figure~\ref{fig:other}).
+\emph{Misconfiguration:}
 Dockle and Checkov flag at least one CIS-style issue in essentially every image
 (missing \texttt{HEALTHCHECK}, content-trust disabled, running as \texttt{root});
 these are structural properties, so the near-universal rate is robust.
