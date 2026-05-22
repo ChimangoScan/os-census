@@ -373,21 +373,22 @@ scanner-agreement results that single-tool studies could not.
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{@{}p{0.12\columnwidth} c p{0.21\columnwidth} p{0.26\columnwidth} p{0.28\columnwidth}@{}}
+\begin{tabular}{@{}p{0.10\columnwidth} c p{0.23\columnwidth} p{0.18\columnwidth} p{0.22\columnwidth} c@{}}
 \toprule
-\textbf{Study} & \textbf{Yr} & \textbf{Reproduced} & \textbf{Reported there} & \textbf{Our corpus (RQ)} \\
+\textbf{Study} & \textbf{Yr} & \textbf{Metric} & \textbf{Reported} & \textbf{Ours} & \textbf{RQ} \\
 \midrule
-\cite{shu2017dockerhub} & '17 & worst severity; vulns/img & $>$80\% high-sev; median 158 & crit/high near-universal; Debian $\approx$344 (RQ1) \\
-\cite{ibrahim2020toomany} & '20 & variance across base distros & varies with chosen base & crit+high spans 10$\times$ by distro (RQ1) \\
-\cite{kaur2021scientific} & '21 & cross-scanner Jaccard & Anchore/Clair 0.63; Vuls/Clair 0.80 & Trivy/Grype 0.30; OSV/Clair $\approx$0 (RQ3) \\
-\cite{zerouali2019outdated,zerouali2021techlag} & '19,'21 & age vs vulns (Debian) & 96\% affected; lag rises with age & mean $\approx$255 to 692; $\rho{=}0.16$ (RQ2) \\
-\cite{haque2022wellbegun} & '22 & minimal vs large base & not safer (more exploitable) & non-monotonic in packages (RQ5) \\
-\cite{mills2023longitudinal} & '23 & longitudinal; OS effect & vulns rise; Debian $\gg$ others & older carry more; Debian highest (RQ1,2) \\
-\cite{boles2024deciphering} & '24 & Trivy vs Grype & agree on count for 15\% of images & Trivy/Grype Jaccard 0.30 (RQ3) \\
-\cite{bufalino2025sbomproof} & '25 & scanner interop, Deb/Alp & tools largely incompatible & OSV/Clair near-disjoint (RQ3) \\
-\cite{churakova2026vex} & '26 & scanner agreement, 48 img & best pair 0.69 & Trivy/Grype 0.30 (RQ3) \\
+\cite{shu2017dockerhub} & '17 & images with high-severity vuln & $>$80\% & 97\%$^{\ast}$ & 1 \\
+\cite{zerouali2019outdated,zerouali2021techlag} & '19,'21 & vulns vs.\ image age (Debian) & rises with age & $\approx$255$\to$692; $\rho{=}0.16$ & 2 \\
+\cite{ibrahim2020toomany} & '20 & spread across base distros & varies & 10$\times$ range & 1 \\
+\cite{kaur2021scientific} & '21 & scanner-pair Jaccard & 0.59 to 0.80 & 0.30 & 3 \\
+\cite{haque2022wellbegun} & '22 & is a minimal image safer? & no & no (non-monotonic) & 5 \\
+\cite{mills2023longitudinal} & '23 & vulns vs.\ time; OS effect & rise; Debian $\gg$ & rise; Debian top & 1,2 \\
+\cite{boles2024deciphering} & '24 & Trivy/Grype agreement & 15\% of imgs & $J{=}0.30$ & 3 \\
+\cite{bufalino2025sbomproof} & '25 & cross-tool CVE overlap & near 0 & OSV/Clair $\approx$0 & 3 \\
+\cite{churakova2026vex} & '26 & best scanner-pair Jaccard & 0.69 & 0.30 & 3 \\
 \bottomrule
-\end{tabular}
+\end{tabular}\\[2pt]
+{\footnotesize $\ast$~critical or high (Shu reports high-severity). $J$: Jaccard; $\rho$: Spearman.}
 \end{table}
 
 \subsection{Threats to validity}
