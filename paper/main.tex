@@ -18,6 +18,7 @@
 \setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
 \setlength{\intextsep}{5pt plus 2pt minus 2pt}
 \setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\emergencystretch=3em  % absorve overfull de listas \texttt{} (nomes de repo)
 \newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
 \usepackage[hidelinks,colorlinks=true,allcolors=black]{hyperref}
@@ -113,7 +114,7 @@ samples~\cite{kaur2021scientific,mills2023longitudinal}. No recent work measures
 the Linux OS base images specifically, with a heterogeneous multi-scanner
 battery, as a current census. This paper fills that gap.
 
-\paragraph{Contributions.}
+\noindent We make the following contributions:
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
 \item A \textbf{recent multi-scanner census} of OS base images on Docker Hub:
 14 scanners over 5{,}606 unique \texttt{amd64} images of the 21
@@ -136,7 +137,6 @@ extended (released on acceptance).
 % ============================================================
 \section{Related Work}
 \label{sec:related}
-\paragraph{Large-scale Docker Hub and base-image measurements.}
 A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
 introduced the first large-scale study, scanning 356{,}218 images and showing
 that vulnerabilities propagate from a base image to everything built on it.
@@ -156,7 +156,6 @@ prevalence and propagation of vulnerabilities in the ecosystem; each draws on a
 single vulnerability detector, and our multi-scanner design complements them by
 also quantifying how much the measured posture depends on the chosen scanner.
 
-\paragraph{Inter-scanner divergence.}
 A second line studies how much a scan result depends on the tool used.
 \cite{imtiaz2021comparative} compared nine software-composition-analysis tools on
 the same projects and found counts spanning an order of magnitude, and
@@ -166,7 +165,10 @@ conducted on focused samples: \cite{kaur2021scientific} use four scanners over 4
 images, \cite{mills2023longitudinal} six over 380, and the recent
 \cite{churakova2026vex} evaluate seven scanner and VEX tools on 48 images,
 finding counts from 191 to 18{,}680 and a best-pair (Trivy and Grype) agreement
-of about 69\%. On the OS-package layer specifically, \cite{bufalino2025sbomproof}
+of about 69\%; closest to us in subject, \cite{boles2024deciphering} compared
+Trivy and Grype on 927 Docker Official Linux images and found the two agreeing on
+the vulnerability count for only 15\% of them. On the OS-package layer
+specifically, \cite{bufalino2025sbomproof}
 report that current scanners are largely incompatible because of
 package-identifier mismatches, and \cite{zhou2026realitycheck,rosso2026svstest}
 document high false-positive rates and silent tool failures in SBOM-based
@@ -174,7 +176,6 @@ scanning. Our work is complementary, bringing this multi-scanner lens to the
 OS-base layer at census scale, adding Clair, and relating the divergence to image
 age and distribution.
 
-\paragraph{Gap.}
 Building on this body of work, we are not aware of a recent study that measures
 the Linux OS base images of Docker Hub specifically with a heterogeneous
 multi-scanner battery as a current census, nor one that quantifies the
@@ -183,27 +184,36 @@ use. This paper addresses both.
 
 \begin{table}[!htbp]
 \centering
-\caption{Positioning against prior OS/base-image measurements.}
+\caption{Prior OS/base-image and container-scanner measurements.}
 \label{tab:related}
-\renewcommand{\arraystretch}{1.2}
-\footnotesize
-\footnotesize\setlength{\tabcolsep}{4pt}
-\begin{tabular}{l c r c c c c}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l c r c c l c c}
 \toprule
-\textbf{Work} & \textbf{Year} & \textbf{Images} & \textbf{Scanners} & \textbf{Dims.} & \textbf{OS-focused} & \textbf{Cross-scanner} \\
+\textbf{Study} & \textbf{Year} & \textbf{Images} & \textbf{Scan.} & \textbf{Dims} & \textbf{Selection} & \textbf{OS} & \textbf{X-sc.} \\
 \midrule
-\cite{shu2017dockerhub}        & 2017 & 356{,}218 & 1 & V & \xmark & \xmark \\
-\cite{zerouali2019outdated} & 2019 & 7{,}380 & 1 & V & \cmark{}\,(Debian) & \xmark \\
-\cite{kaur2021scientific}     & 2021 & 44 & 4 & V & \xmark & \cmark \\
-\cite{mills2023longitudinal} & 2023 & 380 & 6 & V & \xmark & \cmark \\
-\cite{haque2022wellbegun} & 2022 & 261 & 1 & V & \cmark & \xmark \\
-\cite{shi2025drdocker} & 2025 & 33{,}952 & 1 & V,S,C,M & \xmark & \xmark \\
-\cite{churakova2026vex} & 2026 & 48 & 7 & V & \xmark & \cmark \\
+\cite{shu2017dockerhub}      & 2017 & 356{,}218 & 1 & V & crawl & \xmark & \xmark \\
+\cite{zerouali2019outdated}  & 2019 & 7{,}380   & 1 & V & Debian & \cmark & \xmark \\
+\cite{liu2020understanding}  & 2020 & 2.2\,M    & 1 & V & crawl & \xmark & \xmark \\
+\cite{ibrahim2020toomany}    & 2020 & 936       & 1 & V & per-sys & \cmark & \xmark \\
+\cite{kaur2021scientific}    & 2021 & 44        & 4 & V & curated & \xmark & \cmark \\
+\cite{zerouali2021techlag}   & 2021 & 140{,}498 & 1 & V & Debian & \cmark & \xmark \\
+\cite{haque2022wellbegun}    & 2022 & 261       & 1 & V & official & \cmark & \xmark \\
+\cite{dahlmanns2023secrets}  & 2023 & 337{,}171 & 1 & S & crawl & \xmark & \xmark \\
+\cite{malhotra2023vulnerability} & 2023 & ---   & 4 & V & off./ver. & \xmark & \cmark \\
+\cite{mills2023longitudinal} & 2023 & 380       & 6 & V & curated & \xmark & \cmark \\
+\cite{boles2024deciphering}  & 2024 & 927       & 2 & V & official & \cmark & \cmark \\
+\cite{kawaguchi2024sbom}     & 2024 & 3{,}500   & 2 & B & popular & \xmark & \cmark \\
+\cite{bufalino2025sbomproof} & 2025 & 20        & 7 & V & Deb/Alp & \cmark & \cmark \\
+\cite{shi2025drdocker}       & 2025 & 33{,}952  & 1 & V,S,C,M & pull-rank & \xmark & \xmark \\
+\cite{churakova2026vex}      & 2026 & 48        & 7 & V & curated & \xmark & \cmark \\
 \midrule
-\textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \cmark & \cmark \\
+\textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \textbf{category} & \cmark & \cmark \\
 \bottomrule
-\end{tabular}\\[2pt]
-{\footnotesize Dims.: V~vuln, B~SBOM, S~secrets, C~config, M~malware.}
+\end{tabular}}\\[3pt]
+{\footnotesize Dims: V~vuln, B~SBOM, S~secrets, C~config, M~malware. X-sc.: cross-scanner.}
 \end{table}
 
 % ============================================================
@@ -211,7 +221,6 @@ use. This paper addresses both.
 \label{sec:method}
 % Esta secao e NOSSA, escrita original.
 
-\paragraph{Corpus.}
 We take as our corpus the operating-system base images that Docker Hub itself
 lists under its \emph{Operating systems} category: 22 repositories (e.g.\
 \texttt{alpine}, \texttt{ubuntu}, \texttt{debian}, \texttt{centos},
@@ -229,7 +238,6 @@ tags point to a byte-identical image (e.g.\ \texttt{24.04}, \texttt{noble} and
 \texttt{latest}), we deduplicate by \texttt{amd64} content digest, leaving
 \textbf{5{,}606} unique images, the unit of measurement throughout.
 
-\paragraph{Scanner battery.}
 An OS base image is a static root filesystem with no application source code
 and no running service, so we select the static-analysis axes that apply to
 such an artifact and run \emph{14} open-source
@@ -243,7 +251,6 @@ network axes, which require application source or a running service that a base
 image does not provide; we make this selection explicit so the battery matches
 the artifact under study.
 
-\paragraph{Harness and scan order.}
 Each image is pulled \emph{pinned by its \texttt{amd64} digest}, exported once
 to a local tar archive, and analysed by all 14 scanners reading that archive;
 the image is removed afterwards to bound disk. Every scanner runs in its own
@@ -312,17 +319,26 @@ layer specifically.
 
 \subsection{RQ4: End-of-life and un-pullable images}
 \label{sec:rq4}
-Two longevity hazards surface. First, about \textbf{20\%} of the digest-pinned
-OS images fail to pull on a current Docker Engine with \texttt{manifest schema
-unsupported}: they are old images in the deprecated Docker image-manifest
-schema~1, whose support modern Docker removed. The digests still exist on
-Docker Hub, but the images are no longer installable, a hazard concentrated in
-the oldest tags (highest for \texttt{ubuntu}, near zero for \texttt{archlinux}
-and \texttt{almalinux}). Second, end-of-life distributions remain in heavy use:
+Two longevity hazards surface. First, about \textbf{one in five} of the
+digest-pinned OS images attempted so far fail to pull on a current Docker Engine
+with \texttt{manifest schema unsupported}: they are old images in the deprecated
+Docker image-manifest schema~1, whose support modern Docker removed. The digests
+still exist on Docker Hub, but the images are no longer installable, and the rate
+varies sharply by distribution (Figure~\ref{fig:eol}): over half of the
+\texttt{centos} and \texttt{busybox} digests and about a third of \texttt{ubuntu}
+are affected, against under 3\% for \texttt{debian}, \texttt{archlinux} and
+\texttt{rockylinux}. Second, end-of-life distributions remain in heavy use:
 every \texttt{centos} tag has been unmaintained since June~2024, yet the
 repository still records over a billion pulls. To our knowledge neither the
 prevalence of legacy-schema OS images nor the popularity of EOL bases has been
 measured before.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.68\columnwidth]{fig_eol.pdf}
+\caption{Un-pullable digests (legacy schema) by distribution.}
+\label{fig:eol}
+\end{figure}
 
 \subsection{RQ5: Is a minimal image safer?}
 \label{sec:rq5}

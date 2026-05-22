@@ -77,3 +77,27 @@ ax[3].set_title("(d) SCA Jaccard",loc="left"); ax[3].grid(False)
 fig.tight_layout(pad=0.4, w_pad=0.8)
 fig.savefig(f"{FIG}/fig_panels.pdf"); plt.close(fig)
 print("fig_panels.pdf ok | SCA sizes:", {s:len(v) for s,v in sets.items()})
+
+# ---------- Figura 2 (RQ4): nao-pulaveis (schema legado) por distro ----------
+import sqlite3
+DB = os.environ.get("OSCENSUS_DB") or str(ROOT / "work/os.db")
+try:
+    c = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+    tot = collections.Counter(); skp = collections.Counter()
+    for stt, tj in c.execute("SELECT status,target_json FROM jobs"):
+        try:
+            d = json.loads(tj); rp = ((d.get("meta") or {}).get("repo") or d.get("repo") or "?").split("/")[-1]
+        except Exception: rp = "?"
+        tot[rp] += 1
+        if stt == "skipped": skp[rp] += 1
+    c.close()
+    items = sorted(((r, 100*skp[r]/tot[r]) for r in tot if tot[r] >= 20), key=lambda x: x[1])
+    if items:
+        f2, a2 = plt.subplots(figsize=(4.2, 2.5))
+        a2.barh([r for r, _ in items], [v for _, v in items], color="#7b3294")
+        a2.set_xlabel("% un-pullable (legacy manifest schema)")
+        a2.tick_params(axis="y", labelsize=6)
+        f2.tight_layout(); f2.savefig(f"{FIG}/fig_eol.pdf"); plt.close(f2)
+        print("fig_eol.pdf ok")
+except Exception as e:
+    print("fig_eol skip:", e)
