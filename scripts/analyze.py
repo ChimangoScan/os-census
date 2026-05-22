@@ -29,7 +29,8 @@ for rj in glob.glob(str(OUT / "*/report.json")):
     for f in r.get("findings", []):
         if f.get("category") == "pkg-vuln" and f.get("scanner") in SCA:
             cid = f.get("id") or (f.get("cves") or [None])[0]
-            if cid: sca_sets[f["scanner"]].add((img, cid, f.get("package")))
+            if cid and str(cid).startswith("CVE"):
+                sca_sets[f["scanner"]].add((img, cid))   # CVE-level: justo entre esquemas de nome de pacote
     rows.append({
         "image": img, "repo": m.get("repo", "?"), "age_days": m.get("age_days"),
         "pull_count": m.get("pull_count"), "size_mb": round((m.get("size") or 0)/1e6, 1),

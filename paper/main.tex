@@ -71,7 +71,7 @@ distributions, with Debian and the RHEL family carrying the most critical and
 high findings and minimal or rolling-release distributions the fewest;
 (ii)~staler images carry more vulnerabilities (Spearman $\rho=0.16$, $p<0.001$;
 bucketed means rising from $\approx$255 to $\approx$692); (iii)~the four
-package-vulnerability engines barely agree (pairwise Jaccard $\le 0.30$), with
+package-vulnerability engines barely agree (pairwise Jaccard $\le 0.35$), with
 OSV-Scanner and Clair nearly disjoint from the rest; and (iv)~about one in five
 historically-published OS images can no longer be pulled by a modern Docker
 because they use a legacy manifest schema. We release the pipeline and
@@ -314,16 +314,18 @@ across 21 distributions at once.
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
 The four package-vulnerability engines barely agree (Figure~\ref{fig:panels}).
-Over (image, CVE, package) triples the best-agreeing pair is Trivy and Grype, at
-a Jaccard of \textbf{0.30}; every other pair is below 0.05, and OSV-Scanner and
-Clair are essentially disjoint from the rest (OSV$\cap$Clair $=0$). The engines
-differ in scope: Grype and Trivy report the most triples (353k and 227k),
-OSV-Scanner targets language-ecosystem advisories (96k), and Clair maps only
-specific distributions to its feeds (43k, and zero on Rocky and AlmaLinux,
-which it does not map to the RHEL feeds). The reported security posture of an
-OS image is thus, to a large degree, a property of the chosen scanner, echoing
-\cite{churakova2026vex} at far larger scale and on the OS
-layer specifically.
+We compare at the \mbox{(image, CVE)} level because the engines name packages
+differently (Clair reports source packages, Trivy and Grype binary packages), so
+a package-level key would understate agreement. Even so, the best-agreeing pair
+is Trivy and Grype, at a Jaccard of just \textbf{0.35}; every other pair is below
+0.05, and OSV-Scanner and Clair are near-disjoint from the rest
+(OSV$\cap$Clair $=0$). The engines differ sharply in scope: Grype and Trivy
+report by far the most image-CVE pairs (196k and 148k), OSV-Scanner targets
+language-ecosystem advisories (9k) and Clair maps only specific distributions to
+its feeds (8k, and zero on Rocky and AlmaLinux, which it does not map to the RHEL
+feeds). The reported security posture of an OS image is thus, to a large degree,
+a property of the chosen scanner, echoing \cite{churakova2026vex} at far larger
+scale and on the OS layer specifically.
 
 \subsection{RQ4: End-of-life and un-pullable images}
 \label{sec:rq4}
@@ -359,6 +361,24 @@ packages than Mageia. This refines \cite{haque2022wellbegun}:
 on our multi-scanner data the vulnerability count is governed more by a
 distribution's advisory coverage and patch cadence than by image size.
 
+\subsection{Beyond vulnerabilities: secrets, misconfiguration, malware}
+\label{sec:other}
+The battery also covers four non-vulnerability axes. \emph{Misconfiguration:}
+Dockle and Checkov flag at least one CIS-style issue in essentially every image
+(missing \texttt{HEALTHCHECK}, content-trust disabled, running as \texttt{root});
+these are structural properties, so the near-universal rate is robust.
+\emph{Secrets:} TruffleHog and Gitleaks raise at least one detection in
+\textbf{72\%} of images, but these are raw detector hits: consistent with
+\cite{dahlmanns2023secrets}, who validate secrets in only 8.5\% of images, and
+with Dr.\ Docker~\cite{shi2025drdocker}, which filters 99.3\% of its raw hits as
+invalid, the validated rate is far lower, and active validation is future work.
+\emph{Malware/IOC:} ClamAV and YARA-Hunter raise IOC matches on many images, but
+manual inspection shows these are dominated by signatures matching benign system
+binaries; we treat them as triage candidates rather than confirmed malware
+(Dr.\ Docker confirmed only 24 malicious images in 33{,}952). These axes are
+secondary to our vulnerability focus, but they show the same lesson as RQ3: raw
+single-tool counts overstate, and must be read with their false-positive rate.
+
 \subsection{Reproducing prior analyses}
 \label{sec:repro}
 Our four questions reproduce, on the OS-base subset specifically, concrete
@@ -383,7 +403,8 @@ scanner-agreement results that single-tool studies could not.
 \cite{haque2022wellbegun} & is a minimal image safer? & no & no (non-monotonic) \\
 \cite{dahlmanns2023secrets} & images carrying secrets & 8.5\% (valid.) & 72\% (raw) \\
 \cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & rise; Debian $\gg$ & rise; Debian top \\
-\cite{boles2024deciphering} & scanner divergence on OS images & agree 15\% & Jaccard 0.30 \\
+\cite{boles2024deciphering} & scanner divergence on OS images & agree 15\% & Jaccard 0.35 \\
+\cite{shi2025drdocker} & vuln prevalence; OS effect & 93.7\%; OS-dependent & 97\%; 10$\times$ by distro \\
 \bottomrule
 \end{tabular*}\\[2pt]
 {\footnotesize $\ast$~critical or high (Shu reports high-severity); $\rho$: Spearman.}

@@ -58,7 +58,8 @@ ax[2].set_xscale("symlog"); ax[2].set_yscale("symlog")
 ax[2].set_xlim(left=0); ax[2].set_ylim(bottom=0)   # sem regiao negativa
 ax[2].set_xlabel("packages"); ax[2].set_ylabel("vulns"); ax[2].set_title("(c) Minimal safer?",loc="left")
 
-# (d) RQ3: Jaccard 4 engines SCA
+# (d) RQ3: Jaccard 4 engines SCA, por (imagem, CVE) -- justo entre esquemas de
+# nome de pacote (Clair usa pacote-fonte; Trivy/Grype, binario)
 SCA=["trivy","grype","osv","clair"]; sets={s:set() for s in SCA}
 for rj in glob.glob(f"{OUT}/*/report.json"):
     try: r=json.load(open(rj))
@@ -67,7 +68,7 @@ for rj in glob.glob(f"{OUT}/*/report.json"):
     for f in r.get("findings",[]):
         if f.get("category")=="pkg-vuln" and f.get("scanner") in sets:
             cid=f.get("id") or (f.get("cves") or [None])[0]
-            if cid: sets[f["scanner"]].add((img,cid,f.get("package")))
+            if cid and str(cid).startswith("CVE"): sets[f["scanner"]].add((img,cid))
 M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]
 im=ax[3].imshow(M,cmap="YlOrRd",vmin=0,vmax=1)
 ax[3].set_xticks(range(4)); ax[3].set_yticks(range(4))
@@ -77,7 +78,7 @@ for i in range(4):
     for j in range(4):
         ax[3].text(j,i,f"{M[i][j]:.2f}",ha="center",va="center",fontsize=6,
                    color="white" if M[i][j]>0.5 else "black")
-ax[3].set_title("(d) SCA Jaccard",loc="left"); ax[3].grid(False)
+ax[3].set_title("(d) CVE agreement (Jaccard)",loc="left"); ax[3].grid(False)
 
 fig.tight_layout(pad=0.4, w_pad=0.8)
 fig.savefig(f"{FIG}/fig_panels.pdf"); plt.close(fig)
