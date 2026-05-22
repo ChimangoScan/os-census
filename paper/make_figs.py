@@ -63,8 +63,8 @@ ax[3].barh(tv, [dmean(d, lambda r:r["vuln_total"]) for d in tv], color="#08519c"
 ax[3].set_xlabel("mean total vulns"); ax[3].set_title("(d) Total / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y", labelsize=5.5)
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq1.pdf"); plt.close(fig); print("fig_rq1 ok")
 
-# ----------------------------------------------------------------- RQ2 (compacto 1x2)
-fig, ax = plt.subplots(1, 2, figsize=(6.6, 2.2))
+# ----------------------------------------------------------------- RQ2 (1x4)
+fig, ax = plt.subplots(1, 4, figsize=FS)
 bk=[(0,180,"0-6m"),(180,365,"6-12m"),(365,730,"1-2y"),(730,1460,"2-4y"),(1460,1e9,"4y+")]
 def bucket(col):
     xs,ys,es=[],[],[]
@@ -78,6 +78,16 @@ ax[0].set_ylabel("mean total"); ax[0].set_title("(a) Total vs age (rho=0.16)", l
 xs2,ys2,_=bucket("vuln_critical"); xh,yh,_=bucket("vuln_high")
 ax[1].plot(xs2,ys2,"o-",label="crit",color="#67000d"); ax[1].plot(xh,yh,"s-",label="high",color="#ef3b2c")
 ax[1].set_ylim(bottom=0); ax[1].set_ylabel("mean"); ax[1].set_title("(b) Crit/high vs age", loc="left"); ax[1].tick_params(axis="x",rotation=30); ax[1].legend(fontsize=5)
+ag=[r["age_days"]/365 for r in rows if r["age_days"] is not None and r["vuln_total"] is not None]
+vt=[r["vuln_total"] for r in rows if r["age_days"] is not None and r["vuln_total"] is not None]
+ax[2].scatter(ag,vt,s=5,alpha=.2,color="#2166ac",edgecolors="none"); ax[2].set_ylim(bottom=0); ax[2].set_xlim(left=0)
+ax[2].set_xlabel("age (years)"); ax[2].set_ylabel("total"); ax[2].set_title("(c) Per-image", loc="left")
+pcb=[]
+for lo_,hi_,lb in bk:
+    g=[r for r in rows if r["age_days"] is not None and lo_<=r["age_days"]<hi_]
+    if g: pcb.append((lb,100*sum(1 for r in g if (r["vuln_critical"] or 0)>0)/len(g)))
+ax[3].plot([a for a,_ in pcb],[b for _,b in pcb],"o-",color="#d94801"); ax[3].set_ylim(0,100)
+ax[3].set_ylabel("% with >=1 crit"); ax[3].set_title("(d) Critical vs age", loc="left"); ax[3].tick_params(axis="x",rotation=30)
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq2.pdf"); plt.close(fig); print("fig_rq2 ok")
 
 # ----------------------------------------------------------------- RQ3 (le report.json)
@@ -140,31 +150,20 @@ try:
 except Exception as e:
     print("fig_rq4 skip:", e)
 
-# ----------------------------------------------------------------- RQ5 (compacto 1x2)
-fig, ax = plt.subplots(1, 2, figsize=(6.6, 2.2))
+# ----------------------------------------------------------------- RQ5 (1x4)
+fig, ax = plt.subplots(1, 4, figsize=FS)
 px=[r["packages"] for r in rows if r["packages"] and r["vuln_total"] is not None]
 py=[r["vuln_total"] for r in rows if r["packages"] and r["vuln_total"] is not None]
 ax[0].scatter(px,py,s=5,alpha=.25,color="#1a9850",edgecolors="none"); ax[0].set_xscale("symlog"); ax[0].set_yscale("symlog")
 ax[0].set_xlim(left=0); ax[0].set_ylim(bottom=0); ax[0].set_xlabel("packages"); ax[0].set_ylabel("total vulns"); ax[0].set_title("(a) Packages vs vulns", loc="left")
+pc=[r["packages"] for r in rows if r["packages"] and r["vuln_critical"] is not None]
+yc=[(r["vuln_critical"] or 0)+(r["vuln_high"] or 0) for r in rows if r["packages"] and r["vuln_critical"] is not None]
+ax[1].scatter(pc,yc,s=5,alpha=.25,color="#b2182b",edgecolors="none"); ax[1].set_xscale("symlog"); ax[1].set_yscale("symlog")
+ax[1].set_xlim(left=0); ax[1].set_ylim(bottom=0); ax[1].set_xlabel("packages"); ax[1].set_ylabel("crit+high"); ax[1].set_title("(b) Packages vs crit+high", loc="left")
 vpp=sorted(distros,key=lambda d: dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0))[-11:]
-ax[1].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
-ax[1].set_xlabel("vulns / package"); ax[1].set_title("(b) Density / distro", loc="left"); ax[1].set_xlim(left=0); ax[1].tick_params(axis="y",labelsize=5.5)
+ax[2].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
+ax[2].set_xlabel("vulns / package"); ax[2].set_title("(c) Density / distro", loc="left"); ax[2].set_xlim(left=0); ax[2].tick_params(axis="y",labelsize=5.5)
+pk=sorted(distros,key=lambda d: dmean(d, lambda r:r["packages"]))[-11:]
+ax[3].barh(pk,[dmean(d, lambda r:r["packages"]) for d in pk],color="#238b45")
+ax[3].set_xlabel("mean packages"); ax[3].set_title("(d) Packages / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y",labelsize=5.5)
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq5.pdf"); plt.close(fig); print("fig_rq5 ok")
-
-# ----------------------------------------------------------------- Beyond vulnerabilities
-fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.3))
-dims=[("secrets","#e08214"),("misconfig","#8073ac"),("malware","#b2182b")]
-labs=["secrets","misconfig","IOC"]
-def prev(col):
-    v=[r[col] for r in rows if r[col] is not None]; return 100*sum(1 for x in v if x>0)/len(v) if v else 0
-ax[0].bar(labs,[prev(c) for c,_ in dims],color=[c for _,c in dims])
-ax[0].set_ylim(0,112); ax[0].set_ylabel("% of images with >=1"); ax[0].set_title("(a) Raw detector prevalence", loc="left")
-for i,(c,_) in enumerate(dims):
-    ax[0].text(i, prev(c)+2, f"{prev(c):.0f}%", ha="center", fontsize=6)
-# (b) boxplot de hits por imagem (mediana + dispersao + cauda), log
-data=[[r[c] for r in rows if r[c] is not None] for c,_ in dims]
-bp=ax[1].boxplot(data, tick_labels=labs, showfliers=False, patch_artist=True, widths=0.6, medianprops=dict(color="black"))
-for patch,(_,col) in zip(bp["boxes"],dims): patch.set_facecolor(col); patch.set_alpha(.6)
-ax[1].set_yscale("symlog"); ax[1].set_ylim(bottom=0); ax[1].set_ylabel("hits / image")
-ax[1].set_title("(b) Detections per image", loc="left")
-fig.tight_layout(pad=0.4, w_pad=0.9); fig.savefig(f"{FIG}/fig_other.pdf"); plt.close(fig); print("fig_other ok")

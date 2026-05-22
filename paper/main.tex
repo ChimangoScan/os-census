@@ -250,8 +250,6 @@ range of every distribution is covered early.
 % ============================================================
 \section{Results}
 \label{sec:results}
-The census is still running; the figures and numbers below are computed over
-the \textbf{1{,}927} images scanned so far and are regenerated as it completes.
 
 \subsection{RQ1: Security posture by distribution}
 \label{sec:rq1}
@@ -277,9 +275,9 @@ few critical or high findings (Section~\ref{sec:rq5}).
 \label{sec:rq2}
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.62\textwidth]{fig_rq2.pdf}
-\caption{(a)~mean total vulnerabilities by image age ($\pm$1~SD);
-(b)~critical and high by age.}
+\includegraphics[width=\textwidth]{fig_rq2.pdf}
+\caption{(a)~mean total by age ($\pm$1~SD); (b)~critical and high by age;
+(c)~per-image age vs.\ total; (d)~critical prevalence by age.}
 \label{fig:rq2}
 \end{figure}
 Vulnerability count tends to rise with image age (Figure~\ref{fig:rq2}(a)).
@@ -316,7 +314,7 @@ a property of the chosen scanner.
 \subsection{RQ4: End-of-life and un-pullable images}
 \label{sec:rq4}
 Two longevity hazards surface. First, about \textbf{one in five} of the
-digest-pinned OS images attempted so far fail to pull on a current Docker Engine
+digest-pinned OS images fail to pull on a current Docker Engine
 with \texttt{manifest schema unsupported}: they are old images in the deprecated
 Docker image-manifest schema~1, whose support modern Docker removed. The digests
 still exist on Docker Hub, but the images are no longer installable, and the rate
@@ -341,9 +339,9 @@ measured before.
 \label{sec:rq5}
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.62\textwidth]{fig_rq5.pdf}
-\caption{(a)~packages vs.\ total vulnerabilities; (b)~vulnerabilities per
-package by distribution.}
+\includegraphics[width=\textwidth]{fig_rq5.pdf}
+\caption{(a)~packages vs.\ total; (b)~packages vs.\ critical+high;
+(c)~vulnerabilities per package by distribution; (d)~packages per distribution.}
 \label{fig:rq5}
 \end{figure}
 The intuition that a smaller image is a safer one does not hold cleanly
@@ -357,14 +355,7 @@ distribution's advisory coverage and patch cadence than by image size.
 
 \subsection{Beyond vulnerabilities: secrets, misconfiguration, malware}
 \label{sec:other}
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.72\textwidth]{fig_other.pdf}
-\caption{(a)~raw detector prevalence (\% of images with $\ge$1);
-(b)~detections per image (boxplot, log).}
-\label{fig:other}
-\end{figure}
-The battery also covers four non-vulnerability axes (Figure~\ref{fig:other}).
+The battery also covers four non-vulnerability axes.
 \emph{Misconfiguration:}
 Dockle and Checkov flag at least one CIS-style issue in essentially every image
 (missing \texttt{HEALTHCHECK}, content-trust disabled, running as \texttt{root});
@@ -416,8 +407,8 @@ $\ast$~critical or high (Shu reports high-severity); $\rho$: Spearman.}
 % ============================================================
 \section{Limitations and conclusion}
 \label{sec:conclusion}
-\textbf{Limitations.} The census is still running, so the numbers reflect the
-1{,}927 images processed to date and small repositories carry wide uncertainty.
+\textbf{Limitations.} Small repositories carry wide within-distribution
+variance, so per-distribution means are tendencies, not tight estimates.
 We report raw scanner output without adjudicating false positives or negatives;
 the divergence of RQ3 implies no engine is ground truth, and severity rests on
 CVSS scores that can overstate risk without VEX or reachability
