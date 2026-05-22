@@ -141,10 +141,8 @@ pipeline and the first OS-base-focused multi-scanner dataset.
 \cite{zerouali2021techlag} & 140{,}498 & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
 \cite{haque2022wellbegun} & 261       & 1 & V & Hub, official & \cmark & \xmark \\
 \cite{dahlmanns2023secrets} & 337{,}171 & 1 & S & Hub crawl & \xmark & \xmark \\
-\cite{malhotra2023vulnerability} & n/r   & 4 & V & Hub off./ver. & \xmark & \cmark \\
 \cite{mills2023longitudinal} & 380       & 6 & V & Hub categories & \xmark & \cmark \\
 \cite{boles2024deciphering} & 927       & 2 & V & Hub official & \cmark & \cmark \\
-\cite{kawaguchi2024sbom} & 3{,}514   & 2 & B & Hub popular & \xmark & \cmark \\
 \cite{bufalino2025sbomproof} & 20$^{\dagger}$ & 7 & V & Hub Deb/Alp & \cmark & \cmark \\
 \cite{shi2025drdocker} & 33{,}952$^{\ast}$ & 1 & V,S,C,M & Hub pull-rank & \xmark & \xmark \\
 \cite{churakova2026vex} & 48        & 7 & V & Hub curated & \xmark & \cmark \\
@@ -179,22 +177,17 @@ prevalence and propagation of vulnerabilities in the ecosystem; each draws on a
 single vulnerability detector, and our multi-scanner design complements them by
 also quantifying how much the measured posture depends on the chosen scanner.
 
-\noindent\textbf{Inter-scanner divergence.} A second line studies how much a scan result depends on the tool used.
-\cite{imtiaz2021comparative} compared nine software-composition-analysis tools on
-the same projects and found counts spanning an order of magnitude, and
-\cite{javed2021evaluation,javed2021quality} report comparable variation among
-container scanners. For containers, careful side-by-side comparisons have been
-conducted on focused samples: \cite{kaur2021scientific} use four scanners over 44
-images, \cite{mills2023longitudinal} six over 380, and the recent
-\cite{churakova2026vex} evaluate seven scanner and VEX tools on 48 images,
-finding counts from 191 to 18{,}680 and a best-pair (Trivy and Grype) agreement
-of about 69\%; closest to us in subject, \cite{boles2024deciphering} compared
-Trivy and Grype on 927 Docker Official Linux images and found the two agreeing on
-the vulnerability count for only 15\% of them. On the OS-package layer
-specifically, \cite{bufalino2025sbomproof}
-report that current scanners are largely incompatible because of
-package-identifier mismatches, and \cite{zhou2026realitycheck,rosso2026svstest}
-document high false-positive rates and silent tool failures in SBOM-based
+\noindent\textbf{Inter-scanner divergence.} A second line studies how much a
+scan result depends on the tool used, on focused samples:
+\cite{kaur2021scientific} use four scanners over 44 images,
+\cite{mills2023longitudinal} six over 380, and the recent
+\cite{churakova2026vex} seven over 48 images, finding counts from 191 to
+18{,}680 and a best-pair (Trivy and Grype) agreement of about 69\%; closest to
+us, \cite{boles2024deciphering} compared Trivy and Grype on 927 Docker Official
+Linux images and found them agreeing on the count for only 15\%. On the
+OS-package layer, \cite{bufalino2025sbomproof} report that scanners are largely
+incompatible owing to package-identifier mismatches, and
+\cite{zhou2026realitycheck} document high false-positive rates in SBOM-based
 scanning. Our work is complementary, bringing this multi-scanner lens to the
 OS-base layer at census scale and relating the divergence to image age and
 distribution.
