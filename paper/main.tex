@@ -60,25 +60,15 @@ Census of Linux Operating-System Images on Docker Hub}
 
 \begin{abstract}
 % PROVISORIO: fechar com numeros finais do censo
-Every container starts from an operating-system (OS) base image, yet the
-security posture of these foundational images is usually measured with a
-single scanner and on samples that age quickly. We present a recent,
-multi-scanner census of the OS base images on Docker Hub: the
-\textbf{5{,}606} unique \texttt{amd64} images across the \textbf{21}
-repositories of Docker Hub's \emph{Operating systems} category, scanned with
-\textbf{14} independent open-source scanners spanning vulnerabilities, SBOM,
-misconfiguration, secrets and malware. Over the images processed to date we
-find that (i)~vulnerability posture varies by an order of magnitude across
-distributions, with Debian and the RHEL family carrying the most critical and
-high findings and minimal or rolling-release distributions the fewest;
-(ii)~staler images carry more vulnerabilities (Spearman $\rho=0.16$, $p<0.001$;
-bucketed means rising from $\approx$255 to $\approx$692); (iii)~the four
-package-vulnerability engines barely agree (pairwise Jaccard $\le 0.35$), with
-OSV-Scanner and Clair nearly disjoint from the rest; and (iv)~about one in five
-historically-published OS images can no longer be pulled by a modern Docker
-because they use a legacy manifest schema. We release the pipeline and
-the consolidated multi-scanner dataset, to our knowledge the first
-OS-base-focused one, on acceptance.
+Every container starts from an operating-system (OS) base image, yet these are
+usually measured with a single scanner. We present a recent multi-scanner
+census of Docker Hub's Linux OS base images: \textbf{5{,}606} unique
+\texttt{amd64} images across \textbf{21} repositories, scanned with \textbf{14}
+open-source tools. Vulnerability posture varies by an order of magnitude across
+distributions and grows with image age; the four package-vulnerability engines
+barely agree (Jaccard $\le0.35$); and about one in five historically-published
+images can no longer be pulled by a modern Docker (legacy manifest schema). We
+release the pipeline and dataset on acceptance.
 \end{abstract}
 
 % ============================================================
@@ -135,7 +125,7 @@ pipeline and the first OS-base-focused multi-scanner dataset.
 % ============================================================
 \section{Related Work}
 \label{sec:related}
-A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
+\noindent\textit{Large-scale measurements.} A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
 introduced the first large-scale study, scanning 356{,}218 images and showing
 that vulnerabilities propagate from a base image to everything built on it.
 \cite{liu2020understanding} extended the scale to 2.2~million images;
@@ -154,7 +144,7 @@ prevalence and propagation of vulnerabilities in the ecosystem; each draws on a
 single vulnerability detector, and our multi-scanner design complements them by
 also quantifying how much the measured posture depends on the chosen scanner.
 
-A second line studies how much a scan result depends on the tool used.
+\noindent\textit{Inter-scanner divergence.} A second line studies how much a scan result depends on the tool used.
 \cite{imtiaz2021comparative} compared nine software-composition-analysis tools on
 the same projects and found counts spanning an order of magnitude, and
 \cite{javed2021evaluation,javed2021quality} report comparable variation among
@@ -174,7 +164,7 @@ scanning. Our work is complementary, bringing this multi-scanner lens to the
 OS-base layer at census scale and relating the divergence to image age and
 distribution.
 
-Building on this body of work, we are not aware of a recent study that measures
+\noindent\textit{Gap.} Building on this body of work, we are not aware of a recent study that measures
 the Linux OS base images of Docker Hub specifically with a heterogeneous
 multi-scanner battery as a current census, nor one that quantifies the
 prevalence and popularity of \emph{end-of-life} OS images that remain in heavy
@@ -221,7 +211,7 @@ $\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 \label{sec:method}
 % Esta secao e NOSSA, escrita original.
 
-We take as our corpus the operating-system base images that Docker Hub itself
+\noindent\textit{Corpus.} We take as our corpus the operating-system base images that Docker Hub itself
 lists under its \emph{Operating systems} category: 22 repositories (e.g.\
 \texttt{alpine}, \texttt{ubuntu}, \texttt{debian}, \texttt{centos},
 \texttt{busybox}, \texttt{amazonlinux}, \texttt{fedora}, \texttt{oraclelinux},
@@ -235,7 +225,7 @@ enumerated \emph{all} tags of these repositories,
 \texttt{amd64} content digest, leaving \textbf{5{,}606} unique images, the unit
 of measurement throughout.
 
-An OS base image is a static root filesystem with no application source code
+\noindent\textit{Scanner battery.} An OS base image is a static root filesystem with no application source code
 and no running service, so we select the static-analysis axes that apply to
 such an artifact and run \emph{14} open-source
 scanners.\footnote{Each scanner runs from a version-pinned container image; the
@@ -246,7 +236,7 @@ TruffleHog, Gitleaks, detect-secrets and Whispers. \emph{Malware/IOC}:
 ClamAV and YARA\-Hunter. We exclude the SAST, dynamic (DAST) and network axes,
 which need application source or a running service a base image lacks.
 
-Each image is pulled \emph{pinned by its \texttt{amd64} digest}, exported once
+\noindent\textit{Harness and scan order.} Each image is pulled \emph{pinned by its \texttt{amd64} digest}, exported once
 to a local tar archive, and analysed by all 14 scanners reading that archive;
 the image is removed afterwards to bound disk. Every scanner runs in its own
 Docker container and a per-scanner adapter normalises the raw output to a
