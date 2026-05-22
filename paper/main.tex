@@ -211,19 +211,15 @@ $\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 \label{sec:method}
 % Esta secao e NOSSA, escrita original.
 
-\noindent\textit{Corpus.} We take as our corpus the operating-system base images that Docker Hub itself
-lists under its \emph{Operating systems} category: 22 repositories (e.g.\
-\texttt{alpine}, \texttt{ubuntu}, \texttt{debian}, \texttt{centos},
-\texttt{busybox}, \texttt{amazonlinux}, \texttt{fedora}, \texttt{oraclelinux},
-\texttt{rockylinux}, \texttt{almalinux}, \texttt{photon}, \texttt{opensuse},
-\texttt{archlinux}, \texttt{kali}), one of which (\texttt{clefos}) publishes no
-\texttt{linux/amd64} image and drops out. Using the Docker Hub API we
-enumerated \emph{all} tags of these repositories,
-\textbf{6{,}328} tags in total, of which \textbf{6{,}138} carry an
-\texttt{amd64/linux} image. Because many tags point to a byte-identical image
-(e.g.\ \texttt{24.04}, \texttt{noble} and \texttt{latest}), we deduplicate by
-\texttt{amd64} content digest, leaving \textbf{5{,}606} unique images, the unit
-of measurement throughout.
+\noindent\textit{Corpus.} We take as our corpus the operating-system base images
+Docker Hub lists under its \emph{Operating systems} category: \textbf{21}
+repositories with an \texttt{amd64} image (\texttt{alpine}, \texttt{ubuntu},
+\texttt{debian}, \texttt{centos}, \texttt{busybox}, \texttt{amazonlinux},
+\texttt{fedora}, \texttt{oraclelinux}, \texttt{rockylinux}, \texttt{almalinux},
+\texttt{photon}, \texttt{opensuse}, \texttt{archlinux}, \texttt{kali}, \dots).
+Deduplicating tags by \texttt{amd64} content digest (e.g.\ \texttt{24.04},
+\texttt{noble} and \texttt{latest} are one image) leaves \textbf{5{,}606} unique
+images, the unit of measurement.
 
 \noindent\textit{Scanner battery.} An OS base image is a static root filesystem with no application source code
 and no running service, so we select the static-analysis axes that apply to
