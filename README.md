@@ -3,10 +3,10 @@
 Reproduction artifact for the short paper *"How Secure Is Your Base? A Recent
 Multi-Scanner Census of Linux Operating-System Images on Docker Hub"*.
 
-This repository holds the pipeline configuration, the corpus definition, and
-the analysis/figure scripts. The full consolidated dataset (the per-image
-reports of all 13 scanners over the census) is released separately **on
-acceptance**.
+This repository holds the pipeline configuration, the corpus definition, the
+vendored scan engine (`multiscan/`), and the analysis/figure scripts. The full
+consolidated dataset (the per-image reports of all 14 scanners over the census)
+is released separately **on acceptance**.
 
 ## What it measures
 
@@ -14,7 +14,7 @@ A census of the **Linux operating-system base images** Docker Hub lists under
 its *Operating systems* category: 21 repositories (alpine, ubuntu, debian,
 centos, busybox, amazonlinux, fedora, oraclelinux, rockylinux, almalinux,
 photon, opensuse, archlinux, kali, ...), deduplicated by `amd64` content digest
-to **5,606 unique images**, each scanned by **13 open-source scanners**
+to **5,606 unique images**, each scanned by **14 open-source scanners**
 (Syft, cdxgen, Trivy, Grype, OSV-Scanner, Clair, Dockle, Checkov, TruffleHog,
 Gitleaks, detect-secrets, Whispers, ClamAV, YARA-Hunter).
 
@@ -37,20 +37,17 @@ paper/                  LaTeX source (SBC template) + figures
 
 ## Reproducing
 
-The scan engine is [`multiscan`](https://github.com/ChimangoScan/multiscan); this
-repo provides the OS-specific config, corpus and analysis on top of it.
+The scan engine is vendored in `multiscan/`; paths are auto-detected (no manual
+editing). See `SETUP.md` for the full guide; in brief:
 
 ```bash
-# 1. build the scan queue from the corpus definition
-python3 scripts/build_queue.py
-
-# 2. run the census (single host or distributed; see config/os.yaml)
-cd /path/to/multiscan
-uv run scanners seed --config /path/to/config/os.yaml
-uv run scanners run  --config /path/to/config/os.yaml
-
-# 3. analyse + plot
-python3 scripts/analyze.py
+python3 scripts/render_config.py        # auto-detect paths -> config/os.yaml
+python3 scripts/build_queue.py          # -> data/jobs_unique.jsonl (5,606 images)
+cd multiscan
+uv run scanners seed --config ../config/os.yaml
+uv run scanners run  --config ../config/os.yaml
+cd ..
+python3 scripts/analyze.py              # -> data/analysis/per_image.csv
 uv run --with matplotlib python paper/make_figs.py
 ```
 
