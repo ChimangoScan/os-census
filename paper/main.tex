@@ -19,6 +19,12 @@
 \setlength{\intextsep}{5pt plus 2pt minus 2pt}
 \setlength{\floatsep}{5pt plus 2pt minus 2pt}
 \emergencystretch=3em  % absorve overfull de listas \texttt{} (nomes de repo)
+% Float placement (match the companion paper): keep figures/tables near their text.
+\usepackage{float}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.95}
 \newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
 \usepackage[hidelinks,colorlinks=true,allcolors=black]{hyperref}
@@ -192,28 +198,30 @@ use. This paper addresses both.
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{l c r c c l c c}
 \toprule
-\textbf{Study} & \textbf{Year} & \textbf{Images} & \textbf{Scan.} & \textbf{Dims} & \textbf{Selection} & \textbf{OS} & \textbf{X-sc.} \\
+\textbf{Study} & \textbf{Year} & \textbf{Images} & \textbf{Tools} & \textbf{Dims} & \textbf{Source} & \textbf{OS} & \textbf{X-sc.} \\
 \midrule
-\cite{shu2017dockerhub}      & 2017 & 356{,}218 & 1 & V & crawl & \xmark & \xmark \\
-\cite{zerouali2019outdated}  & 2019 & 7{,}380   & 1 & V & Debian & \cmark & \xmark \\
-\cite{liu2020understanding}  & 2020 & 2.2\,M    & 1 & V & crawl & \xmark & \xmark \\
-\cite{ibrahim2020toomany}    & 2020 & 936       & 1 & V & per-sys & \cmark & \xmark \\
+\cite{shu2017dockerhub}      & 2017 & 356{,}218 & 1 & V & Hub crawl & \xmark & \xmark \\
+\cite{zerouali2019outdated}  & 2019 & 7{,}380   & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
+\cite{liu2020understanding}  & 2020 & 2.2\,M$^{\ast}$ & 1 & V & Hub crawl & \xmark & \xmark \\
+\cite{ibrahim2020toomany}    & 2020 & 936       & 1 & V & Hub, per-sys & \xmark & \xmark \\
 \cite{kaur2021scientific}    & 2021 & 44        & 4 & V & curated & \xmark & \cmark \\
-\cite{zerouali2021techlag}   & 2021 & 140{,}498 & 1 & V & Debian & \cmark & \xmark \\
-\cite{haque2022wellbegun}    & 2022 & 261       & 1 & V & official & \cmark & \xmark \\
-\cite{dahlmanns2023secrets}  & 2023 & 337{,}171 & 1 & S & crawl & \xmark & \xmark \\
-\cite{malhotra2023vulnerability} & 2023 & ---   & 4 & V & off./ver. & \xmark & \cmark \\
-\cite{mills2023longitudinal} & 2023 & 380       & 6 & V & curated & \xmark & \cmark \\
-\cite{boles2024deciphering}  & 2024 & 927       & 2 & V & official & \cmark & \cmark \\
-\cite{kawaguchi2024sbom}     & 2024 & 3{,}500   & 2 & B & popular & \xmark & \cmark \\
-\cite{bufalino2025sbomproof} & 2025 & 20        & 7 & V & Deb/Alp & \cmark & \cmark \\
-\cite{shi2025drdocker}       & 2025 & 33{,}952  & 1 & V,S,C,M & pull-rank & \xmark & \xmark \\
-\cite{churakova2026vex}      & 2026 & 48        & 7 & V & curated & \xmark & \cmark \\
+\cite{zerouali2021techlag}   & 2021 & 140{,}498 & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
+\cite{haque2022wellbegun}    & 2022 & 261       & 1 & V & Hub, official & \cmark & \xmark \\
+\cite{dahlmanns2023secrets}  & 2023 & 337{,}171 & 1 & S & Hub crawl & \xmark & \xmark \\
+\cite{malhotra2023vulnerability} & 2023 & n/r   & 4 & V & Hub off./ver. & \xmark & \cmark \\
+\cite{mills2023longitudinal} & 2023 & 380       & 6 & V & Hub categories & \xmark & \cmark \\
+\cite{boles2024deciphering}  & 2024 & 927       & 2 & V & Hub official & \cmark & \cmark \\
+\cite{kawaguchi2024sbom}     & 2024 & 3{,}514   & 2 & B & Hub popular & \xmark & \cmark \\
+\cite{bufalino2025sbomproof} & 2025 & 20$^{\dagger}$ & 7 & V & Hub Deb/Alp & \cmark & \cmark \\
+\cite{shi2025drdocker}       & 2025 & 33{,}952$^{\ast}$ & 1 & V,S,C,M & Hub pull-rank & \xmark & \xmark \\
+\cite{churakova2026vex}      & 2026 & 48        & 7 & V & Hub curated & \xmark & \cmark \\
 \midrule
-\textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \textbf{category} & \cmark & \cmark \\
+\textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \textbf{Hub category} & \cmark & \cmark \\
 \bottomrule
 \end{tabular}}\\[3pt]
-{\footnotesize Dims: V~vuln, B~SBOM, S~secrets, C~config, M~malware. X-sc.: cross-scanner.}
+{\footnotesize Dims: V~vuln, B~SBOM, S~secrets, C~config, M~malware. X-sc.: cross-scanner.
+$\ast$~vulnerability scan on a subset; $\dagger$~top-20 Debian/Alpine image families;
+$\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 \end{table}
 
 % ============================================================
@@ -335,8 +343,8 @@ measured before.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.68\columnwidth]{fig_eol.pdf}
-\caption{Un-pullable digests (legacy schema) by distribution.}
+\includegraphics[width=\textwidth]{fig_eol.pdf}
+\caption{(a)~un-pullable rate by distribution; (b)~repository pulls; (c)~rate vs.\ pulls.}
 \label{fig:eol}
 \end{figure}
 
@@ -362,18 +370,22 @@ scanner-agreement results that single-tool studies could not.
 \centering
 \caption{Prior analyses reproduced on our OS-base corpus.}
 \label{tab:repro}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{@{}p{0.15\columnwidth} p{0.24\columnwidth} p{0.26\columnwidth} p{0.27\columnwidth}@{}}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}p{0.12\columnwidth} c p{0.21\columnwidth} p{0.26\columnwidth} p{0.28\columnwidth}@{}}
 \toprule
-\textbf{Study} & \textbf{Analysis reproduced} & \textbf{As originally reported} & \textbf{On our corpus (14 scanners)} \\
+\textbf{Study} & \textbf{Yr} & \textbf{Reproduced} & \textbf{Reported there} & \textbf{Our corpus (RQ)} \\
 \midrule
-\cite{shu2017dockerhub} & worst-severity class and per-image vulnerability counts & $>$80\% of images with a high-severity flaw; over 180 vulnerabilities per image on average & critical and high findings near-universal; Debian carries a mean of $\approx$344 critical+high per image (RQ1) \\
-\cite{zerouali2019outdated,zerouali2021techlag} & technical lag: image age vs vulnerabilities (Debian) & no release free of vulnerabilities; lag grows with age & total findings rise monotonically from $\approx$255 (under 6 months) to $\approx$692 (over 4 years), across all 21 distributions (RQ2) \\
-\cite{ibrahim2020toomany} & how images for the same system differ across base distributions & posture varies markedly with the chosen base & per-distribution critical+high spans an order of magnitude: Debian and the RHEL family high, Alpine low (RQ1) \\
-\cite{haque2022wellbegun} & minimal vs large base images & minimal images are not safer (carry more highly-exploitable CVEs) & vulnerability count is non-monotonic in package count (BusyBox, 1 package, versus Mageia, $\approx$250) (RQ5) \\
-\cite{churakova2026vex} & agreement among container scanners (48 images) & best pair (Trivy/Grype) Jaccard 0.69; all tools near 0\% & Trivy/Grype Jaccard 0.30 over (image, CVE, package) on 5.6k OS images; OSV and Clair near-disjoint (RQ3) \\
+\cite{shu2017dockerhub} & '17 & worst severity; vulns/img & $>$80\% high-sev; median 158 & crit/high near-universal; Debian $\approx$344 (RQ1) \\
+\cite{ibrahim2020toomany} & '20 & variance across base distros & varies with chosen base & crit+high spans 10$\times$ by distro (RQ1) \\
+\cite{kaur2021scientific} & '21 & cross-scanner Jaccard & Anchore/Clair 0.63; Vuls/Clair 0.80 & Trivy/Grype 0.30; OSV/Clair $\approx$0 (RQ3) \\
+\cite{zerouali2019outdated,zerouali2021techlag} & '19,'21 & age vs vulns (Debian) & 96\% affected; lag rises with age & mean $\approx$255 to 692; $\rho{=}0.16$ (RQ2) \\
+\cite{haque2022wellbegun} & '22 & minimal vs large base & not safer (more exploitable) & non-monotonic in packages (RQ5) \\
+\cite{mills2023longitudinal} & '23 & longitudinal; OS effect & vulns rise; Debian $\gg$ others & older carry more; Debian highest (RQ1,2) \\
+\cite{boles2024deciphering} & '24 & Trivy vs Grype & agree on count for 15\% of images & Trivy/Grype Jaccard 0.30 (RQ3) \\
+\cite{bufalino2025sbomproof} & '25 & scanner interop, Deb/Alp & tools largely incompatible & OSV/Clair near-disjoint (RQ3) \\
+\cite{churakova2026vex} & '26 & scanner agreement, 48 img & best pair 0.69 & Trivy/Grype 0.30 (RQ3) \\
 \bottomrule
 \end{tabular}
 \end{table}
