@@ -240,11 +240,10 @@ which need application source or a running service a base image lacks.
 to a local tar archive, and analysed by all 14 scanners reading that archive;
 the image is removed afterwards to bound disk. Every scanner runs in its own
 Docker container and a per-scanner adapter normalises the raw output to a
-common \texttt{Finding} schema; raw outputs are kept verbatim. To obtain a
-balanced partial dataset at any stopping point, the scan queue is ordered
-\emph{round-robin} across the 21 repositories, and within each repository it
-alternates newest$\leftrightarrow$oldest by last-push date, so the full age
-range of every distribution is covered early.
+common \texttt{Finding} schema; raw outputs are kept verbatim. The scan queue is
+ordered \emph{round-robin} across the 21 repositories, alternating
+newest$\leftrightarrow$oldest by last-push date within each, so every
+distribution and age range is evenly represented.
 % TODO: nota de reprodutibilidade/escala (workers, ETA) ao fechar.
 
 % ============================================================
