@@ -103,7 +103,7 @@ ul{{list-style:none;padding:0;margin:0;max-height:300px;overflow:auto;font-size:
 .t{{color:var(--mut);font-size:12px}}.ok{{color:#10b981}}.rn{{color:#f59e0b}}.er{{color:#ef4444}}
 </style></head><body>
 <header class=top><h1>🐳 Censo Multi-Scanner — Imagens de Sistema Operacional do Docker Hub</h1>
-<div class=sub>21 repos · 5.606 imagens amd64 únicas · 13 scanners estáticos · <code>scansso.anonshield.org</code></div></header>
+<div class=sub>20 repos · 5.606 imagens amd64 únicas · 14 scanners estáticos · <code>scansso.anonshield.org</code></div></header>
 <main>
 <div class=pbar><div style='width:{pct:.1f}%'></div></div>
 <div class=cards>

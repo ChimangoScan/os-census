@@ -11,10 +11,11 @@ is released separately **on acceptance**.
 ## What it measures
 
 A census of the **Linux operating-system base images** Docker Hub lists under
-its *Operating systems* category: 21 repositories (alpine, ubuntu, debian,
+its *Operating systems* category: 20 repositories (alpine, ubuntu, debian,
 centos, busybox, amazonlinux, fedora, oraclelinux, rockylinux, almalinux,
-photon, opensuse, archlinux, kali, ...), deduplicated by `amd64` content digest
-to **5,606 unique images**, each scanned by **14 open-source scanners**
+photon, archlinux, tumbleweed, kali-rolling, ...), deduplicated by `amd64`
+content digest to **5,606 unique images**, each scanned by **14 open-source
+scanners**
 (Syft, cdxgen, Trivy, Grype, OSV-Scanner, Clair, Dockle, Checkov, TruffleHog,
 Gitleaks, detect-secrets, Whispers, ClamAV, YARA-Hunter).
 
@@ -23,7 +24,7 @@ Gitleaks, detect-secrets, Whispers, ClamAV, YARA-Hunter).
 ```
 config/os.yaml          run config (queue, scanners, output, bind mounts)
 config/scanners.yaml    scanner registry (Clair fixed with --image-ref)
-data/hub_tags.jsonl     corpus definition: all tags of the 21 repos (Docker Hub API)
+data/hub_tags.jsonl     corpus definition: all tags of the 20 repos (Docker Hub API)
 data/hub_repos.jsonl    repo metadata (pull counts, last_updated)
 data/jobs_unique.jsonl  scan queue: 5,606 unique amd64 images, round-robin ordered
 scripts/build_queue.py  builds jobs_unique.jsonl from the API pull
