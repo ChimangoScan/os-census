@@ -238,13 +238,10 @@ lists under its \emph{Operating systems} category: 22 repositories (e.g.\
 \texttt{linux/amd64} image and drops out. Using the Docker Hub API we
 enumerated \emph{all} tags of these repositories,
 \textbf{6{,}328} tags in total, of which \textbf{6{,}138} carry an
-\texttt{amd64/linux} image. We note in passing that the ``10K+'' tag badge
-Docker Hub shows for \texttt{ubuntu} and \texttt{alpine} counts
-tag\,$\times$\,architecture\,$\times$\,attestation manifests, not distinct tags:
-\texttt{ubuntu} has 725 distinct tags and \texttt{debian} 2{,}884. Because many
-tags point to a byte-identical image (e.g.\ \texttt{24.04}, \texttt{noble} and
-\texttt{latest}), we deduplicate by \texttt{amd64} content digest, leaving
-\textbf{5{,}606} unique images, the unit of measurement throughout.
+\texttt{amd64/linux} image. Because many tags point to a byte-identical image
+(e.g.\ \texttt{24.04}, \texttt{noble} and \texttt{latest}), we deduplicate by
+\texttt{amd64} content digest, leaving \textbf{5{,}606} unique images, the unit
+of measurement throughout.
 
 An OS base image is a static root filesystem with no application source code
 and no running service, so we select the static-analysis axes that apply to
@@ -254,10 +251,8 @@ exact versions are recorded in the released configuration.} \emph{SBOM}: Syft an
 cdxgen. \emph{Package vulnerabilities (SCA)}: Trivy, Grype, OSV-Scanner and
 Clair. \emph{Image hardening}: Dockle and Checkov. \emph{Secrets}:
 TruffleHog, Gitleaks, detect-secrets and Whispers. \emph{Malware/IOC}:
-ClamAV and YARA\-Hunter. We deliberately exclude the SAST, dynamic (DAST) and
-network axes, which require application source or a running service that a base
-image does not provide; we make this selection explicit so the battery matches
-the artifact under study.
+ClamAV and YARA\-Hunter. We exclude the SAST, dynamic (DAST) and network axes,
+which need application source or a running service a base image lacks.
 
 Each image is pulled \emph{pinned by its \texttt{amd64} digest}, exported once
 to a local tar archive, and analysed by all 14 scanners reading that archive;
@@ -292,11 +287,10 @@ most (mean $\approx$344 critical+high per image, $n=270$), followed by the RHEL
 family (CentOS $\approx$206, OracleLinux $\approx$189, AmazonLinux $\approx$152,
 RockyLinux $\approx$115); Alpine sits lower ($\approx$84), and Arch, ALT, Kali,
 Mageia and openSUSE~Tumbleweed report few or none. Within-distribution variance
-is large (for Debian the standard deviation, $\approx$564, exceeds the mean), so
-these are population tendencies rather than tight estimates, and the smaller
-repositories (for example CentOS, $n=10$) should be read with care. Package
+is large (Debian's SD, $\approx$564, exceeds its mean) and some repositories are
+small (CentOS $n=10$), so these are tendencies, not tight estimates. Package
 count does not track this ordering: Mageia and Fedora carry many packages yet
-few critical or high findings, a point we return to in Section~\ref{sec:rq5}.
+few critical or high findings (Section~\ref{sec:rq5}).
 
 \subsection{RQ2: Staleness vs.\ vulnerability}
 \label{sec:rq2}
@@ -304,12 +298,10 @@ Vulnerability count tends to rise with image age (Figure~\ref{fig:panels}(b)).
 Images rebuilt within the last six months carry a mean of $\approx$255 total
 vulnerability findings, climbing through $\approx$273 (one to two years) and
 $\approx$457 (two to four years) to $\approx$692 for images not rebuilt in over
-four years. At the image level the rank correlation between age and
-vulnerability count is positive and significant, though modest (Spearman
-$\rho=0.16$, $p<0.001$, $n=1{,}927$), reflecting wide within-bucket variance;
-the bucketed means themselves increase monotonically. This reproduces the
-technical-lag effect of \cite{zerouali2019outdated} on the OS-base subset and
-across 21 distributions at once.
+four years. The per-image rank correlation is positive but modest (Spearman
+$\rho=0.16$, $p<0.001$), reflecting wide within-bucket variance even as the
+bucketed means rise monotonically. This reproduces the technical-lag effect of
+\cite{zerouali2019outdated} across 21 distributions at once.
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
@@ -368,23 +360,21 @@ Dockle and Checkov flag at least one CIS-style issue in essentially every image
 (missing \texttt{HEALTHCHECK}, content-trust disabled, running as \texttt{root});
 these are structural properties, so the near-universal rate is robust.
 \emph{Secrets:} TruffleHog and Gitleaks raise at least one detection in
-\textbf{72\%} of images, but these are raw detector hits: consistent with
-\cite{dahlmanns2023secrets}, who validate secrets in only 8.5\% of images, and
-with Dr.\ Docker~\cite{shi2025drdocker}, which filters 99.3\% of its raw hits as
-invalid, the validated rate is far lower, and active validation is future work.
-\emph{Malware/IOC:} ClamAV and YARA-Hunter raise IOC matches on many images, but
-manual inspection shows these are dominated by signatures matching benign system
-binaries; we treat them as triage candidates rather than confirmed malware
-(Dr.\ Docker confirmed only 24 malicious images in 33{,}952). These axes are
-secondary to our vulnerability focus, but they show the same lesson as RQ3: raw
-single-tool counts overstate, and must be read with their false-positive rate.
+\textbf{72\%} of images, but these are raw hits; as \cite{dahlmanns2023secrets}
+(8.5\% validated) and Dr.\ Docker~\cite{shi2025drdocker} (99.3\% of hits filtered
+as invalid) show, the validated rate is far lower, and validation is future work.
+\emph{Malware/IOC:} ClamAV and YARA-Hunter match on many images, but inspection
+shows these are mostly signatures hitting benign system binaries, so we treat
+them as triage candidates, not confirmed malware (Dr.\ Docker confirmed only 24
+in 33{,}952). These axes are secondary here but echo RQ3: raw single-tool counts
+overstate and must be read with their false-positive rate.
 
 \subsection{Reproducing prior analyses}
 \label{sec:repro}
-Our four questions reproduce, on the OS-base subset specifically, concrete
-analyses from prior work (Table~\ref{tab:repro}); the direction holds in every
-case, and the multi-scanner setting lets us refine the minimal-image and
-scanner-agreement results that single-tool studies could not.
+Our research questions reproduce concrete analyses from prior work on the
+OS-base subset (Table~\ref{tab:repro}): the direction holds in every case, and
+the multi-scanner setting refines the minimal-image and scanner-agreement
+findings.
 
 \begin{table}[!htbp]
 \centering
