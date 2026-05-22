@@ -429,10 +429,19 @@ base images is thus effectively zero (even below \cite{dahlmanns2023secrets}'s
 8.5\% and Dr.\ Docker's $\sim$0.7\% valid~\cite{shi2025drdocker}), because real
 secrets live in application layers, not the base. The labelled sample is released
 for re-use.
-\emph{Malware/IOC:} ClamAV and YARA-Hunter match on many images, but inspection
-shows these are mostly signatures hitting benign system binaries, so we treat
-them as triage candidates, not confirmed malware (Dr.\ Docker confirmed only 24
-in 33{,}952). As in RQ3, raw single-tool counts overstate.
+\emph{Malware/IOC:} ClamAV reports zero detections; YARA-Hunter matches 76\% of
+images, but we manually reviewed a seeded random sample of 1{,}100 of its
+13{,}348 matches and found \textbf{zero} real malware (true-positive rate
+$\le0.35\%$, 95\% Wilson CI). Every match was a YARA rule (several written for
+memory dumps) firing on a benign OS artifact: an Emotet byte-pattern in the
+BusyBox binary, a RAT rule matching the word ``cerberus'' in the IEEE OUI list,
+rootkit rules matching kernel syscall names in canonical headers. This agrees
+with ClamAV's zero and Dr.\ Docker's 24-in-33{,}952. Across all three
+non-vulnerability axes, then, the raw single-tool rate is high (72--100\%) but
+the validated rate collapses to near zero for secrets and malware: as in RQ3,
+the headline number is largely a property of the detector, and reading the
+findings is what separates signal from noise. The labelled malware sample is
+released alongside the secrets one.
 
 \subsection{Reproducing prior analyses}
 \label{sec:repro}

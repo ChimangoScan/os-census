@@ -351,10 +351,12 @@ identifier. The validated secret rate for OS base images is thus effectively
 zero, even below \cite{dahlmanns2023secrets}'s 8.5\% and Dr.\ Docker's
 $\sim$0.7\% valid~\cite{shi2025drdocker}, because real secrets live in
 application layers, not the base.
-\emph{Malware/IOC:} ClamAV and YARA-Hunter match on many images, but inspection
-shows these are mostly signatures hitting benign system binaries, so we treat
-them as triage candidates, not confirmed malware (Dr.\ Docker confirmed only 24
-in 33{,}952). As in RQ3, raw single-tool counts overstate.
+\emph{Malware/IOC:} ClamAV reports zero detections, and a manual review of
+1{,}100 of YARA-Hunter's 13{,}348 IOC matches found \textbf{zero} real malware
+(true-positive rate $\le0.35\%$, 95\% CI): every match was a rule firing on a
+benign system binary. Two non-vulnerability axes (secrets, malware) thus have a
+validated rate near zero against a high raw rate; as in RQ3, raw single-tool
+counts overstate, and full triage is future work.
 
 \subsection{Reproducing prior analyses}
 \label{sec:repro}
