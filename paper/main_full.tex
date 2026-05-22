@@ -250,16 +250,43 @@ verbatim.
 (c)~critical prevalence; (d)~mean total vulnerabilities.}
 \label{fig:rq1}
 \end{figure}
-Critical- and high-severity vulnerability findings vary by an order of
-magnitude across distributions (Figure~\ref{fig:rq1}(a)). Debian carries the
-most (mean $\approx$344 critical+high per image, $n=270$), followed by the RHEL
-family (CentOS $\approx$206, OracleLinux $\approx$189, AmazonLinux $\approx$152,
-RockyLinux $\approx$115); Alpine sits lower ($\approx$84), and Arch, ALT, Kali,
-Mageia and openSUSE~Tumbleweed report few or none. Within-distribution variance
-is large (Debian's SD, $\approx$564, exceeds its mean) and some repositories are
-small (CentOS $n=10$), so these are tendencies, not tight estimates. Package
-count does not track this ordering: Mageia and Fedora carry many packages yet
-few critical or high findings (Section~\ref{sec:rq5}).
+Critical- and high-severity findings vary by an order of magnitude across
+distributions (Figure~\ref{fig:rq1}, Table~\ref{tab:distro}): Debian and the RHEL
+family (CentOS, OracleLinux, AmazonLinux, RockyLinux) carry the most, while
+minimal and rolling-release bases (BusyBox, Arch, openSUSE~Leap) carry the
+fewest. Within-distribution variance is large (Debian's SD exceeds its mean),
+so these are tendencies, not tight estimates. Crucially, package count does not
+track the ordering (Table~\ref{tab:distro}): Fedora and AlmaLinux are
+package-heavy yet mid-to-low in severe findings, while one-package BusyBox is
+near the floor (Section~\ref{sec:rq5}).
+
+\begin{table}[!htbp]
+\centering
+\caption{Per-distribution posture (repositories with $n\ge10$ images), sorted by
+mean critical+high per image. \emph{age}: median days since last push.}
+\label{tab:distro}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} l r r r r r r @{}}
+\toprule
+\textbf{Distro} & \textbf{$n$} & \textbf{cr+hi} & \textbf{total} & \textbf{pkgs} & \textbf{\%cr} & \textbf{age} \\
+\midrule
+\texttt{debian}      & 389 & 360 & 1130 &  85 & 100 &  164 \\
+\texttt{centos}      &  10 & 206 & 2754 & 161 & 100 & 2078 \\
+\texttt{oraclelinux} &  26 & 189 &  568 & 169 &  81 & 1019 \\
+\texttt{photon}      & 363 & 158 &  290 &  38 &  98 & 1025 \\
+\texttt{amazonlinux} & 312 & 148 &  485 & 113 &  98 & 1113 \\
+\texttt{rockylinux}  &  95 & 115 &  741 & 134 &  65 & 1101 \\
+\texttt{alpine}      & 181 &  84 &  181 &  14 &  91 & 1381 \\
+\texttt{ubuntu}      & 270 &  70 &  459 &  94 &  66 & 1014 \\
+\texttt{almalinux}   & 234 &  69 &  522 & 123 &  51 &  344 \\
+\texttt{archlinux}   & 441 &  27 &   93 & 134 &  90 &  619 \\
+\texttt{fedora}      &  20 &  13 &   31 & 155 &  80 & 1184 \\
+\texttt{busybox}     &  46 &   8 &   13 &   1 &  93 & 1870 \\
+\texttt{leap}        &  10 &   3 &    8 & 130 &  10 & 1439 \\
+\bottomrule
+\end{tabular*}
+\end{table}
 
 \subsection{RQ2: Staleness vs.\ vulnerability}
 \label{sec:rq2}
