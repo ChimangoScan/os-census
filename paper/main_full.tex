@@ -451,7 +451,14 @@ single distribution (the \emph{OS?} column marks the OS-base-focused ones), yet
 the direction holds in every case, and the multi-scanner setting refines the
 minimal-image and scanner-agreement findings.
 
-Three patterns emerge. \emph{Prevalence replicates, and upward}: the share of
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.62\columnwidth]{fig_repro.pdf}
+\caption{Prior reported vs.\ ours for the \%-of-images metrics we reproduce
+(Shu high-severity, Dahlmanns secrets raw, Dr.\ Docker known-vulnerability).}
+\label{fig:repro}
+\end{figure}
+Three patterns emerge (Figure~\ref{fig:repro}). \emph{Prevalence replicates, and upward}: the share of
 images carrying a high-severity vulnerability rises from \cite{shu2017dockerhub}'s
 $>$80\% (2017) to our 97\%, and \cite{shi2025drdocker}'s 93.7\% known-vulnerability
 rate to 98.7\%, consistent with the secular growth in disclosed CVEs and the
