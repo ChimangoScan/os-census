@@ -1,0 +1,9 @@
+{
+  "total_findings": 26892,
+  "trufflehog_findings": 15039,
+  "gitleaks_findings": 11853,
+  "sample_n": 1100,
+  "sample_trufflehog": 615,
+  "sample_gitleaks": 485,
+  "seed": 42
+}

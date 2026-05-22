@@ -90,16 +90,26 @@ ax[3].plot([a for a,_ in pcb],[b for _,b in pcb],"o-",color="#d94801"); ax[3].se
 ax[3].set_ylabel("% with >=1 crit"); ax[3].set_title("(d) Critical vs age", loc="left"); ax[3].tick_params(axis="x",rotation=30)
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq2.pdf"); plt.close(fig); print("fig_rq2 ok")
 
-# ----------------------------------------------------------------- RQ3 (le report.json)
+# ----------------------------------------------------------------- RQ3
+# Le os report.json brutos se existirem; senao usa o dump pre-computado
+# (data/analysis/rq3_sca_sets.json.gz) -> reproducao sem precisar do scan bruto.
 SCA=["trivy","grype","osv","clair"]; sets={s:set() for s in SCA}
-for rj in glob.glob(f"{OUT}/*/report.json"):
-    try: r=json.load(open(rj))
-    except: continue
-    img=r.get("target",{}).get("image","")
-    for f in r.get("findings",[]):
-        if f.get("category")=="pkg-vuln" and f.get("scanner") in sets:
-            cid=f.get("id") or (f.get("cves") or [None])[0]
-            if cid and str(cid).startswith("CVE"): sets[f["scanner"]].add((img,cid))
+_reports=glob.glob(f"{OUT}/*/report.json")
+if _reports:
+    for rj in _reports:
+        try: r=json.load(open(rj))
+        except: continue
+        img=r.get("target",{}).get("image","")
+        for f in r.get("findings",[]):
+            if f.get("category")=="pkg-vuln" and f.get("scanner") in sets:
+                cid=f.get("id") or (f.get("cves") or [None])[0]
+                if cid and str(cid).startswith("CVE"): sets[f["scanner"]].add((img,cid))
+else:
+    import gzip
+    dump=ROOT/"data/analysis/rq3_sca_sets.json.gz"
+    with gzip.open(dump,"rt") as fi:
+        for s,pairs in json.load(fi).items(): sets[s]={tuple(p) for p in pairs}
+    print(f"RQ3: usando dump pre-computado ({dump.name})")
 _nm={"trivy":"Trivy","grype":"Grype","osv":"OSV","clair":"Clair"}
 fig, ax = plt.subplots(1, 4, figsize=FS)
 M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]

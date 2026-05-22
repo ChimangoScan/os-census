@@ -38,20 +38,31 @@ paper/                  LaTeX source (SBC template) + figures
 
 ## Reproducing
 
-The scan engine is vendored in `multiscan/`; paths are auto-detected (no manual
-editing). See `SETUP.md` for the full guide; in brief:
+One entry point, `reproduce.sh`, with three modes:
 
 ```bash
-python3 scripts/render_config.py        # auto-detect paths -> config/os.yaml
-python3 scripts/build_queue.py          # -> data/jobs_unique.jsonl (5,606 images)
-cd multiscan
-uv run scanners seed --config ../config/os.yaml
-uv run scanners run  --config ../config/os.yaml
-cd ..
-python3 scripts/analyze.py              # -> data/analysis/per_image.csv
-uv run --with matplotlib python paper/make_figs.py
+./reproduce.sh figures    # (default) regenerate ALL figures from the
+                          # pre-computed data in data/ (no scan needed):
+                          # per_image.csv + rq3_sca_sets.json.gz
+./reproduce.sh analysis   # re-aggregate raw report.json -> per_image.csv (needs scan done)
+./reproduce.sh full       # whole study: crawl Docker Hub API -> queue -> scan
+                          # (14 scanners) -> analysis -> figures
 ```
 
-A Docker Hub access token (in `config/accounts.json`, gitignored) is needed to
-avoid pull rate limits. The full per-image dataset will be released on
-acceptance.
+Pipeline stages (what `full` runs), all also callable standalone:
+
+```bash
+python3 scripts/crawl_hub.py      # Docker Hub API -> data/hub_repos.jsonl + hub_tags.jsonl
+python3 scripts/build_queue.py    # dedup by amd64 digest -> data/jobs_unique.jsonl
+python3 scripts/render_config.py  # auto-detect paths -> config/os.yaml
+cd multiscan && uv run scanners seed --config ../config/os.yaml \
+             && uv run scanners run  --config ../config/os.yaml && cd ..
+python3 scripts/analyze.py        # report.json -> data/analysis/per_image.csv
+uv run --with matplotlib,numpy python paper/make_figs.py
+```
+
+The scan engine is vendored in `multiscan/` and paths are auto-detected (no
+manual editing). The `full` mode needs Docker and a Docker Hub access token (in
+`config/accounts.json`, gitignored) to avoid pull rate limits. The pre-computed
+data committed in `data/` lets `figures` mode reproduce every plot offline; the
+full per-image multi-scanner dataset is released separately.
