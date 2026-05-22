@@ -370,24 +370,24 @@ scanner-agreement results that single-tool studies could not.
 \centering
 \caption{Prior analyses reproduced on our OS-base corpus.}
 \label{tab:repro}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{@{}p{0.10\columnwidth} c p{0.23\columnwidth} p{0.18\columnwidth} p{0.22\columnwidth} c@{}}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} p{0.20\columnwidth} p{0.30\columnwidth} l l @{}}
 \toprule
-\textbf{Study} & \textbf{Yr} & \textbf{Metric} & \textbf{Reported} & \textbf{Ours} & \textbf{RQ} \\
+\textbf{Study} & \textbf{Metric reproduced} & \textbf{Reported} & \textbf{Ours} \\
 \midrule
-\cite{shu2017dockerhub} & '17 & images with high-severity vuln & $>$80\% & 97\%$^{\ast}$ & 1 \\
-\cite{zerouali2019outdated,zerouali2021techlag} & '19,'21 & vulns vs.\ image age (Debian) & rises with age & $\approx$255$\to$692; $\rho{=}0.16$ & 2 \\
-\cite{ibrahim2020toomany} & '20 & spread across base distros & varies & 10$\times$ range & 1 \\
-\cite{kaur2021scientific} & '21 & scanner-pair Jaccard & 0.59 to 0.80 & 0.30 & 3 \\
-\cite{haque2022wellbegun} & '22 & is a minimal image safer? & no & no (non-monotonic) & 5 \\
-\cite{mills2023longitudinal} & '23 & vulns vs.\ time; OS effect & rise; Debian $\gg$ & rise; Debian top & 1,2 \\
-\cite{boles2024deciphering} & '24 & Trivy/Grype agreement & 15\% of imgs & $J{=}0.30$ & 3 \\
-\cite{bufalino2025sbomproof} & '25 & cross-tool CVE overlap & near 0 & OSV/Clair $\approx$0 & 3 \\
-\cite{churakova2026vex} & '26 & best scanner-pair Jaccard & 0.69 & 0.30 & 3 \\
+\cite{shu2017dockerhub} & images with a high-severity vuln & $>$80\% & 97\%$^{\ast}$ \\
+\cite{zerouali2019outdated} & vulnerabilities vs.\ image age (Debian) & rises with age & $\approx$255$\to$692 ($\rho{=}0.16$) \\
+\cite{ibrahim2020toomany} & spread across base distributions & varies & 10$\times$ range \\
+\cite{kaur2021scientific} & scanner-pair Jaccard agreement & 0.59 to 0.80 & 0.30 \\
+\cite{haque2022wellbegun} & is a minimal image safer? & no & no (non-monotonic) \\
+\cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & rise; Debian $\gg$ & rise; Debian top \\
+\cite{boles2024deciphering} & Trivy vs.\ Grype agreement & 15\% of imgs & $J{=}0.30$ \\
+\cite{bufalino2025sbomproof} & cross-tool CVE overlap & near 0 & OSV/Clair $\approx$0 \\
+\cite{churakova2026vex} & best scanner-pair Jaccard & 0.69 & 0.30 \\
 \bottomrule
-\end{tabular}\\[2pt]
+\end{tabular*}\\[2pt]
 {\footnotesize $\ast$~critical or high (Shu reports high-severity). $J$: Jaccard; $\rho$: Spearman.}
 \end{table}
 
