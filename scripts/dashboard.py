@@ -47,12 +47,19 @@ def snapshot():
     try: dud = shutil.disk_usage("/var/lib/docker")
     except Exception: dud = duw
     out_sz = len(glob.glob(str(OUT / "*/report.json"))) if OUT.exists() else 0  # nº imgs c/ report (barato)
-    # ETA
+    # ETA + taxa (img/min) + buckets de 1h
+    now = time.time()
     fa = [r[0] for r in q(DB, "SELECT finished_at FROM jobs WHERE status='done' AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 60")]
     rate = (len(fa)-1)/(fa[0]-fa[-1]) if len(fa) > 5 and fa[0] > fa[-1] else 0   # imgs/s
     eta = (s.get("pending",0)+s.get("running",0))/rate if rate else 0
+    permin = q(DB, "SELECT count(*) FROM jobs WHERE finished_at > ?", (now-600,))[0][0] / 10.0
+    nb = 14; buckets = [0]*nb   # buckets[0]=hora atual ... buckets[nb-1]=13h atras
+    for (ts,) in q(DB, "SELECT finished_at FROM jobs WHERE finished_at IS NOT NULL"):
+        h = int((now - ts) // 3600)
+        if 0 <= h < nb: buckets[h] += 1
     return dict(s=s, total=total, done=done, findings=findings, per=per, recent=recent,
-                failed=failed, running=running, duw=duw, dud=dud, out_sz=out_sz, eta=eta)
+                failed=failed, running=running, duw=duw, dud=dud, out_sz=out_sz, eta=eta,
+                permin=permin, buckets=buckets)
 
 def gb(n): return f"{n/1024**3:.1f} GB"
 def hms(s):
@@ -61,6 +68,9 @@ def hms(s):
 
 def page():
     d = snapshot(); pct = 100*d["done"]/d["total"] if d["total"] else 0
+    _mx = max(d["buckets"]) or 1
+    hist = "".join(f"<div class=b title='{c} imgs ({h}h atras)' style='height:{100*c/_mx:.0f}%'></div>"
+                   for h, c in reversed(list(enumerate(d["buckets"]))))
     rep = "".join(
         f"<tr><td>{r}</td><td style='text-align:right'>{v[0]}<span class=t>+{v[1]}sk</span>/{v[2]}</td>"
         f"<td><div class=bar><div style='width:{100*(v[0]+v[1])/v[2] if v[2] else 0:.0f}%'></div></div></td></tr>"
@@ -88,6 +98,7 @@ main{{max-width:1180px;margin:0 auto;padding:20px 22px 60px}}
 .panel h3{{margin:0 0 10px;font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:#334155}}
 table{{border-collapse:collapse;width:100%;font-size:13px}}td{{padding:4px 6px;border-bottom:1px solid #f1f5f9}}
 .bar{{background:#eef2f4;border-radius:5px;height:8px;width:100%;min-width:80px;overflow:hidden}}.bar>div{{background:#14b8a6;height:8px}}
+.hist{{display:flex;align-items:flex-end;gap:3px;height:78px;margin-top:4px}}.hist .b{{flex:1;background:linear-gradient(180deg,#14b8a6,#0f766e);border-radius:2px 2px 0 0;min-height:1px}}
 ul{{list-style:none;padding:0;margin:0;max-height:300px;overflow:auto;font-size:13px}}li{{padding:3px 0}}
 .t{{color:var(--mut);font-size:12px}}.ok{{color:#10b981}}.rn{{color:#f59e0b}}.er{{color:#ef4444}}
 </style></head><body>
@@ -99,8 +110,12 @@ ul{{list-style:none;padding:0;margin:0;max-height:300px;overflow:auto;font-size:
  <div class=card><div class=v>{d['done']:,}/{d['total']:,}</div><div class=l>progresso</div><div class=s>{pct:.1f}% · ETA ~{hms(d['eta'])}</div></div>
  <div class=card><div class=v>{d['s'].get('running',0)} · {d['s'].get('pending',0):,} · {d['s'].get('failed',0)}</div><div class=l>running · pending · failed</div></div>
  <div class=card><div class=v>{d['findings'][0]:,}</div><div class=l>findings totais</div><div class=s>{d['findings'][1]:,} imagens com report</div></div>
+ <div class=card><div class=v>{d['permin']:.1f}</div><div class=l>imagens / min</div><div class=s>média dos últimos 10 min</div></div>
  <div class=card><div class=v>{d['out_sz']:,}</div><div class=l>imagens c/ report salvo</div><div class=s>win_ssd livre {gb(d['duw'].free)} · docker {gb(d['dud'].used)}</div></div>
 </div>
+<div class=panel style=margin-bottom:14px><h3>Concluídas por hora (buckets de 1h, últimas 14h)</h3>
+<div class=hist>{hist}</div>
+<div class=t>← 13h atrás · hora atual →</div></div>
 <div class=grid>
  <div class=panel><h3>Cobertura por repo — done<span class=t>+skip</span>/total (round-robin balanceia por processadas)</h3><table>{rep}</table></div>
  <div class=panel><h3>Concluídas recentes</h3><ul>{rec}</ul></div>

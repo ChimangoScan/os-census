@@ -3,7 +3,7 @@
 data/analysis/per_image.csv e dos report.json.
 Rodar:  uv run --with matplotlib python make_figs.py
 """
-import csv, json, glob, collections, os
+import csv, json, glob, collections, os, statistics as _st
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -26,23 +26,25 @@ for r in rows:
 
 fig, ax = plt.subplots(1, 4, figsize=(13.2, 2.05))
 
-# (a) RQ1: media criticas+altas por distro (top 11)
+# (a) RQ1: media criticas+altas por distro (top 11), com +-SD e n
 by = collections.defaultdict(list)
 for r in rows:
     if r["vuln_critical"] is not None and r["vuln_high"] is not None:
         by[short(r["repo"])].append(r["vuln_critical"]+r["vuln_high"])
-st = sorted(((k,sum(v)/len(v)) for k,v in by.items()), key=lambda x:x[1])[-11:]
-ax[0].barh([k for k,_ in st],[m for _,m in st],color="#b2182b")
-ax[0].set_xlabel("mean crit+high / img"); ax[0].set_title("(a) Posture by distro",loc="left")
+agg = sorted(((k, sum(v)/len(v), (_st.pstdev(v) if len(v)>1 else 0), len(v)) for k,v in by.items()), key=lambda x:x[1])[-11:]
+labels=[k for k,_,_,_ in agg]; means=[m for _,m,_,_ in agg]; sds=[s for _,_,s,_ in agg]; ns=[n for _,_,_,n in agg]
+ax[0].barh(labels, means, xerr=sds, color="#b2182b", error_kw=dict(elinewidth=0.6, ecolor="#777"))
+for i,(m,n) in enumerate(zip(means,ns)): ax[0].text(m, i, f"  n={n}", va="center", fontsize=4.5, color="#333")
+ax[0].set_xlabel("mean crit+high / img (±SD)"); ax[0].set_title("(a) Posture by distro",loc="left")
 
-# (b) RQ2: staleness
+# (b) RQ2: staleness, com +-SD por bucket
 bk=[(0,180,"0-6m"),(180,365,"6-12m"),(365,730,"1-2y"),(730,1460,"2-4y"),(1460,1e9,"4y+")]
-xs,ys=[],[]
+xs,ys,es=[],[],[]
 for lo,hi,lb in bk:
     g=[r["vuln_total"] for r in rows if r["age_days"] is not None and r["vuln_total"] is not None and lo<=r["age_days"]<hi]
-    if g: xs.append(lb); ys.append(sum(g)/len(g))
-ax[1].plot(xs,ys,"o-",color="#2166ac",lw=2); ax[1].set_ylabel("mean vulns")
-ax[1].set_title("(b) Staleness",loc="left"); ax[1].tick_params(axis="x",rotation=30)
+    if g: xs.append(lb); ys.append(sum(g)/len(g)); es.append(_st.pstdev(g) if len(g)>1 else 0)
+ax[1].errorbar(xs,ys,yerr=es,fmt="o-",color="#2166ac",lw=2,capsize=2,elinewidth=0.7); ax[1].set_ylabel("mean vulns (±SD)")
+ax[1].set_title("(b) Staleness ρ=0.16",loc="left"); ax[1].tick_params(axis="x",rotation=30)
 
 # (c) RQ5: pacotes x vulns
 px=[r["packages"] for r in rows if r["packages"] and r["vuln_total"] is not None]
@@ -64,7 +66,8 @@ for rj in glob.glob(f"{OUT}/*/report.json"):
 M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]
 im=ax[3].imshow(M,cmap="YlOrRd",vmin=0,vmax=1)
 ax[3].set_xticks(range(4)); ax[3].set_yticks(range(4))
-ax[3].set_xticklabels([s[:3].capitalize() for s in SCA]); ax[3].set_yticklabels([s[:3].capitalize() for s in SCA])
+_nm={"trivy":"Trivy","grype":"Grype","osv":"OSV","clair":"Clair"}
+ax[3].set_xticklabels([_nm[s] for s in SCA], rotation=30); ax[3].set_yticklabels([_nm[s] for s in SCA])
 for i in range(4):
     for j in range(4):
         ax[3].text(j,i,f"{M[i][j]:.2f}",ha="center",va="center",fontsize=6,

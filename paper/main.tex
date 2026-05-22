@@ -56,17 +56,18 @@ security posture of these foundational images is usually measured with a
 single scanner and on samples that age quickly. We present a recent,
 multi-scanner census of the OS base images on Docker Hub: the
 \textbf{5{,}606} unique \texttt{amd64} images across the \textbf{21}
-repositories of Docker Hub's \emph{Operating systems} category, each scanned by
-\textbf{13} independent open-source scanners spanning vulnerabilities, SBOM,
-misconfiguration, secrets and malware. % TODO numeros finais
-We find that (i)~vulnerability posture varies sharply by distribution, with
-the RHEL family carrying the most critical/high findings and Alpine the
-fewest; (ii)~image staleness is a strong predictor of vulnerability count,
-which grows monotonically with time-since-rebuild; (iii)~the four
-package-vulnerability engines barely agree (pairwise Jaccard $\le 0.31$), with
-OSV-Scanner and Clair nearly disjoint from the rest; and (iv)~about one in
-five historically-published OS images can no longer be pulled by a modern
-Docker because they use a legacy manifest schema. We release the pipeline and
+repositories of Docker Hub's \emph{Operating systems} category, scanned with
+\textbf{14} independent open-source scanners spanning vulnerabilities, SBOM,
+misconfiguration, secrets and malware. Over the images processed to date we
+find that (i)~vulnerability posture varies by an order of magnitude across
+distributions, with Debian and the RHEL family carrying the most critical and
+high findings and minimal or rolling-release distributions the fewest;
+(ii)~staler images carry more vulnerabilities (Spearman $\rho=0.16$, $p<0.001$;
+bucketed means rising from $\approx$255 to $\approx$692); (iii)~the four
+package-vulnerability engines barely agree (pairwise Jaccard $\le 0.30$), with
+OSV-Scanner and Clair nearly disjoint from the rest; and (iv)~about one in five
+historically-published OS images can no longer be pulled by a modern Docker
+because they use a legacy manifest schema. We release the pipeline and
 the consolidated multi-scanner dataset, to our knowledge the first
 OS-base-focused one, on acceptance.
 \end{abstract}
@@ -115,7 +116,7 @@ battery, as a current census. This paper fills that gap.
 \paragraph{Contributions.}
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
 \item A \textbf{recent multi-scanner census} of OS base images on Docker Hub:
-13 scanners over 5{,}606 unique \texttt{amd64} images of the 21
+14 scanners over 5{,}606 unique \texttt{amd64} images of the 21
 \emph{Operating systems} repositories (Section~\ref{sec:method}).
 \item A \textbf{per-distribution security posture} and a measured
 \textbf{staleness-vulnerability} relationship (Sections~\ref{sec:rq1},~\ref{sec:rq2}).
@@ -126,7 +127,7 @@ including Clair, showing the chosen scanner dominates the reported posture
 historically-pulled OS images are no longer installable by a modern Docker
 (legacy manifest schema), and end-of-life bases remain heavily pulled.
 \item \textbf{A released artifact and dataset.} We release the scan pipeline
-and the consolidated multi-scanner dataset, the per-image reports of all 13
+and the consolidated multi-scanner dataset, the per-image reports of all 14
 scanners over the OS census; to our knowledge it is the first OS-base-focused
 multi-scanner dataset, letting the measurement be audited, reproduced and
 extended (released on acceptance).
@@ -186,21 +187,23 @@ use. This paper addresses both.
 \label{tab:related}
 \renewcommand{\arraystretch}{1.2}
 \footnotesize
-\begin{tabular}{l c r c c c}
+\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l c r c c c c}
 \toprule
-\textbf{Work} & \textbf{Year} & \textbf{Images} & \textbf{Scanners} & \textbf{OS-focused} & \textbf{Cross-scanner} \\
+\textbf{Work} & \textbf{Year} & \textbf{Images} & \textbf{Scanners} & \textbf{Dims.} & \textbf{OS-focused} & \textbf{Cross-scanner} \\
 \midrule
-\cite{shu2017dockerhub}        & 2017 & 356{,}218 & 1 & \xmark & \xmark \\
-\cite{zerouali2019outdated} & 2019 & 7{,}380 & 1 & \cmark{}\,(Debian) & \xmark \\
-\cite{kaur2021scientific}     & 2021 & 44 & 4 & \xmark & \cmark \\
-\cite{mills2023longitudinal} & 2023 & 380 & 6 & \xmark & \cmark \\
-\cite{haque2022wellbegun} & 2022 & 261 & 1 & \cmark & \xmark \\
-\cite{shi2025drdocker} & 2025 & 33{,}952 & 1 & \xmark & \xmark \\
-\cite{churakova2026vex} & 2026 & 48 & 7 & \xmark & \cmark \\
+\cite{shu2017dockerhub}        & 2017 & 356{,}218 & 1 & V & \xmark & \xmark \\
+\cite{zerouali2019outdated} & 2019 & 7{,}380 & 1 & V & \cmark{}\,(Debian) & \xmark \\
+\cite{kaur2021scientific}     & 2021 & 44 & 4 & V & \xmark & \cmark \\
+\cite{mills2023longitudinal} & 2023 & 380 & 6 & V & \xmark & \cmark \\
+\cite{haque2022wellbegun} & 2022 & 261 & 1 & V & \cmark & \xmark \\
+\cite{shi2025drdocker} & 2025 & 33{,}952 & 1 & V,S,C,M & \xmark & \xmark \\
+\cite{churakova2026vex} & 2026 & 48 & 7 & V & \xmark & \cmark \\
 \midrule
-\textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{13} & \cmark & \cmark \\
+\textbf{This work} & \textbf{2026} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \cmark & \cmark \\
 \bottomrule
-\end{tabular}
+\end{tabular}\\[2pt]
+{\footnotesize Dims.: V~vuln, B~SBOM, S~secrets, C~config, M~malware.}
 \end{table}
 
 % ============================================================
@@ -229,7 +232,9 @@ tags point to a byte-identical image (e.g.\ \texttt{24.04}, \texttt{noble} and
 \paragraph{Scanner battery.}
 An OS base image is a static root filesystem with no application source code
 and no running service, so we select the static-analysis axes that apply to
-such an artifact and run \emph{13} open-source scanners. \emph{SBOM}: Syft and
+such an artifact and run \emph{14} open-source
+scanners.\footnote{Each scanner runs from a version-pinned container image; the
+exact versions are recorded in the released configuration.} \emph{SBOM}: Syft and
 cdxgen. \emph{Package vulnerabilities (SCA)}: Trivy, Grype, OSV-Scanner and
 Clair. \emph{Image hardening}: Dockle and Checkov. \emph{Secrets}:
 TruffleHog, Gitleaks, detect-secrets and Whispers. \emph{Malware/IOC}:
@@ -240,7 +245,7 @@ the artifact under study.
 
 \paragraph{Harness and scan order.}
 Each image is pulled \emph{pinned by its \texttt{amd64} digest}, exported once
-to a local tar archive, and analysed by all 13 scanners reading that archive;
+to a local tar archive, and analysed by all 14 scanners reading that archive;
 the image is removed afterwards to bound disk. Every scanner runs in its own
 Docker container and a per-scanner adapter normalises the raw output to a
 common \texttt{Finding} schema; raw outputs are kept verbatim. To obtain a
@@ -259,32 +264,37 @@ the \textbf{1{,}927} images scanned so far and are regenerated as it completes.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_panels.pdf}
-\caption{(a)~mean critical+high vulnerabilities per distribution;
-(b)~mean total vulnerabilities by image age; (c)~packages vs.\ vulnerabilities;
-(d)~pairwise Jaccard of the four SCA engines over (image, CVE, package).}
+\caption{Posture by distribution~(a), staleness~(b), packages vs.\
+vulnerabilities~(c), SCA-engine Jaccard~(d). Bars: $\pm$1~SD.}
 \label{fig:panels}
 \end{figure}
 
 \subsection{RQ1: Security posture by distribution}
 \label{sec:rq1}
 Critical- and high-severity vulnerability findings vary by an order of
-magnitude across distributions (Figure~\ref{fig:panels}(a)). Debian carries
-the most (mean $\approx$344 critical+high per image), followed by the RHEL
-family (CentOS $\approx$205, OracleLinux $\approx$189, AmazonLinux $\approx$152,
-RockyLinux $\approx$128); Alpine sits much lower ($\approx$84), and Arch, ALT,
-Kali and openSUSE~Tumbleweed report essentially none. Package count does not
-track this ordering: Mageia and Fedora carry the most packages yet few
-critical or high findings, a point we return to in Section~\ref{sec:rq5}.
+magnitude across distributions (Figure~\ref{fig:panels}(a)). Debian carries the
+most (mean $\approx$344 critical+high per image, $n=270$), followed by the RHEL
+family (CentOS $\approx$206, OracleLinux $\approx$189, AmazonLinux $\approx$152,
+RockyLinux $\approx$115); Alpine sits lower ($\approx$84), and Arch, ALT, Kali,
+Mageia and openSUSE~Tumbleweed report few or none. Within-distribution variance
+is large (for Debian the standard deviation, $\approx$564, exceeds the mean), so
+these are population tendencies rather than tight estimates, and the smaller
+repositories (for example CentOS, $n=10$) should be read with care. Package
+count does not track this ordering: Mageia and Fedora carry many packages yet
+few critical or high findings, a point we return to in Section~\ref{sec:rq5}.
 
 \subsection{RQ2: Staleness vs.\ vulnerability}
 \label{sec:rq2}
-Vulnerability count rises monotonically with image age
-(Figure~\ref{fig:panels}(b)). Images rebuilt within the last six months carry
-a mean of $\approx$255 total vulnerability findings, climbing through
-$\approx$273 (one to two years) and $\approx$457 (two to four years) to
-$\approx$692 for images not rebuilt in over four years. This reproduces the
-technical-lag effect of \cite{zerouali2019outdated} on the
-OS-base subset and across 21 distributions at once.
+Vulnerability count tends to rise with image age (Figure~\ref{fig:panels}(b)).
+Images rebuilt within the last six months carry a mean of $\approx$255 total
+vulnerability findings, climbing through $\approx$273 (one to two years) and
+$\approx$457 (two to four years) to $\approx$692 for images not rebuilt in over
+four years. At the image level the rank correlation between age and
+vulnerability count is positive and significant, though modest (Spearman
+$\rho=0.16$, $p<0.001$, $n=1{,}927$), reflecting wide within-bucket variance;
+the bucketed means themselves increase monotonically. This reproduces the
+technical-lag effect of \cite{zerouali2019outdated} on the OS-base subset and
+across 21 distributions at once.
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
@@ -334,16 +344,14 @@ scanner-agreement results that single-tool studies could not.
 
 \begin{table}[!htbp]
 \centering
-\caption{Concrete analyses from prior work, reproduced on our OS-base corpus.
-The direction holds in every case; the multi-scanner setting additionally lets
-us refine the minimal-image and scanner-agreement findings.}
+\caption{Prior analyses reproduced on our OS-base corpus.}
 \label{tab:repro}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.25}
 \begin{tabular}{@{}p{0.15\columnwidth} p{0.24\columnwidth} p{0.26\columnwidth} p{0.27\columnwidth}@{}}
 \toprule
-\textbf{Study} & \textbf{Analysis reproduced} & \textbf{As originally reported} & \textbf{On our corpus (13 scanners)} \\
+\textbf{Study} & \textbf{Analysis reproduced} & \textbf{As originally reported} & \textbf{On our corpus (14 scanners)} \\
 \midrule
 \cite{shu2017dockerhub} & worst-severity class and per-image vulnerability counts & $>$80\% of images with a high-severity flaw; over 180 vulnerabilities per image on average & critical and high findings near-universal; Debian carries a mean of $\approx$344 critical+high per image (RQ1) \\
 \cite{zerouali2019outdated,zerouali2021techlag} & technical lag: image age vs vulnerabilities (Debian) & no release free of vulnerabilities; lag grows with age & total findings rise monotonically from $\approx$255 (under 6 months) to $\approx$692 (over 4 years), across all 21 distributions (RQ2) \\
@@ -354,12 +362,30 @@ us refine the minimal-image and scanner-agreement findings.}
 \end{tabular}
 \end{table}
 
+\subsection{Threats to validity}
+\label{sec:threats}
+Several threats bound these results. \emph{Coverage:} the census is still
+running, so the numbers reflect the 1{,}927 images processed to date; the
+round-robin order keeps every distribution represented, but the smaller
+repositories carry wide uncertainty and their means may shift as the run
+completes. \emph{Scanner error:} we report raw scanner output and do not
+adjudicate false positives or negatives, and the divergence we measure (RQ3)
+itself implies that no single engine is ground truth; severity, moreover, rests
+on CVSS scores that can overstate operational risk without VEX or reachability
+information~\cite{zhou2026realitycheck}. \emph{Architecture:} we scan
+\texttt{linux/amd64} only, so the findings may not transfer to \texttt{arm64}.
+\emph{Temporal drift:} a tag can be re-pushed during the census, so each image
+is characterised as of its scan time. \emph{Generality:} the corpus is Docker
+Hub's \emph{Operating systems} category, so other registries (Quay, GHCR) and
+non-base images are out of scope. The released dataset lets others re-run the
+analysis under different choices.
+
 % ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 We presented a recent, multi-scanner census of the operating-system base images
 of Docker Hub, the bases on which nearly every container is built, scanned with
-13 independent open-source tools rather than one. Across the images measured so
+14 independent open-source tools rather than one. Across the images measured so
 far, vulnerability posture varies by an order of magnitude across distributions
 and rises steadily with image age; the four package-vulnerability engines agree
 on almost nothing, so the posture a single tool reports is in large part a
