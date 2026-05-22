@@ -108,7 +108,7 @@ been characterised with a \emph{single} scanner and on samples that age
 quickly: the large-scale Docker Hub measurements have typically used one
 detector~\cite{shu2017dockerhub,zerouali2019outdated,liu2020understanding,shi2025drdocker},
 and the studies that \emph{do} compare scanners have done so on focused
-samples~\cite{kaur2021scientific,mills2023longitudinal}. No recent work measures
+samples~\cite{mills2023longitudinal,boles2024deciphering}. No recent work measures
 the Linux OS base images specifically, with a heterogeneous multi-scanner
 battery, as a current census. This paper fills that gap.
 
@@ -141,7 +141,6 @@ Table~\ref{tab:related} positions our work against prior measurements along six 
 \cite{zerouali2019outdated} & 7{,}380   & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
 \cite{liu2020understanding} & 2.2\,M$^{\ast}$ & 1 & V & Hub crawl & \xmark & \xmark \\
 \cite{ibrahim2020toomany} & 936       & 1 & V & Hub, per-sys & \xmark & \xmark \\
-\cite{kaur2021scientific} & 44        & 4 & V & curated & \xmark & \cmark \\
 \cite{zerouali2021techlag} & 140{,}498 & 1$^{\ddagger}$ & V & Hub, Debian & \cmark & \xmark \\
 \cite{haque2022wellbegun} & 261       & 1 & V & Hub, official & \cmark & \xmark \\
 \cite{dahlmanns2023secrets} & 337{,}171 & 1 & S & Hub crawl & \xmark & \xmark \\
@@ -149,7 +148,6 @@ Table~\ref{tab:related} positions our work against prior measurements along six 
 \cite{boles2024deciphering} & 927       & 2 & V & Hub official & \cmark & \cmark \\
 \cite{bufalino2025sbomproof} & 20$^{\dagger}$ & 7 & V & Hub Deb/Alp & \cmark & \cmark \\
 \cite{shi2025drdocker} & 33{,}952$^{\ast}$ & 1 & V,S,C,M & Hub pull-rank & \xmark & \xmark \\
-\cite{churakova2026vex} & 48        & 7 & V & Hub curated & \xmark & \cmark \\
 \midrule
 \textbf{This work} & \textbf{5{,}606} & \textbf{14} & \textbf{V,B,S,C,M} & \textbf{Hub category} & \cmark & \cmark \\
 \bottomrule
@@ -179,7 +177,7 @@ single vulnerability detector, and our multi-scanner design complements them by
 also quantifying how much the measured posture depends on the chosen scanner.
 
 \noindent\textbf{Inter-scanner divergence.} Prior scanner comparisons on focused
-samples report large disagreement~\cite{kaur2021scientific,mills2023longitudinal,churakova2026vex,boles2024deciphering,bufalino2025sbomproof};
+samples report large disagreement~\cite{boles2024deciphering,bufalino2025sbomproof};
 we revisit this as a secondary result, at OS-base census scale
 (Section~\ref{sec:rq3}).
 
