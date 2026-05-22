@@ -25,6 +25,7 @@
 \newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
 \usepackage[hidelinks,colorlinks=true,allcolors=black]{hyperref}
+\raggedbottom  % folga vai pro rodape, evita vaos esticados em paginas curtas
 % footnotes menores
 \makeatletter
 \renewcommand\@makefntext[1]{\parindent 1em\noindent\hb@xt@1.8em{\hss\@makefnmark}\scriptsize #1}
@@ -122,6 +123,7 @@ pipeline and the first OS-base-focused multi-scanner dataset.
 % ============================================================
 \section{Related Work}
 \label{sec:related}
+Table~\ref{tab:related} positions our work against prior measurements along six axes.
 
 \begin{table}[!htbp]
 \centering
@@ -157,9 +159,6 @@ $\ast$~vulnerability scan on a subset; $\dagger$~top-20 Debian/Alpine image fami
 $\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 \end{table}
 
-Table~\ref{tab:related} positions our work against prior measurements along six
-axes; we review three families below.
-
 \noindent\textbf{Large-scale measurements.} A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
 introduced the first large-scale study, scanning 356{,}218 images and showing
 that vulnerabilities propagate from a base image to everything built on it.
@@ -179,20 +178,10 @@ prevalence and propagation of vulnerabilities in the ecosystem; each draws on a
 single vulnerability detector, and our multi-scanner design complements them by
 also quantifying how much the measured posture depends on the chosen scanner.
 
-\noindent\textbf{Inter-scanner divergence.} A second line studies how much a
-scan result depends on the tool used, on focused samples:
-\cite{kaur2021scientific} use four scanners over 44 images,
-\cite{mills2023longitudinal} six over 380, and the recent
-\cite{churakova2026vex} seven over 48 images, finding counts from 191 to
-18{,}680 and a best-pair (Trivy and Grype) agreement of about 69\%; closest to
-us, \cite{boles2024deciphering} compared Trivy and Grype on 927 Docker Official
-Linux images and found them agreeing on the count for only 15\%. On the
-OS-package layer, \cite{bufalino2025sbomproof} report that scanners are largely
-incompatible owing to package-identifier mismatches, and
-\cite{zhou2026realitycheck} document high false-positive rates in SBOM-based
-scanning. Our work is complementary, bringing this multi-scanner lens to the
-OS-base layer at census scale and relating the divergence to image age and
-distribution.
+\noindent\textbf{Inter-scanner divergence.} Prior scanner comparisons on focused
+samples report large disagreement~\cite{kaur2021scientific,mills2023longitudinal,churakova2026vex,boles2024deciphering,bufalino2025sbomproof};
+we revisit this as a secondary result, at OS-base census scale
+(Section~\ref{sec:rq3}).
 
 \noindent\textbf{Gap.} Building on this body of work, we are not aware of a recent study that measures
 the Linux OS base images of Docker Hub specifically with a heterogeneous
