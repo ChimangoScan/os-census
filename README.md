@@ -13,9 +13,9 @@ is released separately **on acceptance**.
 A census of the **Linux operating-system base images** Docker Hub lists under
 its *Operating systems* category: 20 repositories (alpine, ubuntu, debian,
 centos, busybox, amazonlinux, fedora, oraclelinux, rockylinux, almalinux,
-photon, archlinux, tumbleweed, kali-rolling, ...), deduplicated by `amd64`
-content digest to **5,606 unique images**, each scanned by **14 open-source
-scanners**
+photon, archlinux, tumbleweed, leap, kali-rolling, mageia, alt, cirros,
+clearlinux, sl), deduplicated by `amd64` content digest to **5,606 unique
+images**, each scanned by **14 open-source scanners**
 (Syft, cdxgen, Trivy, Grype, OSV-Scanner, Clair, Dockle, Checkov, TruffleHog,
 Gitleaks, detect-secrets, Whispers, ClamAV, YARA-Hunter).
 
