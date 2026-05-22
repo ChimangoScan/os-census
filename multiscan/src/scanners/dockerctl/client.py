@@ -13,6 +13,9 @@ from pathlib import Path
 log = logging.getLogger("scanners.docker")
 
 _RATE_LIMIT_HINTS = ("toomanyrequests", "rate limit", "429 too many requests")
+# Serializa o `docker pull` no processo: com varios workers (threads) so 1 baixa
+# por vez (limite de rede), enquanto os scans rodam em paralelo apos o pull.
+_PULL_MUTEX = threading.Lock()
 
 # Pull errors that retrying will never fix — the tag is gone, the repo is
 # private/absent, the manifest doesn't exist. Fail fast instead of grinding
@@ -72,7 +75,8 @@ def pull(image: str, *, retries: int = 4, backoff: float = 30.0) -> None:
     # rotation rather than a backoff, so the effective retry budget is larger.
     for attempt in range(retries):
         try:
-            p = _run(["pull", "--quiet", image], timeout=600)
+            with _PULL_MUTEX:
+                p = _run(["pull", "--quiet", image], timeout=600)
         except subprocess.TimeoutExpired:
             # a slow registry (ghcr.io has been known to stall) must not crash
             # the whole run; treat a stalled pull as a retryable failure
