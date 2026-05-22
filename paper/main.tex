@@ -64,11 +64,13 @@ Every container starts from an operating-system (OS) base image, yet these are
 usually measured with a single scanner. We present a recent multi-scanner
 census of Docker Hub's Linux OS base images: \textbf{5{,}606} unique
 \texttt{amd64} images across \textbf{20} repositories, scanned with \textbf{14}
-open-source tools. Vulnerability posture varies by an order of magnitude across
-distributions and grows with image age; the four package-vulnerability engines
-barely agree (Jaccard $\le0.35$); and about one in five historically-published
-images can no longer be pulled by a modern Docker (legacy manifest schema). We
-release the pipeline and dataset on acceptance.
+open-source tools. We find that vulnerability posture varies by an order of
+magnitude across distributions and is driven by image age and a distribution's
+patch cadence rather than by image size or popularity; and that about one in
+five historically-published images can no longer be pulled by a modern Docker
+(legacy manifest schema). As a secondary result, the four package-vulnerability
+engines barely agree, so the posture a single tool reports is largely a property
+of that tool. We release the pipeline and dataset on acceptance.
 \end{abstract}
 
 % ============================================================
@@ -114,11 +116,13 @@ battery, as a current census. This paper fills that gap.
 
 \noindent\textbf{Contributions.} We present (i)~a recent multi-scanner census of
 Docker Hub's Linux OS base images (Section~\ref{sec:method}); (ii)~a
-per-distribution posture and a staleness-vulnerability relationship
-(Sections~\ref{sec:rq1},~\ref{sec:rq2}); (iii)~a four-engine divergence
-measurement on the OS-package layer (Section~\ref{sec:rq3});
-(iv)~an image-longevity finding (Section~\ref{sec:rq4}); and (v)~a released
-pipeline and the first OS-base-focused multi-scanner dataset.
+per-distribution posture, a staleness-vulnerability relationship, and the
+finding that vulnerability load is driven by age rather than image size or
+popularity (Sections~\ref{sec:rq1},~\ref{sec:rq2},~\ref{sec:rq5});
+(iii)~an image-longevity finding (Section~\ref{sec:rq4}); (iv)~as a secondary
+result, a four-engine divergence measurement on the OS-package layer
+(Section~\ref{sec:rq3}); and (v)~a released pipeline and the first
+OS-base-focused multi-scanner dataset.
 
 % ============================================================
 \section{Related Work}
@@ -398,11 +402,11 @@ category; the released dataset lets others re-run the analysis under other
 choices.
 \textbf{Conclusion.} We measured the security posture of Docker Hub's Linux OS
 base images with 14 scanners rather than one. Posture varies by an order of
-magnitude across distributions and rises with image age; the four
-package-vulnerability engines agree on almost nothing, so a single tool's count
-is largely a property of that tool; a smaller image is not reliably safer; and
-about a fifth of historically-published images can no longer be installed by a
-modern Docker while end-of-life bases stay heavily pulled. We release the
+magnitude across distributions and is driven by image age rather than image size
+or popularity; and about a fifth of historically-published images can no longer
+be installed by a modern Docker while end-of-life bases stay heavily pulled.
+Secondarily, the four package-vulnerability engines agree on almost nothing, so
+a single tool's count is largely a property of that tool. We release the
 pipeline and dataset\footnote{Released on acceptance.} so the measurement can be
 reproduced and kept current.
 
