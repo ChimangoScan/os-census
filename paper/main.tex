@@ -371,10 +371,11 @@ overstate and must be read with their false-positive rate.
 
 \subsection{Reproducing prior analyses}
 \label{sec:repro}
-Our research questions reproduce concrete analyses from prior work on the
-OS-base subset (Table~\ref{tab:repro}): the direction holds in every case, and
-the multi-scanner setting refines the minimal-image and scanner-agreement
-findings.
+We reproduce concrete analyses from prior work on \emph{our} OS-base corpus
+(Table~\ref{tab:repro}); their own corpora range from the whole registry to a
+single distribution (the \emph{OS?} column marks the OS-base-focused ones), yet
+the direction holds in every case, and the multi-scanner setting refines the
+minimal-image and scanner-agreement findings.
 
 \begin{table}[!htbp]
 \centering
@@ -383,22 +384,23 @@ findings.
 \footnotesize
 \setlength{\tabcolsep}{5pt}
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} p{0.20\columnwidth} p{0.30\columnwidth} l l @{}}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}} p{0.18\columnwidth} p{0.27\columnwidth} c l l @{}}
 \toprule
-\textbf{Study} & \textbf{Metric reproduced} & \textbf{Reported} & \textbf{Ours} \\
+\textbf{Study} & \textbf{Metric reproduced} & \textbf{OS?} & \textbf{Reported} & \textbf{Ours} \\
 \midrule
-\cite{shu2017dockerhub} & images with a high-severity vuln & $>$80\% & 97\%$^{\ast}$ \\
-\cite{zerouali2019outdated} & vulnerabilities vs.\ image age (Debian) & rises with age & $\approx$255$\to$692 ($\rho{=}0.16$) \\
-\cite{ibrahim2020toomany} & spread across base distributions & varies & 10$\times$ range \\
-\cite{wist2021vulnerability} & where severe vulns concentrate & language ecosystems & OS-package layer \\
-\cite{haque2022wellbegun} & is a minimal image safer? & no & no (non-monotonic) \\
-\cite{dahlmanns2023secrets} & images carrying secrets & 8.5\% (valid.) & 72\% (raw) \\
-\cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & rise; Debian $\gg$ & rise; Debian top \\
-\cite{boles2024deciphering} & scanner divergence on OS images & agree 15\% & Jaccard 0.35 \\
-\cite{shi2025drdocker} & known-vulnerability prevalence & 93.7\% & 98.7\% \\
+\cite{shu2017dockerhub} & images with a high-severity vuln & \xmark & $>$80\% & 97\%$^{\ast}$ \\
+\cite{zerouali2019outdated} & vulnerabilities vs.\ image age & \cmark & rises with age & $\approx$255$\to$692 ($\rho{=}0.16$) \\
+\cite{ibrahim2020toomany} & spread across base distributions & \xmark & varies & 10$\times$ range \\
+\cite{wist2021vulnerability} & where severe vulns concentrate & \xmark & language ecosys.\ & OS-package layer \\
+\cite{haque2022wellbegun} & is a minimal image safer? & \cmark & no & no (non-monotonic) \\
+\cite{dahlmanns2023secrets} & images carrying secrets & \xmark & 8.5\% (valid.) & 72\% (raw) \\
+\cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & \xmark & rise; Debian $\gg$ & rise; Debian top \\
+\cite{boles2024deciphering} & scanner divergence on OS images & \cmark & agree 15\% & Jaccard 0.35 \\
+\cite{shi2025drdocker} & known-vulnerability prevalence & \xmark & 93.7\% & 98.7\% \\
 \bottomrule
 \end{tabular*}\\[2pt]
-{\footnotesize $\ast$~critical or high (Shu reports high-severity); $\rho$: Spearman.}
+{\footnotesize \emph{OS?}: prior study's corpus is OS base images.
+$\ast$~critical or high (Shu reports high-severity); $\rho$: Spearman.}
 \end{table}
 
 \subsection{Threats to validity}
