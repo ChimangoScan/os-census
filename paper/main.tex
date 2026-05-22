@@ -411,18 +411,20 @@ pipeline and dataset\footnote{Released on acceptance.} so the measurement can be
 reproduced and kept current.
 
 \bibliographystyle{sbc}
-\begingroup
-\makeatletter
-\let\oldthebibliography\thebibliography
-\let\endoldthebibliography\endthebibliography
-\renewcommand{\thebibliography}[1]{%
-  \oldthebibliography{#1}%
-  \setlength{\itemsep}{-0.5ex}%
-  \setlength{\parskip}{4pt}%
-  \setlength{\parsep}{0pt}%
-  \setlength{\topsep}{0pt}%
-}
-\makeatother
+% Aperto de espacamento das referencias -- DESATIVADO (ha folga de espaco; usa o padrao SBC).
+% Reativar (envolvendo o \bibliography) se faltar espaco:
+% \begingroup
+% \makeatletter
+% \let\oldthebibliography\thebibliography
+% \let\endoldthebibliography\endthebibliography
+% \renewcommand{\thebibliography}[1]{%
+%   \oldthebibliography{#1}%
+%   \setlength{\itemsep}{-0.5ex}%
+%   \setlength{\parskip}{4pt}%
+%   \setlength{\parsep}{0pt}%
+%   \setlength{\topsep}{0pt}%
+% }
+% \makeatother
 \bibliography{paper}
-\endgroup
+% \endgroup
 \end{document}
