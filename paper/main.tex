@@ -12,9 +12,6 @@
 \usepackage{xcolor}
 \usepackage{breakcites}
 \graphicspath{{figures/}}
-\usepackage{caption}
-\captionsetup[figure]{font={small,bf},skip=3pt}
-\captionsetup[table]{font={footnotesize,bf}}
 \setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
 \setlength{\intextsep}{5pt plus 2pt minus 2pt}
 \setlength{\floatsep}{5pt plus 2pt minus 2pt}
@@ -126,7 +123,7 @@ pipeline and the first OS-base-focused multi-scanner dataset.
 \section{Related Work}
 \label{sec:related}
 
-\begin{table}[!hb]
+\begin{table}[!htbp]
 \centering
 \caption{Prior OS/base-image and container-scanner measurements.}
 \label{tab:related}
@@ -161,6 +158,9 @@ pipeline and the first OS-base-focused multi-scanner dataset.
 $\ast$~vulnerability scan on a subset; $\dagger$~top-20 Debian/Alpine image families;
 $\ddagger$~Debian Security Tracker (metadata), not a scanner.}
 \end{table}
+
+Table~\ref{tab:related} positions our work against prior measurements along six
+axes; we review three families below.
 
 \noindent\textbf{Large-scale measurements.} A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerhub}
 introduced the first large-scale study, scanning 356{,}218 images and showing
@@ -231,14 +231,10 @@ cdxgen. \emph{Package vulnerabilities (SCA)}: Trivy, Grype, OSV-Scanner and
 Clair. \emph{Image hardening}: Dockle and Checkov. \emph{Secrets}:
 TruffleHog, Gitleaks, detect-secrets and Whispers. \emph{Malware/IOC}:
 ClamAV and YARA\-Hunter. We exclude the SAST, dynamic (DAST) and network axes,
-which need application source or a running service a base image lacks.
-
-\noindent\textbf{Harness.} Each image is pulled pinned by its \texttt{amd64}
-digest and exported once to a tar archive that all 14 scanners read, so result
-differences reflect the scanner rather than the pull; a per-scanner adapter
-normalises output to a common schema and raw outputs are kept verbatim for
-reproducibility.
-% TODO: nota de reprodutibilidade/escala (workers, ETA) ao fechar.
+which need application source or a running service a base image lacks. Each
+image is exported once to a tar archive that all 14 scanners read, so result
+differences reflect the scanner rather than the pull, and raw outputs are kept
+verbatim.
 
 % ============================================================
 \section{Results}
@@ -246,7 +242,7 @@ reproducibility.
 
 \subsection{RQ1: Security posture by distribution}
 \label{sec:rq1}
-\begin{figure}[!hbp]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_rq1.pdf}
 \caption{(a)~mean critical+high per distribution; (b)~severity mix;
@@ -266,7 +262,7 @@ few critical or high findings (Section~\ref{sec:rq5}).
 
 \subsection{RQ2: Staleness vs.\ vulnerability}
 \label{sec:rq2}
-\begin{figure}[!hbp]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_rq2.pdf}
 \caption{(a)~mean total by age ($\pm$1~SD); (b)~critical and high by age;
@@ -284,7 +280,7 @@ bucketed means rise monotonically (the technical lag of
 
 \subsection{RQ3: Inter-scanner divergence on OS packages}
 \label{sec:rq3}
-\begin{figure}[!hbp]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_rq3.pdf}
 \caption{(a)~pairwise CVE Jaccard; (b)~CVEs per engine; (c)~CVEs by number of
@@ -320,7 +316,7 @@ repository still records over a billion pulls. To our knowledge neither the
 prevalence of legacy-schema OS images nor the popularity of EOL bases has been
 measured before.
 
-\begin{figure}[!hbp]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_rq4.pdf}
 \caption{(a)~un-pullable rate by distribution; (b)~repository pulls;
@@ -330,7 +326,7 @@ measured before.
 
 \subsection{RQ5: Is a minimal image safer?}
 \label{sec:rq5}
-\begin{figure}[!hbp]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{fig_rq5.pdf}
 \caption{(a)~packages vs.\ total; (b)~packages vs.\ critical+high;
@@ -371,7 +367,7 @@ single distribution (the \emph{OS?} column marks the OS-base-focused ones), yet
 the direction holds in every case, and the multi-scanner setting refines the
 minimal-image and scanner-agreement findings.
 
-\begin{table}[!hbp]
+\begin{table}[!htbp]
 \centering
 \caption{Prior analyses reproduced on our OS-base corpus.}
 \label{tab:repro}
