@@ -152,16 +152,19 @@ ax[1].set_xlabel("vulns / package"); ax[1].set_title("(b) Density / distro", loc
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq5.pdf"); plt.close(fig); print("fig_rq5 ok")
 
 # ----------------------------------------------------------------- Beyond vulnerabilities
-fig, ax = plt.subplots(1, 3, figsize=(9.5, 2.2))
+fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.3))
+dims=[("secrets","#e08214"),("misconfig","#8073ac"),("malware","#b2182b")]
+labs=["secrets","misconfig","IOC"]
 def prev(col):
     v=[r[col] for r in rows if r[col] is not None]; return 100*sum(1 for x in v if x>0)/len(v) if v else 0
-ax[0].bar(["secrets","misconfig","IOC"],[prev("secrets"),prev("misconfig"),prev("malware")],color=["#e08214","#8073ac","#b2182b"])
-ax[0].set_ylim(0,100); ax[0].set_ylabel("% of images >=1"); ax[0].set_title("(a) Prevalence (raw)", loc="left")
-def cdf(ax_,col,color,lbl):
-    v=sorted(x for r in rows if (x:=r[col]) is not None)
-    if not v: return
-    ax_.plot(v,[100*i/len(v) for i in range(len(v))],color=color); ax_.set_xscale("symlog")
-    ax_.set_xlim(left=0); ax_.set_ylim(0,100); ax_.set_xlabel(lbl); ax_.set_ylabel("% images <= x")
-cdf(ax[1],"secrets","#e08214","secret hits / image"); ax[1].set_title("(b) Secrets CDF", loc="left")
-cdf(ax[2],"misconfig","#8073ac","misconfig / image"); ax[2].set_title("(c) Misconfig CDF", loc="left")
-fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_other.pdf"); plt.close(fig); print("fig_other ok")
+ax[0].bar(labs,[prev(c) for c,_ in dims],color=[c for _,c in dims])
+ax[0].set_ylim(0,112); ax[0].set_ylabel("% of images with >=1"); ax[0].set_title("(a) Raw detector prevalence", loc="left")
+for i,(c,_) in enumerate(dims):
+    ax[0].text(i, prev(c)+2, f"{prev(c):.0f}%", ha="center", fontsize=6)
+# (b) boxplot de hits por imagem (mediana + dispersao + cauda), log
+data=[[r[c] for r in rows if r[c] is not None] for c,_ in dims]
+bp=ax[1].boxplot(data, tick_labels=labs, showfliers=False, patch_artist=True, widths=0.6, medianprops=dict(color="black"))
+for patch,(_,col) in zip(bp["boxes"],dims): patch.set_facecolor(col); patch.set_alpha(.6)
+ax[1].set_yscale("symlog"); ax[1].set_ylim(bottom=0); ax[1].set_ylabel("hits / image")
+ax[1].set_title("(b) Detections per image", loc="left")
+fig.tight_layout(pad=0.4, w_pad=0.9); fig.savefig(f"{FIG}/fig_other.pdf"); plt.close(fig); print("fig_other ok")
