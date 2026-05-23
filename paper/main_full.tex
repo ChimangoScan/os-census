@@ -530,8 +530,20 @@ $\ast$~critical or high (Shu reports high-severity); $\rho$: Spearman.}
 \end{table}
 
 % ============================================================
-\section{Limitations and conclusion}
+\section{Discussion and conclusion}
 \label{sec:conclusion}
+\textbf{Implications.} Three actionable readings follow from the data. (i)~The
+distribution is the dominant lever (Section~\ref{sec:rq5}): pin to a maintained,
+fast-patching base and rebuild on a cadence rather than chase a ``minimal'' tag,
+since image size alone does not predict exposure. (ii)~Because a single scanner's
+count is largely a property of that scanner (Section~\ref{sec:rq3}), treat a
+one-tool number as a lower bound and reconcile at least two engines with
+complementary feeds, a distro-mapped one (Clair) and an advisory-based one
+(Trivy or Grype); our released multi-scanner dataset is a ready reconciliation
+baseline. (iii)~The high raw but near-zero validated rates for secrets and
+malware (Section~\ref{sec:other}) argue for validation-in-the-loop before acting
+on any non-vulnerability finding.
+
 \textbf{Limitations.} Small repositories carry wide within-distribution
 variance, so per-distribution means are tendencies, not tight estimates.
 We report raw scanner output without adjudicating false positives or negatives;
