@@ -168,7 +168,7 @@ A rich line of work has charted the security of Docker Hub. \cite{shu2017dockerh
 introduced the first large-scale study, scanning 356{,}218 images and showing
 that vulnerabilities propagate from a base image to everything built on it.
 \cite{liu2020understanding} extended the scale to 2.2~million images;
-\cite{zerouali2019outdated} introduced the notion of \emph{technical lag} on
+\cite{zerouali2019outdated} applied the notion of \emph{technical lag} to
 7{,}380 Debian-based images, later generalised to a multi-dimensional analysis
 over 140{,}000 images~\cite{zerouali2021techlag}. \cite{wist2021vulnerability}
 analysed 2{,}500 images across image classes, \cite{ibrahim2020toomany} examined
@@ -381,7 +381,7 @@ minimal-image and scanner-agreement findings.
 \midrule
 \cite{shu2017dockerhub} & images with a high-severity vuln & \xmark & $>$80\% & 97\%$^{\ast}$ \\
 \cite{zerouali2019outdated} & vulnerabilities vs.\ image age & \cmark & rises with age & $\approx$255$\to$692 ($\rho{=}0.16$) \\
-\cite{ibrahim2020toomany} & spread across base distributions & \xmark & varies & 10$\times$ range \\
+\cite{ibrahim2020toomany} & vuln spread across images & \xmark & varies & 10$\times$ (distro) \\
 \cite{wist2021vulnerability} & where severe vulns concentrate & \xmark & language ecosys.\ & OS-package layer \\
 \cite{haque2022wellbegun} & is a minimal image safer? & \cmark & no & no (non-monotonic) \\
 \cite{dahlmanns2023secrets} & images carrying secrets & \xmark & 8.5\% valid & 72\% raw, 0\% valid \\
