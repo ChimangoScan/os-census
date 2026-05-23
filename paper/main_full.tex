@@ -337,14 +337,34 @@ The four package-vulnerability engines barely agree (Figure~\ref{fig:rq3}).
 We compare at the \mbox{(image, CVE)} level because the engines name packages
 differently (Clair reports source packages, Trivy and Grype binary packages), so
 a package-level key would understate agreement. Even so, the best-agreeing pair
-is Trivy and Grype, at a Jaccard of just \textbf{0.35}; every other pair is below
+is Trivy and Grype, at a Jaccard of just \textbf{0.39}; every other pair is below
 0.05, and OSV-Scanner and Clair are near-disjoint from the rest
 (OSV$\cap$Clair $=0$). The engines differ sharply in scope: Grype and Trivy
-report by far the most image-CVE pairs (196k and 148k), OSV-Scanner targets
-language-ecosystem advisories (9k) and Clair maps only specific distributions to
-its feeds (8k, and zero on Rocky and AlmaLinux, which it does not map to the RHEL
-feeds). The reported security posture of an OS image is thus, to a large degree,
+report by far the most image-CVE pairs (276k and 196k), OSV-Scanner targets
+language-ecosystem advisories (14k) and Clair maps only specific distributions to
+its feeds (12k, and zero on Rocky and AlmaLinux, which it does not map to the RHEL
+feeds). Because Clair records half of its findings under the full vulnerability
+name rather than the bare CVE id, we normalise every identifier to its canonical
+CVE before intersecting the sets; skipping this step spuriously deflates Clair's
+overlap. The reported security posture of an OS image is thus, to a large degree,
 a property of the chosen scanner.
+
+\noindent\textbf{Is the divergence error or coverage?}
+To tell whether single-engine findings are false positives or genuine
+coverage gaps, we manually established ground truth for a seed-fixed,
+reproducible stratified sample of 200 \mbox{(image, CVE, engine)} triples,
+reading the installed package version against the authoritative advisory
+(NVD, OSV, and the distribution trackers) for each. Overall precision is
+\textbf{0.91} (95\% Wilson CI [0.86, 0.94]) and differs sharply by engine:
+Trivy 0.96, Grype 0.95 and OSV-Scanner 1.00, against just \textbf{0.63} for
+Clair. Crucially, divergent (single-reporter) findings are about as precise as
+multiply-reported ones, so the disagreement is driven by differences in feed
+coverage and package mapping, \emph{not} by matching errors. Clair's lower
+precision traces almost entirely to one cause: on slim images it reports the
+vulnerable \emph{source} package (e.g.\ \texttt{perl}, \texttt{systemd}) when
+only a stripped binary (\texttt{perl-base}, \texttt{libsystemd0}) is installed.
+No single engine is therefore ground truth: the union over-reports, mostly
+through Clair's source-level mappings, while any one engine under-covers.
 
 \subsection{RQ4: End-of-life and un-pullable images}
 \label{sec:rq4}
@@ -501,7 +521,7 @@ is not reliably safer, but our four-predictor model (Section~\ref{sec:rq5})
 attributes the load to patch cadence rather than to size or popularity.
 \emph{Divergence is larger on the OS layer than two-tool studies suggest}: where
 \cite{boles2024deciphering} found Trivy and Grype agreeing on the count for only
-15\% of images, our CVE-level Jaccard of 0.35 and the near-disjoint OSV-Scanner
+15\% of images, our CVE-level Jaccard of 0.39 and the near-disjoint OSV-Scanner
 and Clair sets (RQ3) show the disagreement deepens once four engines, rather than
 two, are compared. The reproductions thus serve a dual role: they validate the
 pipeline against established results, and they quantify how much a single-scanner,
@@ -545,8 +565,8 @@ proportions and directions rather than raw totals.
 \cite{haque2022wellbegun} & packages: large vs.\ minimal & \cmark & 188 vs 14 & 85 vs 1 \\
 \cite{dahlmanns2023secrets} & images carrying secrets & \xmark & 8.5\% valid & 72\% raw, 0\% valid \\
 \cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & \xmark & rise; Debian $\gg$ & rise; Debian top \\
-\cite{boles2024deciphering} & scanner divergence on OS images & \cmark & agree 15\% & Jaccard 0.35 \\
-\cite{churakova2026vex} & Trivy/Grype CVE Jaccard & \xmark & 0.76 & 0.35 \\
+\cite{boles2024deciphering} & scanner divergence on OS images & \cmark & agree 15\% & Jaccard 0.39 \\
+\cite{churakova2026vex} & Trivy/Grype CVE Jaccard & \xmark & 0.76 & 0.39 \\
 \cite{bufalino2025sbomproof} & CVE-count spread across tools & \cmark & 200 to 36k & 12k to 276k pairs \\
 \cite{shi2025drdocker} & known-vulnerability prevalence & \xmark & 93.7\% & 98.7\% \\
 \bottomrule

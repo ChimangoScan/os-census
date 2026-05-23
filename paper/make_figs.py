@@ -3,7 +3,7 @@
 Saidas: fig_rq1..fig_rq5, fig_other em figures/.
 Rodar:  uv run --with matplotlib python make_figs.py
 """
-import csv, json, glob, collections, os, sqlite3, statistics as st
+import csv, json, glob, collections, os, sqlite3, re, statistics as st
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -110,6 +110,13 @@ else:
     with gzip.open(dump,"rt") as fi:
         for s,pairs in json.load(fi).items(): sets[s]={tuple(p) for p in pairs}
     print(f"RQ3: usando dump pre-computado ({dump.name})")
+# Normaliza o identificador para o CVE-id canonico antes de cruzar os conjuntos:
+# o Clair grava metade das entradas como o nome completo do vuln
+# ("CVE-XXXX-YYYY on Ubuntu 20.04 ..."), que sem normalizar nunca cruza com os
+# CVE-ids limpos dos demais engines e inflaria artificialmente a divergencia.
+_CVE=re.compile(r"CVE-\d{4}-\d+")
+for s in SCA:
+    sets[s]={(img,_CVE.search(str(c)).group(0)) for (img,c) in sets[s] if _CVE.search(str(c))}
 _nm={"trivy":"Trivy","grype":"Grype","osv":"OSV","clair":"Clair"}
 fig, ax = plt.subplots(1, 4, figsize=FS)
 M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]
