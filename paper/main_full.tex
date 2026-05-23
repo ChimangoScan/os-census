@@ -226,7 +226,7 @@ vulnerabilities a defender would have to triage}, not \emph{remotely
 exploitable}.
 
 \noindent\textbf{Corpus.} We take as our corpus the operating-system base images
-Docker Hub lists under its \emph{Operating systems} category: \textbf{20}
+Docker Hub lists under its \emph{Operating systems} category, crawled in 2026: \textbf{20}
 repositories with an \texttt{amd64} image (\texttt{alpine}, \texttt{ubuntu},
 \texttt{debian}, \texttt{centos}, \texttt{busybox}, \texttt{amazonlinux},
 \texttt{fedora}, \texttt{oraclelinux}, \texttt{rockylinux}, \texttt{almalinux},
@@ -456,7 +456,10 @@ secrets live in application layers, not the base. The labelled sample is release
 for re-use.
 \emph{Malware/IOC:} ClamAV reports zero detections; YARA-Hunter matches 76\% of
 images, but we manually reviewed a seeded random sample of 1{,}100 of its
-13{,}348 matches and found \textbf{zero} real malware (true-positive rate
+13{,}348 matches\footnote{For both the secrets and the malware axes, each sampled
+detection was read and classified as a true or false positive by a single
+reviewer; the seeded samples, per-item verdicts and selection scripts are in the
+released dataset.} and found \textbf{zero} real malware (true-positive rate
 $\le0.35\%$, 95\% Wilson CI). Every match was a YARA rule (several written for
 memory dumps) firing on a benign OS artifact: an Emotet byte-pattern in the
 BusyBox binary, a RAT rule matching the word ``cerberus'' in the IEEE OUI list,

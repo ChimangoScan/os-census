@@ -1,0 +1,23 @@
+{
+ "n_singletons_total": 215062,
+ "n_multis_total": 133454,
+ "singleton_by_scanner": {
+  "trivy": 63037,
+  "grype": 142798,
+  "osv": 3288,
+  "clair": 5939
+ },
+ "multi_combos": {
+  "clair+grype": 37,
+  "clair+grype+trivy": 5704,
+  "clair+trivy": 56,
+  "grype+osv": 449,
+  "grype+osv+trivy": 9986,
+  "grype+trivy": 116535,
+  "osv+trivy": 687
+ },
+ "sample_single": 120,
+ "sample_multi": 80,
+ "sample_total": 200,
+ "seed": 42
+}
