@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Gera config/os.yaml com os caminhos corretos para ESTE clone, sem edicao
-manual. Caminhos de saida/cache: env OSCENSUS_OUT/OSCENSUS_CACHE, senao o
-caminho legado dos autores se existir, senao scan-out/ dentro do repo.
+manual. Caminhos de saida/cache: env OSCENSUS_OUT/OSCENSUS_CACHE, senao
+scan-out/ dentro do repo.
 Rodar:  python3 scripts/render_config.py
 """
 import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-def pick(env, legacy, rel):
-    return os.environ.get(env) or (legacy if Path(legacy).exists() else str(ROOT / rel))
+def pick(env, rel):
+    return os.environ.get(env) or str(ROOT / rel)
 
-OUT   = pick("OSCENSUS_OUT",   "/mnt/win_ssd/scanners-data/out_so",   "scan-out/out_so")
-CACHE = pick("OSCENSUS_CACHE", "/mnt/win_ssd/scanners-data/cache_so", "scan-out/cache_so")
+OUT   = pick("OSCENSUS_OUT",   "scan-out/out_so")
+CACHE = pick("OSCENSUS_CACHE", "scan-out/cache_so")
 for d in (OUT, CACHE, str(ROOT/"work")):
     Path(d).mkdir(parents=True, exist_ok=True)
 

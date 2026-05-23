@@ -20,8 +20,8 @@ UV="${UV:-uv}"
 
 figures() {
   echo "[reproduce] figuras a partir dos dados pre-computados (data/)"
-  "$UV" run --with matplotlib,numpy python paper/make_figs.py
-  echo "[reproduce] OK -> paper/figures/*.pdf"
+  "$UV" run --with matplotlib,numpy python scripts/make_figs.py
+  echo "[reproduce] OK -> figures/*.pdf"
 }
 
 case "$MODE" in

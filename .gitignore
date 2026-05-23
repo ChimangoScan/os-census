@@ -6,10 +6,6 @@ __pycache__/
 *.db-shm
 *.db-wal
 related_work_pdfs/
-paper/main.aux
-paper/main.log
-paper/main.out
-paper/main.bbl
-paper/main.blg
-paper/*.log
 figures/_*.pdf
+config/os.yaml
+scan-out/

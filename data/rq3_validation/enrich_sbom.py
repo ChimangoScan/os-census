@@ -4,8 +4,8 @@ matching by package name and source name. Read-only on out_so; only adds an
 'sbom' field with candidate installed versions. Does NOT classify."""
 import os, json, gzip, glob
 
-BASE = "/mnt/win_ssd/scanners-data/out_so"
-OUT = "/mnt/win_ssd/so-dockerhub-paper/data/rq3_validation"
+BASE = "scan-out/out_so"
+OUT = "data/rq3_validation"
 
 def load_sbom(dd):
     files = glob.glob(os.path.join(BASE, dd, "syft", "*.syft.json.gz"))

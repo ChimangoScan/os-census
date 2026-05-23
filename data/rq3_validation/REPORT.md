@@ -52,7 +52,7 @@ Conclusao central: os findings divergentes (reportados por um unico scanner) NAO
 ## 2. Metodologia
 
 ### 2.1 Fonte e formato dos dados (somente leitura)
-- Findings por scanner: /mnt/win_ssd/scanners-data/out_so/<dir>/{trivy,grype,osv,clair}/*.json.gz.
+- Findings por scanner: scan-out/out_so/<dir>/{trivy,grype,osv,clair}/*.json.gz.
   - Trivy: Results[].Vulnerabilities[] -> PkgName, InstalledVersion, FixedVersion, Status, DataSource.
   - Grype: matches[] -> artifact.name/version/purl, vulnerability.id, fix.versions/state, namespace (feed).
   - OSV-Scanner: results[].packages[].vulnerabilities[] -> package.name/version/ecosystem, id+aliases.

@@ -1,7 +1,7 @@
 #!/bin/bash
-# Deploya um worker remoto do censo de SO num host remoto, consistente com o local:
-# engine multiscan + scanners.yaml (clair --image-ref) + matcher.db + whispers.
-# O worker consome a fila via coordinator local (porta 8918) por túnel reverso.
+# Deploya um worker remoto do censo de SO num host (lampad/a9), consistente com o local:
+# engine multiscan + nossa scanners.yaml (clair --image-ref) + matcher.db + whispers.
+# O worker consome NOSSA fila via coordinator local (porta 8918) por túnel reverso.
 # Uso: bash deploy_worker.sh <host>     (rode do PC local; precisa ssh <host> e ssh -R)
 set -e
 H="$1"; [ -z "$H" ] && { echo "uso: deploy_worker.sh <host>"; exit 1; }
@@ -9,7 +9,7 @@ COORD=8918
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"          # raiz do repo (auto)
 LOCAL_REPO="${OSCENSUS_ENGINE:-$ROOT/multiscan}"  # engine: submodulo por padrao
 LOCAL_CFG="$ROOT/config"
-MATCHER="${OSCENSUS_MATCHER:-${OSCENSUS_CACHE:-$ROOT/scan-out/cache_so}/clair/matcher.db}"
+MATCHER="${OSCENSUS_MATCHER:-${OSCENSUS_CACHE:-/mnt/win_ssd/scanners-data/cache_so}/clair/matcher.db}"
 RD=os-worker   # dir no remoto (relativo ao home)
 
 echo "[$H] 1. dirs"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Extract ALL secret findings from TruffleHog + Gitleaks outputs under
-/mnt/win_ssd/scanners-data/out_so, assign a stable ID to each, and draw a
+scan-out/out_so, assign a stable ID to each, and draw a
 reproducible random sample of 1100 (seed=42), stratified proportionally by
 scanner.
 
@@ -17,8 +17,8 @@ import glob
 import hashlib
 import random
 
-ROOT = "/mnt/win_ssd/scanners-data/out_so"
-OUTDIR = "/mnt/win_ssd/so-dockerhub-paper/data/secret_validation"
+ROOT = "scan-out/out_so"
+OUTDIR = "data/secret_validation"
 SAMPLE_N = 1100
 SEED = 42
 

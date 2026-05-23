@@ -12,7 +12,7 @@ causa (only meaningful for FP/ambiguo): feed_db | source_vs_binary |
 For TP, causa = "" .
 """
 import json, os
-OUT = "/mnt/win_ssd/so-dockerhub-paper/data/rq3_validation"
+OUT = "data/rq3_validation"
 recs = [json.loads(l) for l in open(os.path.join(OUT, "sample.jsonl"))]
 
 # (verdict, causa, justificativa) keyed by index in sample.jsonl

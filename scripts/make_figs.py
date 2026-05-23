@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Figuras do paper: uma figura 1x4 por RQ (linha horizontal, altura minima).
-Saidas: fig_rq1..fig_rq5, fig_other em figures/.
-Rodar:  uv run --with matplotlib python make_figs.py
+"""Figuras: uma figura 1x4 por RQ (linha horizontal, altura minima).
+Saidas: fig_rq1..fig_rq5, fig_repro em figures/.
+Rodar:  uv run --with matplotlib,numpy python scripts/make_figs.py
 """
 import csv, json, glob, collections, os, sqlite3, re, statistics as st
 from pathlib import Path
@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent
 CSV  = str(ROOT / "data/analysis/per_image.csv")
-FIG  = str(Path(__file__).resolve().parent / "figures")
-_leg = Path("/mnt/win_ssd/scanners-data/out_so")
-OUT  = str(os.environ.get("OSCENSUS_OUT") or (_leg if _leg.exists() else ROOT/"scan-out"/"out_so"))
+FIG  = str(ROOT / "figures")
+OUT  = str(os.environ.get("OSCENSUS_OUT") or ROOT/"scan-out"/"out_so")
 DB   = os.environ.get("OSCENSUS_DB") or str(ROOT / "work/os.db")
 plt.rcParams.update({"font.size": 7, "axes.grid": True, "grid.alpha": 0.25, "axes.axisbelow": True,
                      "savefig.bbox": "tight", "axes.titlesize": 7.5, "xtick.labelsize": 6, "ytick.labelsize": 6})

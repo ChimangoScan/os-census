@@ -9,9 +9,9 @@ Reproducible: seed=42 fixed.
 """
 import os, re, json, gzip, glob, random, hashlib, sys
 
-BASE = "/mnt/win_ssd/scanners-data/out_so"
-SETS = "/mnt/win_ssd/so-dockerhub-paper/data/analysis/rq3_sca_sets.json.gz"
-OUT = "/mnt/win_ssd/so-dockerhub-paper/data/rq3_validation"
+BASE = "scan-out/out_so"
+SETS = "data/analysis/rq3_sca_sets.json.gz"
+OUT = "data/rq3_validation"
 SEED = 42
 N_SINGLE = 120   # pairs reported by exactly ONE scanner (divergent)
 N_MULTI = 80     # pairs reported by 2+ scanners (agreement)

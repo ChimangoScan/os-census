@@ -20,7 +20,7 @@ Nenhuma credencial real e utilizável foi encontrada na amostra. Todas as 1.100 
 ## 2. Metodologia
 
 ### 2.1 Fonte e formato dos dados
-- Diretório: /mnt/win_ssd/scanners-data/out_so/<imagem>/{trufflehog,gitleaks}/ (somente leitura).
+- Diretório: scan-out/out_so/<imagem>/{trufflehog,gitleaks}/ (somente leitura).
 - TruffleHog: JSONL, um finding por linha. Campos usados: DetectorName, Raw/RawV2, Verified, SourceMetadata.Data.Docker.file. Todos os findings têm Verified=false.
 - Gitleaks: array JSON. Campos usados: RuleID, Secret, Match, File, StartLine, Entropy.
 - Arquivos .gz descomprimidos para leitura. Markers vazios: [] (gitleaks), 0 bytes (trufflehog).

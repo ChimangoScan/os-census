@@ -9,8 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = Path(os.environ.get("OSCENSUS_DB") or ROOT / "work/os.db")
-_legacy = Path("/mnt/win_ssd/scanners-data/out_so")
-OUT = Path(os.environ.get("OSCENSUS_OUT") or (_legacy if _legacy.exists() else ROOT/"scan-out"/"out_so"))
+OUT = Path(os.environ.get("OSCENSUS_OUT") or ROOT/"scan-out"/"out_so")
 EXfiles = {"report.json"}
 NOW = time.time()
 

@@ -1,7 +1,7 @@
 # Setup / Reproduction
 
 This artifact provides the OS-specific configuration, corpus and analysis; the
-scan engine is the `multiscan` submodule. Below is the full path from a clean
+scan engine is vendored in `multiscan/`. Below is the full path from a clean
 clone to figures.
 
 ## 0. Prerequisites
@@ -10,7 +10,7 @@ clone to figures.
 
 ## 1. Clone
 ```bash
-git clone https://github.com/ChimangoScan/os-census
+git clone https://github.com/<anonymous>/os-census
 cd os-census          # the scan engine is vendored in ./multiscan
 ```
 
@@ -51,13 +51,8 @@ Distributed runs (coordinator + reverse-tunnelled workers) use
 
 ## 6. Analyse and plot
 ```bash
-python3 scripts/analyze.py                         # -> data/analysis/per_image.csv + RQ summaries
-uv run --with matplotlib python paper/make_figs.py # -> paper/figures/fig_panels.pdf
+python3 scripts/analyze.py                            # -> data/analysis/per_image.csv + RQ summaries
+uv run --with matplotlib,numpy python scripts/make_figs.py  # -> figures/*.pdf
 ```
 
-## 7. Live progress (optional)
-```bash
-python3 scripts/dashboard.py 8911   # http://localhost:8911
-```
-
-The full consolidated per-image dataset is released separately on acceptance.
+The full consolidated per-image dataset is released separately.
