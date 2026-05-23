@@ -73,7 +73,7 @@ def bucket(col):
     return xs,ys,es
 xs,ys,es=bucket("vuln_total"); lo=[min(e,y) for y,e in zip(ys,es)]
 ax[0].errorbar(xs,ys,yerr=[lo,es],fmt="o-",color="#2166ac",lw=2,capsize=2,elinewidth=.7); ax[0].set_ylim(bottom=0)
-ax[0].set_ylabel("mean total"); ax[0].set_title("(a) Total vs age (rho=0.16)", loc="left"); ax[0].tick_params(axis="x",rotation=30)
+ax[0].set_ylabel("mean total"); ax[0].set_title("(a) Total vs age (rho=0.27)", loc="left"); ax[0].tick_params(axis="x",rotation=30)
 xs2,ys2,_=bucket("vuln_critical"); xh,yh,_=bucket("vuln_high")
 ax[1].plot(xs2,ys2,"o-",label="crit",color="#67000d"); ax[1].plot(xh,yh,"s-",label="high",color="#ef3b2c")
 ax[1].set_ylim(bottom=0); ax[1].set_ylabel("mean"); ax[1].set_title("(b) Crit/high vs age", loc="left"); ax[1].tick_params(axis="x",rotation=30); ax[1].legend(fontsize=5)
@@ -210,3 +210,44 @@ ax.legend(fontsize=6,loc="upper center"); ax.set_title("(a) Prior reported vs ou
 for x,v in zip(xs,prior): ax.text(x-w/2,v+1.5,f"{v:g}",ha="center",fontsize=5)
 for x,v in zip(xs,ours):  ax.text(x+w/2,v+1.5,f"{v:.0f}",ha="center",fontsize=5)
 fig.tight_layout(pad=0.4); fig.savefig(f"{FIG}/fig_repro.pdf"); plt.close(fig); print(f"fig_repro ok (hs={hs:.0f} sec={sec:.0f} kv={kv:.0f})")
+
+# ----------------------------------------------------------------- fig_repro2
+# Reproduz 4 plots classicos de trabalhos anteriores no NOSSO corpus:
+# (a) Shu'17 Fig.4 CDF de vulns/imagem; (b) Ibrahim'20 Fig.17 / Wist'21 Fig.3 vulns por distro (box);
+# (c) Boles'24 Fig.3 diferenca por-imagem (Grype-Trivy); (d) Wist'21 Fig.6 pulls vs vulns (rho).
+import numpy as _np, gzip as _gz
+def _spear(a, b):
+    a = _np.asarray(a, float); b = _np.asarray(b, float)
+    ra = _np.argsort(_np.argsort(a)); rb = _np.argsort(_np.argsort(b))
+    return float(_np.corrcoef(ra, rb)[0, 1])
+fig, ax = plt.subplots(1, 4, figsize=FS)
+# (a) CDF de vulns/imagem
+vt = sorted(r["vuln_total"] for r in rows if r["vuln_total"] is not None)
+ax[0].plot(vt, [(i+1)/len(vt) for i in range(len(vt))], color="#08519c", lw=1.3)
+ax[0].axvline(st.median(vt), color="#d95f02", ls="--", lw=.7)
+ax[0].set_xscale("symlog"); ax[0].set_xlabel("vulns / image"); ax[0].set_ylabel("CDF")
+ax[0].set_title(f"(a) CDF, median {st.median(vt):.0f} [Shu'17]", loc="left")
+# (b) box por distro (top 9 por mediana)
+topd = sorted(distros, key=lambda d: st.median([r["vuln_total"] for r in byd[d] if r["vuln_total"] is not None]))[-9:]
+ax[1].boxplot([[r["vuln_total"] for r in byd[d] if r["vuln_total"] is not None] for d in topd],
+              showfliers=False, widths=.6)
+ax[1].set_xticklabels(topd, rotation=40, ha="right", fontsize=5); ax[1].set_yscale("log")
+ax[1].set_ylabel("vulns / image"); ax[1].set_title("(b) vulns by distro [Ibrahim'20]", loc="left")
+# (c) Grype - Trivy por imagem
+_S = json.load(_gz.open(ROOT/"data/analysis/rq3_sca_sets.json.gz", "rt"))
+def _cnt(scan):
+    c = collections.Counter()
+    for img, _ in _S[scan]: c[img] += 1
+    return c
+_g, _t = _cnt("grype"), _cnt("trivy")
+_diff = [_g.get(i, 0) - _t.get(i, 0) for i in (set(_g) | set(_t))]
+ax[2].hist(_diff, bins=70, color="#7b3294"); ax[2].axvline(0, color="k", lw=.6)
+ax[2].set_xlabel("Grype $-$ Trivy (CVEs/image)"); ax[2].set_ylabel("images")
+ax[2].set_title(f"(c) Grype$>$Trivy in {100*sum(1 for d in _diff if d>0)/len(_diff):.0f}% [Boles'24]", loc="left")
+# (d) pulls vs vulns
+_p = [(r["pull_count"], r["vuln_total"]) for r in rows if r["pull_count"] and r["vuln_total"] is not None]
+ax[3].scatter([x for x,_ in _p], [y for _,y in _p], s=3, alpha=.18, color="#238b45", edgecolors="none")
+ax[3].set_xscale("log"); ax[3].set_xlabel("pull count"); ax[3].set_ylabel("vulns / image")
+ax[3].set_title(f"(d) pulls vs vulns $\\rho$={_spear([x for x,_ in _p],[y for _,y in _p]):.2f} [Wist'21]", loc="left")
+fig.tight_layout(pad=0.4, w_pad=0.9); fig.savefig(f"{FIG}/fig_repro2.pdf"); plt.close(fig)
+print(f"fig_repro2 ok (n={len(vt)}, pulls-rho shown)")
