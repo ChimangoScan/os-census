@@ -1,7 +1,7 @@
 # Multi-Scanner Census of Linux OS Base Images on Docker Hub
 
-Reproduction artifact for the short paper *"How Secure Is Your Base? A Recent
-Multi-Scanner Census of Linux Operating-System Images on Docker Hub"*.
+Reproduction artifact for the paper *"How Secure Is Your Base? A Multi-Scanner
+Census of Linux Operating-System Images on Docker Hub"*.
 
 This repository holds the pipeline configuration, the corpus definition, the
 vendored scan engine (`multiscan/`), and the analysis/figure scripts. The full
