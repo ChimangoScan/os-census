@@ -9,12 +9,37 @@ Censo de imagens base de SO (Trivy, Grype, OSV-Scanner, Clair) — validacao por
 > (GHSA-cx63-2mw6-8hw5 e GHSA-5rjg-fvgr-3xxf) dao faixa `< 70.0.0` e `< 78.1.1`
 > SEM limite inferior, logo as versoes instaladas (39.2.0, 41.2.0, 53.0.0, 59.6.0)
 > estao DENTRO da faixa vulneravel = TP. Reclassifiquei os 5 de FP para TP em
-> `verdicts_corrected.jsonl`. Numeros corrigidos: precision global **0.911**
-> (IC95 Wilson [0.862, 0.944]); por engine **Trivy 0.96, Grype 0.95, OSV-Scanner
-> 1.00, Clair 0.63**; FPs restantes: source_vs_binary (12) e feed_db (5). A
-> conclusao qualitativa nao muda (divergencia = cobertura/feed, nao erro de
-> matching; Clair e o outlier por source-vs-binary). O paper usa os numeros
-> corrigidos.
+> `verdicts_corrected.jsonl`.
+>
+> **Correcao 2 (Clair source-vs-binary).** O agente marcou 8 dos 10 FP do Clair
+> como "pacote-fonte vs binario" sem checar se o codigo vulneravel esta no
+> binario instalado. Conferi nos advisories: CVE-2026-8376 e um buffer overflow
+> em `Perl_study_chunk` (NUCLEO do interpretador, presente em `perl-base`; Debian
+> marca 5.40.1-6 vulneravel, no-dsa) e CVE-2026-4437 e da glibc (DNS via
+> `gethostbyaddr`), e `libc6` E a glibc runtime. Logo `perl-base`/`libc6`
+> instalados ESTAO afetados = TP, nao FP. Reclassifiquei esses 8 de FP para TP.
+> Permanecem FP os 2 legitimos: CVE-2007-5686 (Debian "unimportant") e
+> CVE-2013-4392 (systemd de 2013, fora de faixa no systemd 249).
+>
+> **Correcao 3+4 (auditoria completa dos 200).** Reli TODOS os 200 (nao so as
+> suspeitas). Achei mais 2 erros source-vs-binary na direcao oposta (TP que sao
+> FP): (3) CVE-2023-4733 (vim use-after-free) marcado TP em `vim-data`, que nao
+> tem executavel -- inconsistente com o proprio FP do agente em CVE-2023-5344
+> (mesmo `vim-data`); (4) CVE-2017-1000082 (parsing de username no PID1 do
+> systemd) marcado TP em `libsystemd0`, mas o SBOM so tem `libsystemd0` (sem o
+> daemon systemd), entao o codigo vulneravel esta ausente -- inconsistente com o
+> proprio FP do agente em CVE-2013-4392. Ambos reclassificados TP->FP.
+>
+> **Numeros finais (4 correcoes, todos os 200 reauditados):** precision global
+> **0.942** (IC95 Wilson [0.900, 0.968]); por engine **Trivy 0.93, Grype 0.94,
+> OSV-Scanner 1.00, Clair 0.93**. Os 11 FP restantes sao todos legitimos:
+> subpacotes so-de-dados (`vim-data`/`vim-common`), bibliotecas compartilhadas
+> sem o codigo do daemon (`libsystemd0`), e CVEs que a distro marca
+> nao-vulnerabilidade (CVE-2007-5686 "unimportant", CVE-2005-2541 "intended
+> behaviour", CVE-2013-4392 fora de faixa). Achado: os QUATRO engines sao
+> individualmente de alta precisao (0.93-1.00); nenhum e outlier; a divergencia
+> quase total entre eles e cobertura/feed, NAO erro de matching. O paper usa
+> estes numeros.
 
 ## 1. Resumo executivo
 
