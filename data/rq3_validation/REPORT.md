@@ -2,44 +2,37 @@
 
 Censo de imagens base de SO (Trivy, Grype, OSV-Scanner, Clair) — validacao por leitura humana de pares (imagem, CVE)
 
-> **Nota de re-verificacao independente (revisao posterior).** Reli os advisories
-> autoritativos dos veredictos e encontrei UM erro sistematico: os 5 FP com
-> `causa=version_range` (setuptools, CVE-2024-6345 e CVE-2025-47273) usaram um
-> limite inferior errado (59.8.0). Os GitHub Security Advisories
-> (GHSA-cx63-2mw6-8hw5 e GHSA-5rjg-fvgr-3xxf) dao faixa `< 70.0.0` e `< 78.1.1`
-> SEM limite inferior, logo as versoes instaladas (39.2.0, 41.2.0, 53.0.0, 59.6.0)
-> estao DENTRO da faixa vulneravel = TP. Reclassifiquei os 5 de FP para TP em
-> `verdicts_corrected.jsonl`.
+> **Re-auditoria independente de TODOS os 200 (criterio consistente).** Reli os
+> advisories e re-adjudiquei os 200 sob UM criterio unico = **advisory-match**,
+> coerente com o escopo do paper (Limitacoes dizem que NAO fazemos
+> reachability/VEX): TP = a versao instalada do pacote-FONTE esta na faixa
+> afetada pelo advisory autoritativo (distro tracker / NVD / OSV); FP = o
+> advisory REJEITA (nao-afetado / componente nao construido / disputado /
+> fora-de-faixa / match de pacote errado por CPE). Isto corrige os erros
+> bidirecionais do agente, que misturava advisory-match com reachability de forma
+> inconsistente:
+>   - **FP que eram TP** (o agente aplicou reachability indevida): os 5 setuptools
+>     `version_range` (faixa upstream `<70.0`/`<78.1.1` sem limite inferior, GHSA
+>     verificado) e os 8 do Clair em pacotes core (CVE-2026-8376 = overflow em
+>     `Perl_study_chunk`, NUCLEO do interpretador presente em `perl-base`;
+>     CVE-2026-4437 = glibc, e `libc6` E a glibc) -> reclassificados TP.
+>   - **TP que eram FP** (o agente perdeu): os 6 do Clair em CVE-2023-45853
+>     (vulnerabilidade do **MiniZip**, que as distros NAO compilam no `zlib1g`;
+>     Debian marca o pacote `zlib` "not affected") -> reclassificados FP.
 >
-> **Correcao 2 (Clair source-vs-binary).** O agente marcou 8 dos 10 FP do Clair
-> como "pacote-fonte vs binario" sem checar se o codigo vulneravel esta no
-> binario instalado. Conferi nos advisories: CVE-2026-8376 e um buffer overflow
-> em `Perl_study_chunk` (NUCLEO do interpretador, presente em `perl-base`; Debian
-> marca 5.40.1-6 vulneravel, no-dsa) e CVE-2026-4437 e da glibc (DNS via
-> `gethostbyaddr`), e `libc6` E a glibc runtime. Logo `perl-base`/`libc6`
-> instalados ESTAO afetados = TP, nao FP. Reclassifiquei esses 8 de FP para TP.
-> Permanecem FP os 2 legitimos: CVE-2007-5686 (Debian "unimportant") e
-> CVE-2013-4392 (systemd de 2013, fora de faixa no systemd 249).
->
-> **Correcao 3+4 (auditoria completa dos 200).** Reli TODOS os 200 (nao so as
-> suspeitas). Achei mais 2 erros source-vs-binary na direcao oposta (TP que sao
-> FP): (3) CVE-2023-4733 (vim use-after-free) marcado TP em `vim-data`, que nao
-> tem executavel -- inconsistente com o proprio FP do agente em CVE-2023-5344
-> (mesmo `vim-data`); (4) CVE-2017-1000082 (parsing de username no PID1 do
-> systemd) marcado TP em `libsystemd0`, mas o SBOM so tem `libsystemd0` (sem o
-> daemon systemd), entao o codigo vulneravel esta ausente -- inconsistente com o
-> proprio FP do agente em CVE-2013-4392. Ambos reclassificados TP->FP.
->
-> **Numeros finais (4 correcoes, todos os 200 reauditados):** precision global
-> **0.942** (IC95 Wilson [0.900, 0.968]); por engine **Trivy 0.93, Grype 0.94,
-> OSV-Scanner 1.00, Clair 0.93**. Os 11 FP restantes sao todos legitimos:
-> subpacotes so-de-dados (`vim-data`/`vim-common`), bibliotecas compartilhadas
-> sem o codigo do daemon (`libsystemd0`), e CVEs que a distro marca
-> nao-vulnerabilidade (CVE-2007-5686 "unimportant", CVE-2005-2541 "intended
-> behaviour", CVE-2013-4392 fora de faixa). Achado: os QUATRO engines sao
-> individualmente de alta precisao (0.93-1.00); nenhum e outlier; a divergencia
-> quase total entre eles e cobertura/feed, NAO erro de matching. O paper usa
-> estes numeros.
+> **Numeros finais (200 reauditados, advisory-match):** precision global
+> **0.94** (179/191; IC95 Wilson [0.89, 0.96]); por engine **Trivy 1.00**
+> (27/27), **Grype 0.97** (114/118), **OSV-Scanner 1.00** (19/19) e **Clair 0.70**
+> (19/27). Os 12 FP restantes nao sao ruido aleatorio: 6 sao o artefato de feed
+> do Clair no `zlib`/MiniZip, 4 sao CVE-2007-5686 (initscripts do rPath casado
+> por CPE em `login`/`shadow`), 1 e CVE-2005-2541 (tar, Debian "intended
+> behaviour") e 1 e CVE-2013-4392 (systemd de 2013, fora de faixa no systemd
+> 249). Achado: tres engines sao quase perfeitos e o Clair fica mais baixo por UM
+> artefato de mapeamento de feed especifico (nao por imprecisao geral); a
+> divergencia quase total entre os engines e cobertura/feed, NAO erro de
+> matching. (Um criterio mais estrito de reachability reclassificaria alguns
+> matches source-level -- subpacote so-de-dados, daemon separado -- como
+> nao-explotaveis; esta fora do nosso escopo.) O paper usa estes numeros.
 
 ## 1. Resumo executivo
 
