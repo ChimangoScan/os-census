@@ -61,8 +61,8 @@ usually measured with a single scanner. We present a recent multi-scanner
 census of Docker Hub's Linux OS base images: \textbf{5{,}606} unique
 \texttt{amd64} images across \textbf{20} repositories, scanned with \textbf{14}
 open-source tools. We find that vulnerability posture varies by an order of
-magnitude across distributions and is driven by image age and a distribution's
-patch cadence rather than by image size or popularity; and that about one in
+magnitude across distributions and is driven by the distribution it belongs to and by image age, not by image
+size or popularity; and that about one in
 five historically-published images can no longer be pulled by a modern Docker
 (legacy manifest schema). As a secondary result, the four package-vulnerability
 engines barely agree, and the high raw secret and malware detection rates
@@ -390,7 +390,7 @@ package count ($\beta\approx0.17$), and the partial correlations agree
 ($0.44$ vs.\ $0.19$); the vulnerability load tracks patch cadence, not image
 size. Popularity offers no protection either: a repository's pull count is
 essentially uncorrelated with its vulnerability count (Spearman
-$\rho\approx0$, Figure~\ref{fig:rq5}(c)), so the most-pulled bases are no safer
+$\rho=0.00$, $p=0.9$, Figure~\ref{fig:rq5}(c)), so the most-pulled bases are no safer
 than the rest.
 
 A four-predictor model confirms the ordering. Regressing total vulnerabilities
@@ -556,8 +556,8 @@ category; the released dataset lets others re-run the analysis under other
 choices.
 \textbf{Conclusion.} We measured the security posture of Docker Hub's Linux OS
 base images with 14 scanners rather than one. Posture varies by an order of
-magnitude across distributions and is driven by image age rather than image size
-or popularity; and about a fifth of historically-published images can no longer
+magnitude across distributions and is driven by the distribution and image age rather than by image size or
+popularity; and about a fifth of historically-published images can no longer
 be installed by a modern Docker while end-of-life bases stay heavily pulled.
 Secondarily, the four package-vulnerability engines agree on almost nothing, so
 a single tool's count is largely a property of that tool. We publicly release
