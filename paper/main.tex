@@ -69,8 +69,9 @@ magnitude across distributions and is driven by image age and a distribution's
 patch cadence rather than by image size or popularity; and that about one in
 five historically-published images can no longer be pulled by a modern Docker
 (legacy manifest schema). As a secondary result, the four package-vulnerability
-engines barely agree, so the posture a single tool reports is largely a property
-of that tool. We publicly release this multi-scanner dataset, to our knowledge
+engines barely agree, and the high raw secret and malware detection rates
+collapse to near zero under manual validation: the posture a single tool reports
+is largely a property of that tool. We publicly release this multi-scanner dataset, to our knowledge
 the first focused on OS base images, together with the full pipeline.
 \end{abstract}
 
@@ -339,26 +340,19 @@ than the rest.
 
 \subsection{Beyond vulnerabilities: secrets, misconfiguration, malware}
 \label{sec:other}
-The battery also covers four non-vulnerability axes.
-\emph{Misconfiguration:}
-Dockle and Checkov flag at least one CIS-style issue in essentially every image
-(missing \texttt{HEALTHCHECK}, content-trust disabled, running as \texttt{root});
-these are structural properties, so the near-universal rate is robust.
-\emph{Secrets:} TruffleHog and Gitleaks raise at least one detection in
-\textbf{72\%} of images, but these are raw hits. A manual review of a seeded
-random sample of \textbf{1{,}100} detections (of 26{,}892; 95\% CI $\pm3\%$)
-found \textbf{zero} real credentials (true-positive rate $\le0.35\%$, 95\% CI):
-every hit was a test key, package checksum, documentation example or C
-identifier. The validated secret rate for OS base images is thus effectively
-zero, even below \cite{dahlmanns2023secrets}'s 8.5\% and Dr.\ Docker's
-$\sim$0.7\% valid~\cite{shi2025drdocker}, because real secrets live in
-application layers, not the base.
-\emph{Malware/IOC:} ClamAV reports zero detections, and a manual review of
-1{,}100 of YARA-Hunter's 13{,}348 IOC matches found \textbf{zero} real malware
-(true-positive rate $\le0.35\%$, 95\% CI): every match was a rule firing on a
-benign system binary. Two non-vulnerability axes (secrets, malware) thus have a
-validated rate near zero against a high raw rate; as in RQ3, raw single-tool
-counts overstate, and full triage is future work.
+The battery also covers three non-vulnerability axes.
+\emph{Misconfiguration:} Dockle and Checkov flag a CIS-style issue in essentially
+every image (missing \texttt{HEALTHCHECK}, content-trust disabled, running as
+\texttt{root}); these are structural, so the near-universal rate is robust.
+\emph{Secrets and malware:} TruffleHog/Gitleaks flag \textbf{72\%} of images and
+YARA-Hunter \textbf{76\%}, but manually reading seeded samples of \textbf{1{,}100}
+detections each found \textbf{zero} real secrets and \textbf{zero} real malware
+(true-positive rate $\le0.35\%$, 95\% CI; ClamAV reports zero): every hit was a
+test key, package checksum, documentation example, or a YARA rule matching a
+benign system binary, below \cite{dahlmanns2023secrets}'s 8.5\% and Dr.\ Docker's
+$\sim$0.7\%~\cite{shi2025drdocker}. The validated rate on both axes is near zero
+against a high raw rate; as in RQ3, single-tool counts overstate, and full triage
+is future work.
 
 \subsection{Reproducing prior analyses}
 \label{sec:repro}
