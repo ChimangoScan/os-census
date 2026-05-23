@@ -25,6 +25,10 @@
 \newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
 \usepackage[hidelinks,colorlinks=true,allcolors=black]{hyperref}
+% footnotes menores
+\makeatletter
+\renewcommand\@makefntext[1]{\parindent 1em\noindent\hb@xt@1.8em{\hss\@makefnmark}\scriptsize #1}
+\makeatother
 
 % patch p/ o bug \bbl@normalsf (sbc-template + babel em TeXLive recente)
 \makeatletter
