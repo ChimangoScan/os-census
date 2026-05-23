@@ -507,6 +507,21 @@ two, are compared. The reproductions thus serve a dual role: they validate the
 pipeline against established results, and they quantify how much a single-scanner,
 single-distribution lens understates the ecosystem-wide picture.
 
+Three further comparisons sharpen the picture. The high-severity rate extends a
+clear time series: against the trend \cite{wist2021vulnerability} compiled
+(36\% of images with a high-severity vulnerability in 2015, $>$80\% by
+2017~\cite{shu2017dockerhub}), our 2026 figure of 96\% continues the monotonic
+rise. The census also adjudicates a disagreement in the literature:
+\cite{wist2021vulnerability} found vulnerability count uncorrelated with pull
+count ($\rho{=}{-}0.11$), whereas \cite{haque2022wellbegun} reported a moderate
+positive correlation with downloads ($\rho{=}0.73$, small sample); at census
+scale we side with the former ($\rho{=}0.00$, Section~\ref{sec:rq5}). Finally,
+absolute counts must be read with care: source-package-level
+counting~\cite{zerouali2019outdated} puts per-image medians in the hundreds,
+single-scanner CVE counts run lower (Wist's median 26, Shu's official 76), and
+our 14-scanner union (median 257) sits above any single tool, so we compare
+proportions and directions rather than raw totals.
+
 \begin{table}[!htbp]
 \centering
 \caption{Prior analyses reproduced on our OS-base corpus.}
@@ -523,8 +538,11 @@ single-distribution lens understates the ecosystem-wide picture.
 \cite{ibrahim2020toomany} & vuln spread across images & \xmark & varies & 10$\times$ (distro) \\
 \cite{wist2021vulnerability} & where severe vulns concentrate & \xmark & language ecosys.\ & OS-package layer \\
 \cite{wist2021vulnerability} & official imgs w/ crit or high & \xmark & 45.9\% & 96\% \\
+\cite{wist2021vulnerability} & median vulns per image & \xmark & 26 & 257 \\
+\cite{wist2021vulnerability} & vulns vs.\ pull count & \xmark & $\rho{=}{-}0.11$ & $\rho{=}0.00$ \\
 \cite{haque2022wellbegun} & is a minimal image safer? & \cmark & no & no (non-monotonic) \\
 \cite{haque2022wellbegun} & base images w/ HE or HI vuln & \cmark & 72.8\% & 96\% \\
+\cite{haque2022wellbegun} & packages: large vs.\ minimal & \cmark & 188 vs 14 & 85 vs 1 \\
 \cite{dahlmanns2023secrets} & images carrying secrets & \xmark & 8.5\% valid & 72\% raw, 0\% valid \\
 \cite{mills2023longitudinal} & vulnerabilities vs.\ time; OS effect & \xmark & rise; Debian $\gg$ & rise; Debian top \\
 \cite{boles2024deciphering} & scanner divergence on OS images & \cmark & agree 15\% & Jaccard 0.35 \\
