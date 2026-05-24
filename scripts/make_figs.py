@@ -119,7 +119,7 @@ for s in SCA:
 _nm={"trivy":"Trivy","grype":"Grype","osv":"OSV","clair":"Clair"}
 fig, ax = plt.subplots(1, 4, figsize=FS)
 M=[[ (len(sets[a]&sets[b])/len(sets[a]|sets[b]) if (sets[a]|sets[b]) else 0) for b in SCA] for a in SCA]
-im=ax[0].imshow(M,cmap="YlOrRd",vmin=0,vmax=1); ax[0].set_xticks(range(4)); ax[0].set_yticks(range(4))
+im=ax[0].imshow(M,cmap="YlOrRd",vmin=0,vmax=1,aspect="auto"); ax[0].set_xticks(range(4)); ax[0].set_yticks(range(4))
 ax[0].set_xticklabels([_nm[s] for s in SCA],rotation=30); ax[0].set_yticklabels([_nm[s] for s in SCA])
 for i in range(4):
     for j in range(4): ax[0].text(j,i,f"{M[i][j]:.2f}",ha="center",va="center",fontsize=5.5,color="white" if M[i][j]>.5 else "black")
