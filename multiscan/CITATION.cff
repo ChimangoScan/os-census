@@ -3,7 +3,12 @@ title: "multiscan: A Cross-Scanner Comparison of Open-Source Container & Applica
 message: "If you use this artifact, please cite it."
 type: software
 authors:
-  - name: "multiscan (anonymous — under review)"
+  - family-names: "Kapelinski"
+    given-names: "Cristhian"
+  - family-names: "Machado"
+    given-names: "Beatriz"
+  - family-names: "Kreutz"
+    given-names: "Diego"
 abstract: >-
   A reproducible, Docker-only study that runs a battery of ~36 open-source
   security scanners over a fixed corpus of 130 deliberately-vulnerable

@@ -10,7 +10,7 @@ clone to figures.
 
 ## 1. Clone
 ```bash
-git clone https://github.com/<anonymous>/os-census
+git clone https://github.com/ChimangoScan/os-census
 cd os-census          # the scan engine is vendored in ./multiscan
 ```
 
@@ -55,4 +55,6 @@ python3 scripts/analyze.py                            # -> data/analysis/per_ima
 uv run --with matplotlib,numpy python scripts/make_figs.py  # -> figures/*.pdf
 ```
 
-The full consolidated per-image dataset is released separately.
+The full consolidated per-image dataset is attached to the GitHub release
+(see the *Dataset* section of `README.md`), and every number asserted in the
+paper can be checked against the data with `./reproduce.sh verify`.
