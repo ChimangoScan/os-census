@@ -1,0 +1,73 @@
+{
+  "_comment": "Todos os numeros afirmados no camera-ready (main.tex), cada um com seu locator. Verificados por scripts/verify_values.py contra os artefatos versionados em data/.",
+  "checks": [
+    {"id": "corpus_images", "source": "abstract; sec 3", "expect": {"equals": 5606}},
+    {"id": "corpus_distros", "source": "abstract; sec 3 '20 distributions'", "expect": {"equals": 20}},
+    {"id": "corpus_repos", "source": "sec 3 '21 repositories'", "expect": {"equals": 21}},
+    {"id": "scanners", "source": "abstract; sec 3", "expect": {"equals": 14}},
+
+    {"id": "rq1_debian_mean_ch", "source": "sec 4.1", "expect": {"equals": 329, "round": 0}},
+    {"id": "rq1_debian_n", "source": "sec 4.1", "expect": {"equals": 2641}},
+    {"id": "rq1_debian_sd", "source": "sec 4.1", "expect": {"equals": 375, "round": 0}},
+    {"id": "rq1_centos_mean_ch", "source": "sec 4.1", "expect": {"equals": 206, "round": 0}},
+    {"id": "rq1_centos_n", "source": "sec 4.1", "expect": {"equals": 10}},
+    {"id": "rq1_oraclelinux_mean_ch", "source": "sec 4.1", "expect": {"equals": 190, "round": 0}},
+    {"id": "rq1_amazonlinux_mean_ch", "source": "sec 4.1", "expect": {"equals": 160, "round": 0}},
+    {"id": "rq1_rockylinux_mean_ch", "source": "sec 4.1", "expect": {"equals": 128, "round": 0}},
+    {"id": "rq1_alpine_mean_ch", "source": "sec 4.1", "expect": {"equals": 84, "round": 0}},
+    {"id": "rq1_mageia_mean_packages", "source": "sec 4.5 'around 250 packages'", "expect": {"range": [240, 260]}},
+    {"id": "rq1_mageia_mean_total", "source": "sec 4.5 'about a dozen'", "expect": {"range": [10, 15]}},
+    {"id": "rq1_debian_fewer_pkgs_than_mageia", "source": "sec 4.5", "expect": {"equals": true}},
+
+    {"id": "rq2_mean_0_6m", "source": "sec 4.2", "expect": {"equals": 289, "round": 0}},
+    {"id": "rq2_mean_1_2y", "source": "sec 4.2", "expect": {"equals": 381, "round": 0}},
+    {"id": "rq2_mean_2_4y", "source": "sec 4.2", "expect": {"equals": 548, "round": 0}},
+    {"id": "rq2_mean_4y_plus", "source": "sec 4.2", "expect": {"equals": 1118, "round": 0}},
+    {"id": "rq2_spearman_age_total", "source": "sec 4.2", "expect": {"equals": 0.27, "round": 2}},
+    {"id": "rq2_p_below_001", "source": "sec 4.2", "expect": {"equals": true}},
+
+    {"id": "rq3_jaccard_trivy_grype", "source": "sec 4.3", "expect": {"equals": 0.36, "round": 2}},
+    {"id": "rq3_jaccard_trivy_clair", "source": "sec 4.3", "expect": {"equals": 0.13, "round": 2}},
+    {"id": "rq3_osv_clair_intersection", "source": "sec 4.3", "expect": {"equals": 0}},
+    {"id": "rq3_grype_pairs_k", "source": "sec 4.3", "expect": {"equals": 636}},
+    {"id": "rq3_trivy_pairs_k", "source": "sec 4.3", "expect": {"equals": 323}},
+    {"id": "rq3_osv_pairs_k", "source": "sec 4.3", "expect": {"equals": 16}},
+    {"id": "rq3_clair_pairs_k", "source": "sec 4.3", "expect": {"equals": 50}},
+
+    {"id": "counting_pairs_summed", "source": "sec 3 Counting", "expect": {"equals": 1025210}},
+    {"id": "counting_pairs_unique", "source": "sec 3 Counting", "expect": {"equals": 710739}},
+    {"id": "counting_inflation", "source": "sec 3 Counting", "expect": {"equals": 1.44, "round": 2}},
+    {"id": "counting_dedup_spearman", "source": "sec 3 Counting", "expect": {"equals": 0.86, "round": 2}},
+
+    {"id": "rq4_unpullable_pct", "source": "sec 4.4 '8%'", "expect": {"equals": 8, "round": 0}},
+    {"id": "rq4_one_in_n", "source": "abstract; sec 4.4 'one in twelve'", "expect": {"equals": 12, "round": 0}},
+    {"id": "rq4_centos_rate", "source": "sec 4.4 'over half'", "expect": {"gt": 50}},
+    {"id": "rq4_busybox_rate", "source": "sec 4.4 'over half'", "expect": {"gt": 50}},
+    {"id": "rq4_ubuntu_rate", "source": "sec 4.4 'about a third'", "expect": {"range": [28, 39]}},
+    {"id": "rq4_debian_rate", "source": "sec 4.4 'under 3%'", "expect": {"lt": 3}},
+    {"id": "rq4_archlinux_rate", "source": "sec 4.4 'under 3%'", "expect": {"lt": 3}},
+    {"id": "rq4_rockylinux_rate", "source": "sec 4.4 'under 3%'", "expect": {"lt": 3}},
+    {"id": "rq4_centos_pulls_over_1b", "source": "sec 4.4", "expect": {"equals": true}},
+
+    {"id": "rq5_beta_age", "source": "sec 4.5", "expect": {"equals": 0.44, "round": 2}},
+    {"id": "rq5_beta_packages", "source": "sec 4.5", "expect": {"equals": 0.15, "round": 2}},
+    {"id": "rq5_beta_size", "source": "sec 4.5", "expect": {"equals": -0.23, "round": 2}},
+    {"id": "rq5_beta_pulls", "source": "sec 4.5", "expect": {"equals": -0.07, "round": 2}},
+    {"id": "rq5_beta_pkgs_ubuntu", "source": "sec 4.5 '0.53 for Ubuntu'", "expect": {"equals": 0.53, "round": 2}},
+    {"id": "rq5_beta_pkgs_almalinux", "source": "sec 4.5 '0.65 for AlmaLinux'", "expect": {"equals": 0.65, "round": 2}},
+
+    {"id": "other_secrets_raw_pct", "source": "sec 4.6 '83%'", "expect": {"equals": 83, "round": 0}},
+    {"id": "other_yara_raw_pct", "source": "sec 4.6 '85%'", "expect": {"equals": 85, "round": 0}},
+    {"id": "secrets_population", "source": "appendix '26,892'", "expect": {"equals": 26892}},
+    {"id": "malware_population", "source": "appendix '13,348'", "expect": {"equals": 13348}},
+    {"id": "secrets_sample_n", "source": "sec 4.6; appendix", "expect": {"equals": 1100}},
+    {"id": "malware_sample_n", "source": "sec 4.6; appendix", "expect": {"equals": 1100}},
+    {"id": "secrets_true_positives", "source": "sec 4.6 'zero real secrets'", "expect": {"equals": 0}},
+    {"id": "malware_true_positives", "source": "sec 4.6 'zero real malware'", "expect": {"equals": 0}},
+    {"id": "validation_seed", "source": "appendix 'seed=42'", "expect": {"equals": 42}},
+    {"id": "wilson_upper_pct", "source": "sec 4.6; appendix '<=0.35%'", "expect": {"equals": 0.35, "round": 2}},
+
+    {"id": "repro_shu_high_pct", "source": "table 2 '97%'", "expect": {"equals": 97, "round": 0}},
+    {"id": "repro_drdocker_known_vuln_pct", "source": "table 2 '98.0%'", "expect": {"equals": 98.0, "round": 1}}
+  ]
+}

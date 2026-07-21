@@ -24,12 +24,18 @@ figures() {
   echo "[reproduce] OK -> figures/*.pdf"
 }
 
+verify() {
+  echo "[reproduce] verificando cada numero do paper contra os dados (expected/paper_values.json)"
+  python3 scripts/verify_values.py
+}
+
 case "$MODE" in
-  data|figures)  figures ;;
+  data|figures)  figures; verify ;;
+  verify)        verify ;;
   analysis)
     echo "[reproduce] reagregando report.json -> data/analysis/per_image.csv"
     python3 scripts/analyze.py
-    figures ;;
+    figures; verify ;;
   all|full)
     echo "[reproduce] estudo completo: crawl -> fila -> scan -> analise -> figuras"
     python3 scripts/crawl_hub.py                       # API Docker Hub -> data/hub_*.jsonl
@@ -38,6 +44,6 @@ case "$MODE" in
     ( cd multiscan && "$UV" run scanners seed --config ../config/os.yaml \
                    && "$UV" run scanners run  --config ../config/os.yaml )
     python3 scripts/analyze.py                         # -> data/analysis/per_image.csv
-    figures ;;
-  *) echo "uso: $0 [data|analysis|all]   (data=so figuras dos dados; all=estudo inteiro)"; exit 1 ;;
+    figures; verify ;;
+  *) echo "uso: $0 [data|analysis|verify|all]   (data=figuras+verify; all=estudo inteiro)"; exit 1 ;;
 esac
