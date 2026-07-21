@@ -169,7 +169,47 @@ def load_all():
         v["malware_population"] = v.get("malware_population") or sum(1 for _ in open(ROOT / "data/malware_validation/all_findings.jsonl"))
         v["wilson_upper_pct"] = wilson_upper(max(v.get("secrets_true_positives", 0), v.get("malware_true_positives", 0)),
                                              v["secrets_sample_n"])
+        v["malware_draw_reproduces"] = _replay_malware_draw()
+        pop = json.load(open(ROOT / "data/secret_validation/population_stats.json"))
+        samp = [json.loads(l) for l in open(ROOT / "data/secret_validation/sample.jsonl")]
+        cnt = collections.Counter(s["id"][:2] for s in samp)
+        th = round(1100 * pop["trufflehog_findings"] / pop["total_findings"])
+        v["secrets_draw_strata"] = (cnt["tr"] == th == pop["sample_trufflehog"]
+                                    and cnt["gi"] == 1100 - th == pop["sample_gitleaks"]
+                                    and len({s["id"] for s in samp}) == 1100)
     return v
+
+def _replay_malware_draw():
+    """Re-executa o sorteio do apendice (seed=42, estratificado por regra) sobre
+    o all_findings.jsonl committado e compara com o sample.jsonl committado."""
+    import random
+    d = ROOT / "data/malware_validation"
+    seen = {}
+    for l in open(d / "all_findings.jsonl"):
+        fd = json.loads(l); seen.setdefault(fd["id"], fd)
+    uniq = list(seen.values())
+    rng = random.Random(42)
+    by_rule = collections.defaultdict(list)
+    for fd in uniq: by_rule[fd["rule"]].append(fd)
+    for r in by_rule:
+        by_rule[r].sort(key=lambda x: x["id"]); rng.shuffle(by_rule[r])
+    N, total, rules = 1100, len(uniq), sorted(by_rule)
+    alloc = {r: max(1, round(N * len(by_rule[r]) / total)) for r in rules}
+    while sum(alloc.values()) > N:
+        r = max((x for x in rules if alloc[x] > 1), key=lambda x: alloc[x]); alloc[r] -= 1
+    while sum(alloc.values()) < N:
+        r = max(rules, key=lambda x: len(by_rule[x]) - alloc[x])
+        if alloc[r] < len(by_rule[r]): alloc[r] += 1
+        else: break
+    sample = []
+    for r in rules: sample.extend(by_rule[r][:min(alloc[r], len(by_rule[r]))])
+    if len(sample) < N:
+        chosen = {s["id"] for s in sample}
+        rest = [fd for fd in uniq if fd["id"] not in chosen]
+        rng.shuffle(rest); sample.extend(rest[:N - len(sample)])
+    sample = sample[:N]; rng.shuffle(sample)
+    committed = [json.loads(l)["id"] for l in open(d / "sample.jsonl")]
+    return [s["id"] for s in sample] == committed
 
 # ---------------------------------------------------------------- comparacao
 def check(exp, got):

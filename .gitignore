@@ -8,5 +8,6 @@ __pycache__/
 related_work_pdfs/
 figures/_*.pdf
 config/os.yaml
+config/smoke_scan.yaml
 scan-out/
 paper/

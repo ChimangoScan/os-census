@@ -65,6 +65,8 @@
     {"id": "secrets_true_positives", "source": "sec 4.6 'zero real secrets'", "expect": {"equals": 0}},
     {"id": "malware_true_positives", "source": "sec 4.6 'zero real malware'", "expect": {"equals": 0}},
     {"id": "validation_seed", "source": "appendix 'seed=42'", "expect": {"equals": 42}},
+    {"id": "malware_draw_reproduces", "source": "appendix 'seed-fixed (seed=42) stratified random sample' (malware): replay exato do sorteio", "expect": {"equals": true}},
+    {"id": "secrets_draw_strata", "source": "appendix seed-fixed stratified sample (secrets): alocacao 615/485 proporcional + ids unicos", "expect": {"equals": true}},
     {"id": "wilson_upper_pct", "source": "sec 4.6; appendix '<=0.35%'", "expect": {"equals": 0.35, "round": 2}},
 
     {"id": "repro_shu_high_pct", "source": "table 2 '97%'", "expect": {"equals": 97, "round": 0}},

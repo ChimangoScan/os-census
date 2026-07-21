@@ -70,5 +70,8 @@ case "$MODE" in
                    && "$UV" run scanners run  --config ../config/os.yaml )
     python3 scripts/analyze.py                         # -> data/analysis/per_image.csv
     figures; verify ;;
-  *) echo "uso: $0 [data|analysis|verify|all]   (data=figuras+verify; all=estudo inteiro)"; exit 1 ;;
+  scan-smoke)
+    echo "[reproduce] claim 3 reduzido: escaneando ${SMOKE_N:-10} imagens com os 14 scanners"
+    bash scripts/scan_smoke.sh ;;
+  *) echo "uso: $0 [data|analysis|verify|scan-smoke|all]   (data=figuras+verify; scan-smoke=pipeline de scan em 10 imagens; all=estudo inteiro)"; exit 1 ;;
 esac
