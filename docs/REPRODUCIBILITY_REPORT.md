@@ -24,6 +24,15 @@ records the known limitations found while building the reproduction pipeline.
   still running: 26,892 secret detections and 13,348 YARA-Hunter matches then
   available, vs. 44,339 and 20,157 in the final census. The paper states this
   explicitly (appendix). The verdicts apply to the sampled populations.
+- **The seeded draws themselves.** The malware draw is fully reproducible:
+  `verify_values.py` replays the appendix protocol (seed=42, stratified by
+  rule) over the committed `all_findings.jsonl` and the 1,100 drawn ids match
+  the committed `sample.jsonl` exactly, in order (`malware_draw_reproduces`).
+  The secrets draw is NOT re-executable because its snapshot population was
+  never committed (only `population_stats.json` survives); what is checked
+  instead (`secrets_draw_strata`) is that the committed sample matches the
+  protocol's proportional allocation exactly (615 TruffleHog / 485 Gitleaks
+  of 26,892) with 1,100 unique ids.
 - **Numbers corrected in the camera-ready.** The submitted version carried
   values from a partial snapshot (~3.3k images) that do not hold on the final
   census: raw secret rate 72% → **83%** (TruffleHog∪Gitleaks), raw YARA rate
@@ -104,9 +113,11 @@ records the known limitations found while building the reproduction pipeline.
 | secrets_true_positives | sec 4.6 'zero real secrets' | 0 | 0 | PASS |
 | malware_true_positives | sec 4.6 'zero real malware' | 0 | 0 | PASS |
 | validation_seed | appendix 'seed=42' | 42 | 42 | PASS |
+| malware_draw_reproduces | appendix 'seed-fixed (seed=42) stratified random sample' (malware): replay exato do sorteio | True | True | PASS |
+| secrets_draw_strata | appendix seed-fixed stratified sample (secrets): alocacao 615/485 proporcional + ids unicos | True | True | PASS |
 | wilson_upper_pct | sec 4.6; appendix '<=0.35%' | 0.35 | 0.348 | PASS |
 | repro_shu_high_pct | table 2 '97%' | 97 | 96.8689 | PASS |
 | repro_drdocker_known_vuln_pct | table 2 '98.0%' | 98.0 | 98.0358 | PASS |
 
-**60 PASS / 0 FAIL / 0 SKIP**
+**62 PASS / 0 FAIL / 0 SKIP**
 <!-- verify:auto:end -->
