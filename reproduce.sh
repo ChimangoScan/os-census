@@ -12,11 +12,29 @@
 #
 #   ./reproduce.sh analysis  (intermediario) report.json brutos -> per_image.csv -> figuras.
 #
-# Requisitos: python3, uv (https://docs.astral.sh/uv/). O modo full precisa de Docker.
+# Requisitos: python3, uv (https://docs.astral.sh/uv/); analysis precisa de
+# curl + zstd (baixa o dataset da release se ausente); full precisa de Docker.
 set -euo pipefail
 cd "$(dirname "$0")"
 MODE="${1:-figures}"
 UV="${UV:-uv}"
+
+DATASET_URL="https://github.com/ChimangoScan/os-census/releases/download/dataset-v1/os-census-per-image-reports.tar.zst"
+DATASET_SHA256="184e823e663a563608e0f0398a7aa095d533a41aefc1e7f7df30b8086909d963"
+
+ensure_dataset() {  # garante os report.json; baixa da release e verifica sha256 se ausentes
+  local out="${OSCENSUS_OUT:-$PWD/scan-out/out_so}"
+  if [ -n "$(find "$out" -maxdepth 2 -name report.json -print -quit 2>/dev/null)" ]; then
+    echo "[reproduce] dataset presente em $out"; return
+  fi
+  echo "[reproduce] dataset ausente; baixando da release (~138 MB; 8.6 GB extraido)"
+  mkdir -p scan-out
+  curl -L --fail -o scan-out/reports.tar.zst "$DATASET_URL"
+  echo "$DATASET_SHA256  scan-out/reports.tar.zst" | sha256sum -c -
+  tar --zstd -xf scan-out/reports.tar.zst -C scan-out
+  rm scan-out/reports.tar.zst
+  export OSCENSUS_OUT="$PWD/scan-out/out_so"
+}
 
 figures() {
   echo "[reproduce] figuras a partir dos dados pre-computados (data/)"
@@ -33,6 +51,7 @@ case "$MODE" in
   data|figures)  figures; verify ;;
   verify)        verify ;;
   analysis)
+    ensure_dataset
     echo "[reproduce] reagregando report.json -> data/analysis/per_image.csv"
     python3 scripts/analyze.py
     figures; verify ;;
