@@ -114,7 +114,23 @@ Expected result: `data/analysis/per_image.csv` and the RQ3 sets are rebuilt
 from the raw `report.json` files (identical to the committed ones), then the
 same figures and the same `60 PASS / 0 FAIL`.
 
-**Claim 3 (optional, not required for the seals) — the whole census from
+**Claim 3 — the scan pipeline itself, reduced** (10 corpus images scanned by
+all 14 scanners into an isolated queue/output; measured **27 min** on an
+8-core AMD Ryzen 7 9700X, most of it the one-time Clair DB preparation and
+scanner-image pulls; needs Docker; a Docker Hub token in
+`config/accounts.json` is optional):
+
+```bash
+./reproduce.sh scan-smoke
+```
+
+Expected result: `[scan-smoke] 10/10 imagens com report.json` and one
+invocation of each of the 14 scanners per image, under `scan-out/smoke/out/`.
+The census state in `data/` is not touched. The extracted-filesystem cache is
+written by containers as root; clean it afterwards with
+`docker run --rm -v "$PWD/scan-out:/s" alpine rm -rf /s/smoke`.
+
+**Claim 3 full (optional, not required for the seals) — the whole census from
 scratch** (days of scanning; Docker + Docker Hub token):
 
 ```bash
