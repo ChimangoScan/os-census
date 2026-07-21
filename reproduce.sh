@@ -29,7 +29,13 @@ ensure_dataset() {  # garante os report.json; baixa da release e verifica sha256
   fi
   echo "[reproduce] dataset ausente; baixando da release (~138 MB; 8.6 GB extraido)"
   mkdir -p scan-out
-  curl -L --fail -o scan-out/reports.tar.zst "$DATASET_URL"
+  if ! curl -L --fail -o scan-out/reports.tar.zst "$DATASET_URL"; then
+    echo "[reproduce] URL direta indisponivel; resolvendo pelo endpoint da API"
+    local aurl
+    aurl=$(curl -s https://api.github.com/repos/ChimangoScan/os-census/releases/tags/dataset-v1 \
+      | python3 -c "import json,sys;print([a['url'] for a in json.load(sys.stdin)['assets'] if a['name']=='os-census-per-image-reports.tar.zst'][0])")
+    curl -L --fail -H "Accept: application/octet-stream" -o scan-out/reports.tar.zst "$aurl"
+  fi
   echo "$DATASET_SHA256  scan-out/reports.tar.zst" | sha256sum -c -
   tar --zstd -xf scan-out/reports.tar.zst -C scan-out
   rm scan-out/reports.tar.zst
