@@ -53,6 +53,10 @@ cols = list(rows[0].keys())
 with (ANA / "per_image.csv").open("w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=cols); w.writeheader(); w.writerows(rows)
 
+import gzip
+with gzip.open(ANA / "rq3_sca_sets.json.gz", "wt") as f:
+    json.dump({s: sorted(v) for s, v in sca_sets.items()}, f)
+
 print(f"=== {len(rows)} imagens analisadas -> data/analysis/per_image.csv ===\n")
 
 # RQ1: postura por repo (média de críticas+altas, pacotes)
