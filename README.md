@@ -122,7 +122,10 @@ final line `**62 PASS / 0 FAIL / 0 SKIP**` (exit code 0). Figures land in
 
 ### Claim #1 (main) — every number and figure in the paper reproduces from the data
 
-- **Execution:** `./reproduce.sh`
+```bash
+./reproduce.sh
+```
+
 - **Expected time:** ~10 s, offline.
 - **Expected resources:** <1 GB RAM, no extra disk.
 - **Expected result:** all 5 paper figures regenerated and the 62 checks in
@@ -134,7 +137,10 @@ final line `**62 PASS / 0 FAIL / 0 SKIP**` (exit code 0). Figures land in
 
 ### Claim #2 — the committed aggregates derive from the raw multi-scanner dataset
 
-- **Execution:** `./reproduce.sh analysis`
+```bash
+./reproduce.sh analysis
+```
+
 - **Expected time:** ~15 min (131 MB download + 8.6 GB extract + re-aggregation
   of 5,142 reports).
 - **Expected resources:** ~9 GB disk, <2 GB RAM.
@@ -147,7 +153,10 @@ final line `**62 PASS / 0 FAIL / 0 SKIP**` (exit code 0). Figures land in
 10 corpus images scanned by all 14 scanners into an isolated queue and output
 directory; the census state in `data/` is not touched.
 
-- **Execution:** `./reproduce.sh scan-smoke`
+```bash
+./reproduce.sh scan-smoke
+```
+
 - **Expected time:** **27 min measured on an 8-core AMD Ryzen 7 9700X** (not
   the reference machine above), most of it the one-time Clair database
   preparation and the scanner image pulls.
@@ -158,15 +167,11 @@ directory; the census state in `data/` is not touched.
   The extracted-filesystem cache is written by containers as root; clean it
   with `docker run --rm -v "$PWD/scan-out:/s" alpine rm -rf /s/smoke`.
 
-### Claim #3 (full, optional — not required for the seals)
-
-The whole census from scratch: crawls the Docker Hub API, rebuilds the queue of
-5,606 images, runs the 14 scanners, and re-enters Claim #2.
-
-- **Execution:** `./reproduce.sh all`
-- **Expected time:** days of scanning.
-- **Expected resources:** Docker + a Docker Hub token; see `SETUP.md` for the
-  one-time scanner preparation and the distributed workers.
+Beyond the three claims, the whole census can be re-run from scratch with
+`./reproduce.sh all`: it crawls the Docker Hub API, rebuilds the queue of 5,606
+images, runs the 14 scanners and re-enters Claim #2. This takes **weeks of
+scanning** and needs Docker plus a Docker Hub token; see `SETUP.md` for the
+one-time scanner preparation and the distributed workers.
 
 ## LICENSE
 
