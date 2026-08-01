@@ -57,9 +57,10 @@ This artifact is submitted for the four SBC quality seals:
 
 ## Basic information (Informações básicas)
 
-`multiscan` is a **Docker-only harness**: every scanner runs as a pinned
-container image, so nothing is installed on the host and a run reproduces on
-any machine with a Docker daemon. The engine pulls each target image once,
+`multiscan` is a **Docker-only harness**: every scanner runs in a container, so
+nothing is installed on the host and the same harness runs on any machine with
+a Docker daemon. Several registry entries use floating tags; a new run may
+therefore resolve newer scanner builds and databases. The engine pulls each target image once,
 hands the static scanners the saved tarball and exported root filesystem,
 brings the container up on an isolated network for the dynamic scanners,
 records per-invocation timing, and normalizes every output to one schema while
@@ -124,10 +125,10 @@ an hour, and the **bundled dataset** for reproducing the figures directly.
   matplotlib-venn, krippendorff) are the `analysis` extra in `pyproject.toml`
   and install into a *separate* virtual environment so the engine stays
   standard-library + PyYAML. Exact versions of both are pinned in `uv.lock`.
-- **Scanner images:** 31 scanners. Most are pinned public images from Docker
-  Hub / GHCR; the rest have no maintained upstream image and are built from
-  pinned Dockerfiles under `docker/`. The full list and version pins are in
-  `config/scanners.yaml`.
+- **Scanner images:** 31 scanners. Most are public images from Docker Hub /
+  GHCR, several referenced by floating tags; the rest have no maintained
+  upstream image and are built from Dockerfiles under `docker/`. The full list
+  of configured references and invocations is in `config/scanners.yaml`.
 - **Corpus images:** the 130 D1 target containers are public images referenced
   in `data/inventory/d1.csv` (the reduced corpus uses `d1-reduced.csv`), pulled
   on demand from Docker Hub. Anonymous pulls are rate-limited (~100 / 6 h); the

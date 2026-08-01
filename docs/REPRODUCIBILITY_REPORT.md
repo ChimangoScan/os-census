@@ -7,6 +7,11 @@ records the known limitations found while building the reproduction pipeline.
 
 ## Known limitations and notes
 
+- **Scanner environment.** Several configured scanner images use floating
+  tags, and vulnerability/signature databases were refreshed during the
+  campaign. The original image digests and database snapshots were not
+  preserved. The released raw outputs and normalized reports are the immutable
+  measurement record; a new scan can resolve newer software or databases.
 - **Analyzed vs. corpus size.** The corpus has 5,606 unique images; 463 are
   un-pullable (legacy manifest schema, RQ4), leaving 5,143 completed scan jobs
   and 5,142 per-image reports (one completed job produced no `report.json`).
@@ -116,8 +121,8 @@ records the known limitations found while building the reproduction pipeline.
 | malware_draw_reproduces | appendix 'seed-fixed (seed=42) stratified random sample' (malware): replay exato do sorteio | True | True | PASS |
 | secrets_draw_strata | appendix seed-fixed stratified sample (secrets): alocacao 615/485 proporcional + ids unicos | True | True | PASS |
 | wilson_upper_pct | sec 4.6; appendix '<=0.35%' | 0.35 | 0.348 | PASS |
-| repro_shu_high_pct | table 2 '97%' | 97 | 96.8689 | PASS |
-| repro_drdocker_known_vuln_pct | table 2 '98.0%' | 98.0 | 98.0358 | PASS |
+| repro_shu_high_pct | extra (not in the paper): replication of Shu'17 on our corpus | 97 | 96.8689 | PASS |
+| repro_drdocker_known_vuln_pct | extra (not in the paper): replication of Dr. Docker'25 on our corpus | 98.0 | 98.0358 | PASS |
 
 **62 PASS / 0 FAIL / 0 SKIP**
 <!-- verify:auto:end -->

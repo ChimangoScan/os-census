@@ -208,7 +208,7 @@ scanners:
     outputs: []
 
   # ── catalog expansion: multi-scanner dataset ────────────────────────────────
-  # Scanners added for the D1 corpus. Each is a pinned Docker image; the adapter
+  # Scanners added for the D1 corpus. Each has a configured Docker image; the adapter
   # module under scanners.adapters parses its native output into Findings.
 
   gitleaks:

@@ -4,6 +4,13 @@ This artifact provides the OS-specific configuration, corpus and analysis; the
 scan engine is vendored in `multiscan/`. Below is the full path from a clean
 clone to figures.
 
+The registry records the image references and invocations used by the
+campaign, but several references use floating tags such as `latest`. Scanner
+databases were also refreshed during execution. Consequently, a new scan
+exercises the same pipeline and settings but may resolve different scanner
+builds or vulnerability/signature databases; the released raw outputs and
+normalized reports are the immutable record of the measured campaign.
+
 ## 0. Prerequisites
 - Docker (Engine 24+), Python 3.12, [`uv`](https://docs.astral.sh/uv/), `git`.
 - A Docker Hub account access token (to avoid anonymous pull rate limits).

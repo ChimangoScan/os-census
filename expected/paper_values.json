@@ -69,7 +69,7 @@
     {"id": "secrets_draw_strata", "source": "appendix seed-fixed stratified sample (secrets): alocacao 615/485 proporcional + ids unicos", "expect": {"equals": true}},
     {"id": "wilson_upper_pct", "source": "sec 4.6; appendix '<=0.35%'", "expect": {"equals": 0.35, "round": 2}},
 
-    {"id": "repro_shu_high_pct", "source": "table 2 '97%'", "expect": {"equals": 97, "round": 0}},
-    {"id": "repro_drdocker_known_vuln_pct", "source": "table 2 '98.0%'", "expect": {"equals": 98.0, "round": 1}}
+    {"id": "repro_shu_high_pct", "source": "extra (not in the paper): replication of Shu'17 on our corpus", "expect": {"equals": 97, "round": 0}},
+    {"id": "repro_drdocker_known_vuln_pct", "source": "extra (not in the paper): replication of Dr. Docker'25 on our corpus", "expect": {"equals": 98.0, "round": 1}}
   ]
 }

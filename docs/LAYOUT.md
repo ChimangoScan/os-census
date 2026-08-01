@@ -2,7 +2,7 @@
 
 ```
 reproduce.sh            entry point: data|analysis|verify|all (see README)
-config/scanners.yaml    scanner registry, versions pinned (Clair fixed with --image-ref)
+config/scanners.yaml    scanner registry: image references and invocations
 config/os.yaml          run config, generated per-clone by render_config.py (gitignored)
 data/hub_tags.jsonl     corpus definition: all tags of the 21 repositories (Docker Hub API)
 data/hub_repos.jsonl    repository metadata (pull counts, last_updated)
