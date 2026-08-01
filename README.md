@@ -154,9 +154,11 @@ directory; the census state in `data/` is not touched.
 ./reproduce.sh scan-smoke
 ```
 
-- **Expected time:** **27 min measured on an 8-core AMD Ryzen 7 9700X** (not
-  the reference machine above), most of it the one-time Clair database
-  preparation and the scanner image pulls.
+- **Expected time:** **30 min to 3–4 h**, depending on the machine and the
+  link. Most of the run is the one-time Clair database preparation and the pull
+  of the 14 scanner images, so it is bound by network bandwidth and CPU far
+  more than by the 10 images themselves. The lower end is the measured **27 min
+  on an 8-core AMD Ryzen 7 9700X** with a fast connection.
 - **Expected resources:** Docker; ~15 GB disk for the scanner images. A Docker
   Hub token in `config/accounts.json` is optional.
 - **Expected result:** `[scan-smoke] 10/10 imagens com report.json` and one
