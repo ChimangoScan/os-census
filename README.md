@@ -11,9 +11,6 @@ Engine, and that the four package-vulnerability engines show low pairwise
 agreement (best pair Jaccard **0.36**).
 
 > Paper: SBSeg 2026. Authors: Cristhian Kapelinski, Diego Kreutz (UNIPAMPA).
-> Artifact evaluation:
-> [submission](https://doc-artefatos.github.io/sbseg2026/subinstrucoes.html) ·
-> [review](https://doc-artefatos.github.io/sbseg2026/revinstrucoes.html).
 
 ## Estrutura do readme.md
 
