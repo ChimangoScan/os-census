@@ -80,10 +80,13 @@ def load_all():
         v["rq1_mageia_mean_packages"] = st.mean([r["packages"] for r in byd["mageia"]])
         v["rq1_mageia_mean_total"] = st.mean([r["vuln_total"] for r in byd["mageia"]])
         v["rq1_debian_fewer_pkgs_than_mageia"] = st.mean([r["packages"] for r in byd["debian"]]) < v["rq1_mageia_mean_packages"]
-        bk = [(0, 180, "rq2_mean_0_6m"), (365, 730, "rq2_mean_1_2y"),
+        bk = [(0, 180, "rq2_mean_0_6m"), (180, 365, "rq2_mean_6_12m"), (365, 730, "rq2_mean_1_2y"),
               (730, 1460, "rq2_mean_2_4y"), (1460, 1e9, "rq2_mean_4y_plus")]
         for lo, hi, key in bk:
             v[key] = st.mean([r["vuln_total"] for r in rows if r["age_days"] is not None and lo <= r["age_days"] < hi])
+        for lo, hi, key in ((0, 180, "rq2_crit_share_0_6m"), (1460, 1e9, "rq2_crit_share_4y_plus")):
+            b = [r for r in rows if r["age_days"] is not None and lo <= r["age_days"] < hi]
+            v[key] = 100 * sum(1 for r in b if r["vuln_critical"] >= 1) / len(b)
         pares = [(r["age_days"], r["vuln_total"]) for r in rows if r["age_days"] is not None]
         rho = spearman([a for a, _ in pares], [b for _, b in pares])
         v["rq2_spearman_age_total"] = rho

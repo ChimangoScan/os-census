@@ -20,7 +20,10 @@
     {"id": "rq1_debian_fewer_pkgs_than_mageia", "source": "sec 4.5", "expect": {"equals": true}},
 
     {"id": "rq2_mean_0_6m", "source": "sec 4.2", "expect": {"equals": 289, "round": 0}},
+    {"id": "rq2_mean_6_12m", "source": "sec 4.2", "expect": {"equals": 366, "round": 0}},
     {"id": "rq2_mean_1_2y", "source": "sec 4.2", "expect": {"equals": 381, "round": 0}},
+    {"id": "rq2_crit_share_0_6m", "source": "sec 4.2 '86.8%'", "expect": {"equals": 86.8, "round": 1}},
+    {"id": "rq2_crit_share_4y_plus", "source": "sec 4.2 '95.8%'", "expect": {"equals": 95.8, "round": 1}},
     {"id": "rq2_mean_2_4y", "source": "sec 4.2", "expect": {"equals": 548, "round": 0}},
     {"id": "rq2_mean_4y_plus", "source": "sec 4.2", "expect": {"equals": 1118, "round": 0}},
     {"id": "rq2_spearman_age_total", "source": "sec 4.2", "expect": {"equals": 0.27, "round": 2}},

@@ -78,7 +78,10 @@ records the known limitations found while building the reproduction pipeline.
 | rq1_mageia_mean_total | sec 4.5 'about a dozen' | {'range': [10, 15]} | 12.0 | PASS |
 | rq1_debian_fewer_pkgs_than_mageia | sec 4.5 | True | True | PASS |
 | rq2_mean_0_6m | sec 4.2 | 289 | 288.868 | PASS |
+| rq2_mean_6_12m | sec 4.2 | 366 | 365.5495 | PASS |
 | rq2_mean_1_2y | sec 4.2 | 381 | 380.5482 | PASS |
+| rq2_crit_share_0_6m | sec 4.2 '86.8%' | 86.8 | 86.7965 | PASS |
+| rq2_crit_share_4y_plus | sec 4.2 '95.8%' | 95.8 | 95.7854 | PASS |
 | rq2_mean_2_4y | sec 4.2 | 548 | 548.0459 | PASS |
 | rq2_mean_4y_plus | sec 4.2 | 1118 | 1117.8233 | PASS |
 | rq2_spearman_age_total | sec 4.2 | 0.27 | 0.2717 | PASS |
@@ -124,5 +127,5 @@ records the known limitations found while building the reproduction pipeline.
 | repro_shu_high_pct | extra (not in the paper): replication of Shu'17 on our corpus | 97 | 96.8689 | PASS |
 | repro_drdocker_known_vuln_pct | extra (not in the paper): replication of Dr. Docker'25 on our corpus | 98.0 | 98.0358 | PASS |
 
-**62 PASS / 0 FAIL / 0 SKIP**
+**65 PASS / 0 FAIL / 0 SKIP**
 <!-- verify:auto:end -->
