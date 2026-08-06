@@ -1,5 +1,7 @@
 # os-census: a multi-scanner census of the Linux OS base images of Docker Hub
 
+[![artifact](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml/badge.svg)](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml)
+
 Reproduction artifact for the paper *"A Multi-Scanner Census of the Linux
 Operating-System Base Images of Docker Hub"*. It measures the **5,606** unique
 `amd64` images of the **20** Linux distributions in Docker Hub's *Operating
