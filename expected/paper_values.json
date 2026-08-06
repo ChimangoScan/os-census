@@ -1,5 +1,5 @@
 {
-  "_comment": "Todos os numeros afirmados no camera-ready (main.tex), cada um com seu locator. Verificados por scripts/verify_values.py contra os artefatos versionados em data/.",
+  "_comment": "Every number asserted in the camera-ready (main.tex), each with its locator. Checked by scripts/verify_values.py against the versioned artifacts in data/.",
   "checks": [
     {"id": "corpus_images", "source": "abstract; sec 3", "expect": {"equals": 5606}},
     {"id": "corpus_distros", "source": "abstract; sec 3 '20 distributions'", "expect": {"equals": 20}},
@@ -68,8 +68,8 @@
     {"id": "secrets_true_positives", "source": "sec 4.6 'zero real secrets'", "expect": {"equals": 0}},
     {"id": "malware_true_positives", "source": "sec 4.6 'zero real malware'", "expect": {"equals": 0}},
     {"id": "validation_seed", "source": "appendix 'seed=42'", "expect": {"equals": 42}},
-    {"id": "malware_draw_reproduces", "source": "appendix 'seed-fixed (seed=42) stratified random sample' (malware): replay exato do sorteio", "expect": {"equals": true}},
-    {"id": "secrets_draw_strata", "source": "appendix seed-fixed stratified sample (secrets): alocacao 615/485 proporcional + ids unicos", "expect": {"equals": true}},
+    {"id": "malware_draw_reproduces", "source": "appendix 'seed-fixed (seed=42) stratified random sample' (malware): exact replay of the draw", "expect": {"equals": true}},
+    {"id": "secrets_draw_strata", "source": "appendix seed-fixed stratified sample (secrets): proportional 615/485 allocation + unique ids", "expect": {"equals": true}},
     {"id": "wilson_upper_pct", "source": "sec 4.6; appendix '<=0.35%'", "expect": {"equals": 0.35, "round": 2}},
 
     {"id": "repro_shu_high_pct", "source": "extra (not in the paper): replication of Shu'17 on our corpus", "expect": {"equals": 97, "round": 0}},

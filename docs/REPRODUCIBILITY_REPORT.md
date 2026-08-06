@@ -121,8 +121,8 @@ records the known limitations found while building the reproduction pipeline.
 | secrets_true_positives | sec 4.6 'zero real secrets' | 0 | 0 | PASS |
 | malware_true_positives | sec 4.6 'zero real malware' | 0 | 0 | PASS |
 | validation_seed | appendix 'seed=42' | 42 | 42 | PASS |
-| malware_draw_reproduces | appendix 'seed-fixed (seed=42) stratified random sample' (malware): replay exato do sorteio | True | True | PASS |
-| secrets_draw_strata | appendix seed-fixed stratified sample (secrets): alocacao 615/485 proporcional + ids unicos | True | True | PASS |
+| malware_draw_reproduces | appendix 'seed-fixed (seed=42) stratified random sample' (malware): exact replay of the draw | True | True | PASS |
+| secrets_draw_strata | appendix seed-fixed stratified sample (secrets): proportional 615/485 allocation + unique ids | True | True | PASS |
 | wilson_upper_pct | sec 4.6; appendix '<=0.35%' | 0.35 | 0.348 | PASS |
 | repro_shu_high_pct | extra (not in the paper): replication of Shu'17 on our corpus | 97 | 96.8689 | PASS |
 | repro_drdocker_known_vuln_pct | extra (not in the paper): replication of Dr. Docker'25 on our corpus | 98.0 | 98.0358 | PASS |
