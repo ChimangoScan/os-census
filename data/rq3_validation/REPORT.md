@@ -2,7 +2,7 @@
 
 Census of Linux operating-system base images, scanned by Trivy, Grype, OSV-Scanner and Clair. Validation by human reading of (image, CVE) pairs.
 
-> **Scope.** This validation is supplementary material of the artifact. The paper does not report these precision figures; its Limitations state that package findings lack manual adjudication. Every number below is reproducible from the committed `verdicts.jsonl`.
+> **Scope.** The paper's Limitations state that the census's package findings lack manual adjudication, and that is accurate: the 710,739 unique (image, CVE) pairs are not adjudicated. This document is a supplementary, sampled check over 200 of them, kept in the artifact as evidence for how the RQ3 divergence should be read. The paper reports none of the precision figures below. Every number here is reproducible from the committed `verdicts.jsonl`.
 
 ## 1. Executive summary
 
@@ -124,9 +124,20 @@ Debian has the lowest precision because it is where the Clair pairs carrying a s
 
 ## 4. Why the scanners disagree
 
-### 4.1 A consolidation artifact in Clair's own entries
+### 4.1 Clair's identifier format, and why it does not explain the divergence
 
-Part of Clair's isolation, including its zero intersection with OSV-Scanner, is a measurement artifact rather than a scanner property. About half of Clair's entries in `rq3_sca_sets.json.gz` are stored as Clair's full vulnerability name, for example `CVE-2026-5435 on Ubuntu 22.04 LTS (jammy) - medium`, instead of the normalized CVE identifier: 5,866 of 11,736, with the other 5,870 clean. Trivy, Grype and OSV-Scanner have no such entries. A string carrying an `on Ubuntu ...` suffix can never match the clean CVE identifiers of the other engines, which inflates Clair's apparent divergence and drives intersections to zero, contributing to the low Jaccard coefficients and to the empty OSV-Clair intersection. The CVE was normalized at match time so the cases could be read, but the set-level metric should be recomputed after normalizing Clair's names. This is a cause of divergence in the measurement, distinct from a scanner false positive.
+Clair stores a vulnerability under its own full name rather than a bare CVE identifier, for example `CVE-2009-5155 on Ubuntu 18.04 LTS (bionic) - negligible`. In the consolidated set this affects 13,340 of Clair's 49,912 entries; Trivy, Grype and OSV-Scanner have none. Such a string can never match a bare CVE identifier, so crossing the sets verbatim would understate Clair's overlap with the other engines.
+
+The analysis does not cross them verbatim. Both `scripts/make_figs.py` and `scripts/verify_values.py` extract the canonical CVE identifier before intersecting, so every Jaccard coefficient and intersection the paper reports is computed on normalized identifiers. The difference this makes, measured over the committed set:
+
+| Pair | Verbatim | Normalized (what the paper reports) |
+|---|---|---|
+| Trivy and Grype | 0.3623 | 0.3623 |
+| Trivy and Clair | 0.1066 | 0.1276 |
+| Grype and Clair | 0.0554 | 0.0715 |
+| OSV-Scanner and Clair, intersection | 0 pairs | 0 pairs |
+
+Two consequences matter for reading the paper. The headline agreement of 0.36 between Trivy and Grype involves no Clair entry and is unaffected. And **the empty intersection between OSV-Scanner and Clair is not a normalization artifact**: it is 0 under normalization as well, because OSV-Scanner reports language-ecosystem pairs while Clair reports pairs from its distribution feeds, and on this corpus those two sets do not meet. The identifier format is therefore a detail of Clair's output that the analysis already handles, not a cause of the measured divergence.
 
 ### 4.2 Source versus binary granularity, the dominant real cause (12 of 22)
 
@@ -155,7 +166,7 @@ The large majority of single-reporter divergences are true positives: the engine
 3. **n=200 gives wide intervals for the engines with few pairs.** OSV-Scanner has 19 pairs and Clair 32; Clair's precision of 0.630 carries an interval of [0.442, 0.785] and is pulled down by the forced sampling of Clair combinations and by one repeated source-versus-binary pattern (six pairs of CVE-2026-8376 on perl across distinct slim images).
 4. **Per-scanner precision in the multi stratum** is attributed to the engine from which the package and version were extracted, which is one of the reporters rather than all of them. This is why the single-reporter-only figures are reported alongside; they are the cleaner measurement.
 5. **Correlated false positives.** The same CVE and package recur across tags, which reduces effective diversity even though many images are covered.
-6. **The Clair normalization artifact of Section 4.1 affects the set-level RQ3 metrics** (Jaccard coefficients and intersections), not the true-positive and false-positive verdicts here, which use the normalized CVE.
+6. **The verdicts here are at pair level, like the paper's set metrics**, and both use the canonical CVE identifier (Section 4.1). Neither resolves whether an affected package is reachable at runtime, which is outside the scope of the paper and of this validation.
 
 ## 6. Artifacts
 

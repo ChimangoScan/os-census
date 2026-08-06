@@ -52,6 +52,18 @@ Verdicts are written incrementally to `verdicts.jsonl`, each an identifier, a ve
 
 For N=26,892 and n=1,100, a proportion near 0.5 would give a 95% interval of about ±2.95%. Because the observed false-positive proportion is close to 1.0, the effective interval is far narrower, with a Wilson lower bound of 99.65%. Running `extract_and_sample.py` with `seed=42` reproduces exactly the same 1,100 identifiers.
 
+### 2.5 The sampling frame is a snapshot of the running census
+
+The sample was drawn from a snapshot taken while the census was still running, which is what the paper's appendix states. The snapshot is the sampling frame; it is smaller than the completed census, whose figures the paper reports and which this artifact reproduces:
+
+| | Sampling frame (snapshot) | Completed census (the paper's figures) |
+|---|---|---|
+| Images considered | 2,747 | 5,142 with a report |
+| Images with at least one detection | about 72% | 4,286 (83.4%, the paper's "83%") |
+| Secret detections | 26,892 | 44,339 |
+
+The measured quantity, the fraction of detections that are true positives, is a property of the detections themselves and does not depend on how far the census had progressed when the sample was drawn.
+
 ## 3. Results
 
 - Read: 1,100 of 1,100. True positives 0, false positives 1,100, ambiguous 0.
@@ -60,12 +72,12 @@ For N=26,892 and n=1,100, a proportion near 0.5 would give a 95% interval of abo
 
 ### 3.1 Estimated rate of validated secrets per image
 
-The headline census figure collapses once a real credential is required. About 72% of the images carry at least one raw detection. To estimate the fraction that carries at least one real secret, we treat the detections of an image as independent, which is conservative here: in practice the false positives are strongly correlated, because they come from the same system files replicated across images.
+The headline census figure collapses once a real credential is required. In the completed census 83.4% of the images carry at least one raw detection, which is the 83% the paper reports. To estimate the fraction that carries at least one real secret, we treat the detections of an image as independent, which is conservative here: in practice the false positives are strongly correlated, because they come from the same system files replicated across images.
 
 - Point estimate of the fraction of images with at least one real secret: approximately 0%.
-- Coarse upper bound: combining the 0.348% ceiling on the true-positive rate with the 72% ceiling on images with a raw detection puts the fraction below about 0.25%, that is, at most roughly 7 of the 2,747 images, and most likely none.
+- Coarse upper bound: combining the 0.348% ceiling on the true-positive rate with the 83.4% of images carrying a raw detection puts the fraction below about 0.29%, that is, at most roughly 15 of the 5,142 images, and most likely none. This is the artifact's own derivation; the paper reports the bound on the true-positive rate itself (95% upper bound of at most 0.35%) rather than a per-image bound.
 
-In practical terms, the finding that "72% of the images contain secrets" falls to about 0% once a validated, usable credential is required.
+In practical terms, the finding that most images contain secrets falls to about 0% once a validated, usable credential is required.
 
 ## 4. Why every detection is a false positive
 
