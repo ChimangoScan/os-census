@@ -157,13 +157,7 @@ The large majority of single-reporter divergences are true positives: the engine
 5. **Correlated false positives.** The same CVE and package recur across tags, which reduces effective diversity even though many images are covered.
 6. **The Clair normalization artifact of Section 4.1 affects the set-level RQ3 metrics** (Jaccard coefficients and intersections), not the true-positive and false-positive verdicts here, which use the normalized CVE.
 
-## 6. A stricter criterion, drafted and not applied
-
-A later re-reading proposed adjudicating all 200 pairs under a single advisory-match criterion, in which a true positive requires only that the installed version of the source package fall in the range the authoritative advisory declares affected, and a false positive requires that the advisory reject it. That criterion would move some verdicts in both directions. The setuptools `version_range` pairs would become true positives, because the upstream ranges have no lower bound; the Clair pairs on core packages would become true positives, since `Perl_study_chunk` is in the interpreter core shipped by `perl-base` and `libc6` is glibc; and the Clair pairs on CVE-2023-45853 would become false positives, because the flaw is in MiniZip, which distributions do not build into `zlib1g` and which Debian marks as not affected.
-
-**Those verdicts were never written back to `verdicts.jsonl`, and the totals proposed alongside them do not reconcile with the reclassifications listed.** This document therefore reports the committed verdicts throughout, which is what the artifact reproduces and what any reviewer recomputing from `verdicts.jsonl` will obtain. Applying the stricter criterion would require re-adjudicating and rewriting the verdict file.
-
-## 7. Artifacts
+## 6. Artifacts
 
 - `extract_and_sample.py`: digest mapping, seeded sampling and extraction; it does not classify.
 - `enrich_sbom.py`: attaches the installed versions from the Syft SBOM.
