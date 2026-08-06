@@ -24,7 +24,7 @@ Sections of this document:
 | [Preocupações com segurança](#preocupações-com-segurança) | What the artifact touches |
 | [Instalação](#instalação) | Clone; nothing else for the main path |
 | [Teste mínimo](#teste-mínimo) | One command, ~10 s |
-| [Experimentos](#experimentos) | One command per claim, with times |
+| [Experimentos](#experimentos) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
 | [LICENSE](#license) | MIT |
 
 How the repository is organized:
@@ -48,7 +48,7 @@ How the repository is organized:
   every paper number in ~10 s, offline, from the committed data.
 - **Sustentável (SeloS)**: small stdlib-only scripts (`scripts/`), documented
   layout (`docs/`), vendored scan engine (`multiscan/`), no dead code.
-- **Reprodutível (SeloR)**: `./reproduce.sh` re-derives **all 62 numbers**
+- **Reprodutível (SeloR)**: `./reproduce.sh` re-derives **all 65 numbers**
   asserted in the paper and all 5 figures from versioned data
   (`expected/paper_values.json`; exact match, exit code gated);
   `./reproduce.sh analysis` re-derives them from the raw per-image dataset,
@@ -105,47 +105,47 @@ Nothing else: `uv run` resolves the plotting dependencies on first use (~30 s).
 
 ## Teste mínimo
 
-One command (~10 s):
+One command (~10 s), offline, no Docker:
 
 ```bash
 ./reproduce.sh
 ```
 
-Expected: `fig_rq1 ok` ... `fig_repro2 ok`, the verification table, and the
-final line `**62 PASS / 0 FAIL / 0 SKIP**` (exit code 0). Figures land in
-`figures/*.pdf`.
+It regenerates the paper's 5 figures from the committed data and re-derives
+every number the paper asserts, checking each one against
+`expected/paper_values.json`.
+
+Expected: `fig_rq1 ok` ... `fig_repro2 ok`, the verification table (one row per
+number: name, paper section, expected, obtained, PASS), and the final line
+`**65 PASS / 0 FAIL / 0 SKIP**` (exit code 0). Figures land in `figures/*.pdf`
+and the table is also written to `docs/REPRODUCIBILITY_REPORT.md`.
+
+Expected resources: <1 GB RAM, no extra disk.
 
 ## Experimentos
 
-### Claim #1 (main) — every number and figure in the paper reproduces from the data
-
-```bash
-./reproduce.sh
-```
-
-- **Expected time:** ~10 s, offline.
-- **Expected resources:** <1 GB RAM, no extra disk.
-- **Expected result:** all 5 paper figures regenerated and the 62 checks in
-  `expected/paper_values.json` (corpus sizes; RQ1 per-distribution means; RQ2
-  age buckets and Spearman ρ=0.27; RQ3 Jaccards and engine coverages; RQ4
-  un-pullable rates; RQ5 regression betas; secret/malware validation) all PASS,
-  ending in `62 PASS / 0 FAIL / 0 SKIP`. The table is also written to
-  `docs/REPRODUCIBILITY_REPORT.md`.
-
-### Claim #2 — the committed aggregates derive from the raw multi-scanner dataset
+### Claim #1 (main) — every paper number and figure re-derives from the raw multi-scanner dataset
 
 ```bash
 ./reproduce.sh analysis
 ```
 
-- **Expected time:** ~15 min (131 MB download + 8.6 GB extract + re-aggregation
-  of 5,142 reports).
+- **Expected time:** ~15 min on the reference machine (131 MB download + 8.6 GB
+  extract + re-aggregation of 5,142 reports); dominated by the download, so a
+  slower link takes proportionally longer.
 - **Expected resources:** ~9 GB disk, <2 GB RAM.
 - **Expected result:** `data/analysis/per_image.csv` and the RQ3 sets are
   rebuilt from the raw `report.json` files, identical to the committed ones,
-  followed by the same figures and the same `62 PASS / 0 FAIL`.
+  followed by the same 5 figures and the same
+  `**65 PASS / 0 FAIL / 0 SKIP**` as the minimal test — this is what makes the
+  committed aggregates auditable rather than trusted.
 
-### Claim #3 — the scan pipeline itself, reduced
+### Claim #2 (optional) — the scan pipeline itself, reduced
+
+**Optional, and not needed for any seal.** Claim #1 already re-derives every
+number and figure in the paper from the raw dataset; this claim only exercises
+the collection side — the pipeline that produced that dataset — and it is long
+(see the time below). Run it only if you want to see the scanners execute.
 
 10 corpus images scanned by all 14 scanners into an isolated queue and output
 directory; the census state in `data/` is not touched.
@@ -154,23 +154,37 @@ directory; the census state in `data/` is not touched.
 ./reproduce.sh scan-smoke
 ```
 
-- **Expected time:** **30 min to 3–4 h**, depending on the machine and the
-  link. Most of the run is the one-time Clair database preparation and the pull
-  of the 14 scanner images, so it is bound by network bandwidth and CPU far
-  more than by the 10 images themselves. The lower end is the measured **27 min
-  on an 8-core AMD Ryzen 7 9700X** with a fast connection.
+- **Expected time — strongly hardware- and link-dependent.** Measured at
+  **~90 min on an 8-core AMD Ryzen 7 9700X** with a fast connection. On a
+  slower or more contended machine, or a slower link, expect **10–20 h**. Most
+  of the run is the one-time Clair database preparation and the pull of the 14
+  scanner images, so it is bound by network bandwidth and CPU far more than by
+  the 10 images themselves; scanning fewer images (`SMOKE_N=3 ./reproduce.sh
+  scan-smoke`) therefore saves much less time than it looks.
 - **Expected resources:** Docker; ~15 GB disk for the scanner images. A Docker
   Hub token in `config/accounts.json` is optional.
-- **Expected result:** `[scan-smoke] 10/10 imagens com report.json` and one
-  invocation of each of the 14 scanners per image, under `scan-out/smoke/out/`.
-  The extracted-filesystem cache is written by containers as root; clean it
-  with `docker run --rm -v "$PWD/scan-out:/s" alpine rm -rf /s/smoke`.
+- **Expected result:** the run ends with
+  `[scan-smoke] 10/10 images with report.json in <repo>/scan-out/smoke/out`,
+  then a line listing the invocations per scanner (10 for each of the 14
+  scanners), then `[scan-smoke] OK`. The per-image reports are under
+  `scan-out/smoke/out/`. What this claim asserts is the **verdict and the
+  per-scanner invocation counts**, not the wall-clock time. Finding counts will
+  not match the census: the scanners resolve current vulnerability databases,
+  while the census is the immutable record of when it ran (see
+  `docs/REPRODUCIBILITY_REPORT.md`).
+- **Cleanup:** the extracted-filesystem cache is written by containers as root;
+  remove it with
 
-Beyond the three claims, the whole census can be re-run from scratch with
+```bash
+docker run --rm -v "$PWD/scan-out:/s" alpine rm -rf /s/smoke
+```
+
+Beyond the two claims, the whole census can be re-run from scratch with
 `./reproduce.sh all`: it crawls the Docker Hub API, rebuilds the queue of 5,606
-images, runs the 14 scanners and re-enters Claim #2. This takes **weeks of
-scanning** and needs Docker plus a Docker Hub token; see `SETUP.md` for the
-one-time scanner preparation and the distributed workers.
+images, runs the 14 scanners and then re-enters Claim #1. This takes **weeks of
+scanning** and needs Docker plus a Docker Hub token; see
+[`SETUP.md`](SETUP.md) for the one-time scanner preparation and the distributed
+workers.
 
 ## LICENSE
 
