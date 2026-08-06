@@ -1,111 +1,123 @@
-# Validação manual de falso-positivo vs verdadeiro-positivo das detecções de "secrets"
+# Manual validation of the secret detections: true positives versus false positives
 
-Censo de imagens Docker (TruffleHog + Gitleaks) — validação por leitura humana
+Census of Docker Hub operating-system base images, scanned by TruffleHog and Gitleaks, validated by human reading.
 
-## 1. Resumo executivo
+## 1. Executive summary
 
-De uma amostra aleatória de 1.100 detecções de secret (estratificada por scanner, seed=42), extraída do universo de 26.892 detecções distintas em 2.747 imagens, classifiquei manualmente (lendo cada finding) as 1.100. Resultado:
+None of the secret detections in the sample is a usable credential. From a random sample of **1,100 detections**, stratified by scanner and drawn with `seed=42` from a population of **26,892** distinct detections over **2,747** images, every one was classified by reading the finding itself.
 
-| Classe | n | % |
+| Class | n | % |
 |---|---|---|
-| Verdadeiro-positivo (TP) | 0 | 0,00% |
-| Falso-positivo (FP) | 1.100 | 100,00% |
-| Ambíguo | 0 | 0,00% |
+| True positive | 0 | 0.00% |
+| False positive | 1,100 | 100.00% |
+| Ambiguous | 0 | 0.00% |
 
-- Taxa de FP validada: 100,0% (IC 95% Wilson: 99,65% – 100,00%).
-- Taxa de TP validada: 0,0% (IC 95% Wilson: 0,00% – 0,348%; limite superior pela regra de três: 0,273%).
+- Validated false-positive rate: 100.0% (95% Wilson confidence interval: 99.65% to 100.00%).
+- Validated true-positive rate: 0.0% (95% Wilson interval: 0.00% to 0.348%; the rule-of-three upper bound for 0 successes in 1,100 trials is 0.273%).
 
-Nenhuma credencial real e utilizável foi encontrada na amostra. Todas as 1.100 detecções são placeholders de documentação, chaves de teste embutidas em bibliotecas, checksums/hashes de pacote, identificadores de código, material de chave pública, ou tokens temporários já expirados em logs.
+All 1,100 detections are documentation placeholders, test keys shipped inside system libraries, package checksums, source-code identifiers, public-key material, or short-lived tokens already expired in log files.
 
-## 2. Metodologia
+## 2. Methodology
 
-### 2.1 Fonte e formato dos dados
-- Diretório: scan-out/out_so/<imagem>/{trufflehog,gitleaks}/ (somente leitura).
-- TruffleHog: JSONL, um finding por linha. Campos usados: DetectorName, Raw/RawV2, Verified, SourceMetadata.Data.Docker.file. Todos os findings têm Verified=false.
-- Gitleaks: array JSON. Campos usados: RuleID, Secret, Match, File, StartLine, Entropy.
-- Arquivos .gz descomprimidos para leitura. Markers vazios: [] (gitleaks), 0 bytes (trufflehog).
+### 2.1 Source and format of the data
 
-### 2.2 Extração e amostragem (script, reprodutível)
-- Script: extract_and_sample.py. Faz APENAS (a) extração de todos os findings, (b) ID estável, (c) amostragem com seed fixo, (d) gravação. Não classifica nada.
-- ID estável: sha1(scanner|imagem|arquivo|regra|locator|valor)[:16], prefixado por tr_/gi_. Locator = nº da linha (trufflehog) ou StartLine (gitleaks).
-- Universo após deduplicação por ID: 26.892 findings (15.039 trufflehog + 11.853 gitleaks). A diferença para os 27.285 brutos vem da dedup de findings idênticos e raras linhas não parseáveis.
-- Amostragem estratificada proporcional por scanner com random.Random(42): 615 trufflehog + 485 gitleaks = 1.100, cobrindo 677 imagens distintas.
-- Amostra salva em sample.jsonl (1 finding/linha, com ID, scanner, imagem, arquivo, regra, valor/trecho).
+The scanner outputs are read only, from `scan-out/out_so/<image>/{trufflehog,gitleaks}/`.
 
-### 2.3 Classificação (manual, por leitura)
-- A decisão TP/FP foi minha, lendo cada finding (valor + arquivo + regra + trecho de contexto), em 11 lotes de 100. Nenhum filtro, regex ou heurística automática decidiu o veredicto; o script só gravou o que eu decidi.
-- Critério:
-  - TP = credencial/segredo real e utilizável (chave privada de produção, token de API válido em formato e contexto, senha real em config).
-  - FP = placeholder, exemplo/doc, hash/checksum de pacote, chave pública, secret de teste conhecido, caminho/binário casado por engano, token temporário expirado.
-  - Ambíguo = dúvida genuína (contado à parte). Não houve nenhum.
-- Veredictos gravados incrementalmente em verdicts.jsonl (ID + veredicto + 1 frase de motivo).
+- TruffleHog writes JSON Lines, one finding per line. The fields used are `DetectorName`, `Raw`/`RawV2`, `Verified` and `SourceMetadata.Data.Docker.file`. Every finding in the corpus carries `Verified=false`, meaning the scanner itself never confirmed a credential against its provider.
+- Gitleaks writes a JSON array. The fields used are `RuleID`, `Secret`, `Match`, `File`, `StartLine` and `Entropy`.
+- Compressed outputs are decompressed for reading. An empty result is `[]` for Gitleaks and a zero-byte file for TruffleHog.
 
-### 2.4 Representatividade e precisão
-- N=26.892, n=1.100. Para proporção ~0,5 daria IC 95% de ±~2,95%; como a proporção observada de FP é ~1,0, o IC efetivo é muito mais estreito (Wilson: limite inferior 99,65% para FP).
-- Amostra reprodutível: rodar extract_and_sample.py com seed=42 produz exatamente os mesmos 1.100 IDs.
+### 2.2 Extraction and sampling
 
-## 3. Resultados
+`extract_and_sample.py` performs only four steps: it extracts every finding, derives a stable identifier, draws the sample with a fixed seed, and writes the result. It classifies nothing.
 
-- Lidos: 1.100 / 1.100. TP: 0 | FP: 1.100 | Ambíguo: 0.
-- FP: 100,0% — IC 95% Wilson [99,65%, 100,00%].
-- TP: 0,0% — IC 95% Wilson [0,00%, 0,348%]; regra de três (0/1100) ⇒ limite superior 0,273%.
+- The stable identifier is `sha1(scanner|image|file|rule|locator|value)[:16]`, prefixed with `tr_` or `gi_` for the originating scanner. The locator is the line number for TruffleHog and `StartLine` for Gitleaks.
+- After deduplication by identifier the population is 26,892 findings, 15,039 from TruffleHog and 11,853 from Gitleaks. The gap to the 27,285 raw records comes from identical findings collapsing together and from a small number of unparseable lines.
+- Sampling is stratified by scanner and proportional, using `random.Random(42)`: 615 TruffleHog and 485 Gitleaks findings, 1,100 in total, spanning 677 distinct images.
+- The sample is written to `sample.jsonl`, one finding per line, with its identifier, scanner, image, file, rule and matched value.
 
-### 3.1 Taxa de secrets VALIDADA por imagem (estimativa)
-O censo indica que ~72% das imagens têm ≥1 detecção bruta. Para estimar a fração com ≥1 secret real:
-- Suposição: a probabilidade de uma detecção ser TP ~ taxa de TP medida (ponto = 0%), tratando detecções de uma imagem de forma independente (suposição conservadora; na prática os FPs são fortemente correlacionados, pois vêm dos mesmos arquivos de sistema replicados entre imagens).
-- Estimativa pontual: fração de imagens com ≥1 secret real ≈ 0%.
-- Limite superior grosseiro: usando o teto do IC de TP (0,348%) e o teto de 72%, a fração de imagens com ≥1 secret real fica abaixo de ~0,25% (no máximo ~7 das 2.747 imagens, e provavelmente nenhuma).
-- Em termos práticos: o achado "72% das imagens têm secrets" desaba para ~0% quando exigimos credencial real validada por leitura.
+### 2.3 Classification
 
-## 4. Por que tudo é FP — categorias dominantes observadas
+A single reviewer decided every verdict by reading the finding: the matched value, the file it came from, the rule that fired, and the surrounding context. No filter, regular expression or heuristic decided a verdict; the script only recorded the decision.
 
-(a) Chaves de teste embutidas em bibliotecas do sistema — chaves de teste compiladas no GnuTLS (libgnutls.so*, gnutls-cli): RSA "MIIEogIBAAKCAQEA6yCv+BLrRP..." e EC "MHcCAQEEIPAKWV7...". Fixtures públicas, não credenciais. Padrão "PrivateKey" mais frequente.
+The criterion is:
 
-(b) Chaves de exemplo/teste em docs de pacotes — m2crypto-*/demo/.../server.pem e rsa.priv.pem; chaves PGP de teste do pygpgme (tests/keys/key1.sec, key2.sec, signonly.sec). Chaves reais em formato, porém amostras de teste públicas.
+- **True positive**: a real, usable credential, such as a production private key, an API token valid in both format and context, or a real password in a configuration file.
+- **False positive**: a placeholder, a documentation example, a package hash or checksum, a public key, a known test secret, a path or binary matched by accident, or an expired short-lived token.
+- **Ambiguous**: a genuine doubt, counted separately. There were none.
 
-(c) Hashes/checksums de pacote casados como token — TruffleHog Box/Agora/Alchemy/Pastebin/Flickr/BingSubscriptionKey casando MD5 de libc6:amd64.md5sums, fatias de apt .../Packages e Translation-en, e GUIDs de 32 hex em binários (systemd-resolved).
+Verdicts are written incrementally to `verdicts.jsonl`, each an identifier, a verdict and a one-sentence reason.
 
-(d) Identificadores de código C em headers — Gitleaks generic-api-key casando nomes de macros/tipos: TPM2B_ENCRYPTED_SECRET, krb5_const_principal, gnutls_x509_crt_fmt_t, NL80211_KEY_MAX, __NFTA_TUNNEL_KEY_IP6_MAX, COPHH_KEY_UTF8, soft_heap_limit64/column_bytes16 (sqlite), _mm512_srli_epi64 (intrínseca x86), b4_api_PREFIX (template bison).
+### 2.4 Representativeness and precision
 
-(e) URLs de exemplo em documentação — http://joe:password@proxy.example.com, http://user:host@foo:3128, ftp://user:passwd@my.site.com, http://john%40example.com:password@example.com, http://test:pass;auth=NTLM@example.com, username:fakepwd (curl MANUAL). De urllib2, urlgrabber, HTTP/Tiny.pm, man pages do yum/curl.
+For N=26,892 and n=1,100, a proportion near 0.5 would give a 95% interval of about ±2.95%. Because the observed false-positive proportion is close to 1.0, the effective interval is far narrower, with a Wilson lower bound of 99.65%. Running `extract_and_sample.py` with `seed=42` reproduces exactly the same 1,100 identifiers.
 
-(f) Material de chave pública — fatias base64 de pacman/keyrings/archlinux.gpg (pacotes PGP de chaves públicas) casadas por Box/UnifyID/generic-api-key.
+## 3. Results
 
-(g) Assinaturas de tipo de arquivo em binário — Gitleaks private-key casando strings literais "BEGIN PRIVATE KEY"/"BEGIN OPENSSH PRIVATE KEY" dentro de magic.mgc (banco compilado do libmagic). Entropia ~1,3-2,0.
+- Read: 1,100 of 1,100. True positives 0, false positives 1,100, ambiguous 0.
+- False-positive rate: 100.0%, 95% Wilson interval [99.65%, 100.00%].
+- True-positive rate: 0.0%, 95% Wilson interval [0.00%, 0.348%]; the rule of three over 0/1,100 gives an upper bound of 0.273%.
 
-(h) Hash de política padrão e UUID de doc — tpm2-tss/fapi-profiles/*.json authPolicy é hash de política padrão da especificação TSS; gnutls/NEWS tpmkey:uuid=... é exemplo de changelog.
+### 3.1 Estimated rate of validated secrets per image
 
-(i) Hashes de sessão em log de instalador — var/log/anaconda/* "key: <sha1>" são IDs de transação do instalador, não credenciais.
+The headline census figure collapses once a real credential is required. About 72% of the images carry at least one raw detection. To estimate the fraction that carries at least one real secret, we treat the detections of an image as independent, which is conservative here: in practice the false positives are strongly correlated, because they come from the same system files replicated across images.
 
-(j) Tokens AWS STS temporários e expirados em log — var/log/dnf.librepo.log contém ASIAT2EO7SSD... e X-Amz-Security-Token=IQoJb3JpZ2luX2Vj... capturados em URLs pré-assinadas de espelhos RPM em S3. Credenciais de sessão de curta duração, expiradas, registradas em log — não utilizáveis. Caso mais borderline da amostra; FP sob o critério de "secret real e utilizável".
+- Point estimate of the fraction of images with at least one real secret: approximately 0%.
+- Coarse upper bound: combining the 0.348% ceiling on the true-positive rate with the 72% ceiling on images with a raw detection puts the fraction below about 0.25%, that is, at most roughly 7 of the 2,747 images, and most likely none.
 
-Não houve nenhum exemplo de TP para ilustrar — nenhuma chave privada de produção, token de API válido, nem senha de config real na amostra de 1.100.
+In practical terms, the finding that "72% of the images contain secrets" falls to about 0% once a validated, usable credential is required.
 
-## 5. Comparação com a literatura
+## 4. Why every detection is a false positive
 
-| Estudo | Método | Hits válidos/reais |
+Ten patterns account for the whole sample.
+
+**(a) Test keys compiled into system libraries.** Test keys built into GnuTLS (`libgnutls.so*`, `gnutls-cli`), both RSA and elliptic-curve. These are public test fixtures, not credentials, and they are the most frequent pattern behind the `PrivateKey` detector.
+
+**(b) Example and test keys in package documentation.** Keys under `m2crypto-*/demo/` (`server.pem`, `rsa.priv.pem`) and the pygpgme test keys (`tests/keys/key1.sec`, `key2.sec`, `signonly.sec`). They are real keys in format, but published test material.
+
+**(c) Package hashes and checksums matched as tokens.** The TruffleHog Box, Agora, Alchemy, Pastebin, Flickr and BingSubscriptionKey detectors matching MD5 digests in `libc6:amd64.md5sums`, slices of the apt `Packages` and `Translation-en` files, and 32-character hexadecimal GUIDs inside binaries such as `systemd-resolved`.
+
+**(d) C identifiers in headers.** The Gitleaks `generic-api-key` rule matching macro and type names: `TPM2B_ENCRYPTED_SECRET`, `krb5_const_principal`, `gnutls_x509_crt_fmt_t`, `NL80211_KEY_MAX`, `__NFTA_TUNNEL_KEY_IP6_MAX`, `COPHH_KEY_UTF8`, the SQLite symbols `soft_heap_limit64` and `column_bytes16`, the x86 intrinsic `_mm512_srli_epi64`, and the bison template token `b4_api_PREFIX`.
+
+**(e) Example URLs in documentation.** Credential-bearing example URLs such as `http://joe:password@proxy.example.com`, `ftp://user:passwd@my.site.com` and `username:fakepwd`, taken from urllib2, urlgrabber, `HTTP/Tiny.pm` and the yum and curl manual pages.
+
+**(f) Public-key material.** Base64 slices of `pacman/keyrings/archlinux.gpg`, which are PGP public-key packets, matched by the Box, UnifyID and `generic-api-key` rules.
+
+**(g) File-type signatures inside a binary.** The Gitleaks `private-key` rule matching the literal strings `BEGIN PRIVATE KEY` and `BEGIN OPENSSH PRIVATE KEY` inside `magic.mgc`, the compiled libmagic database. The reported entropy, around 1.3 to 2.0, is far below that of key material.
+
+**(h) A specification policy hash and a documentation identifier.** The `authPolicy` field of `tpm2-tss/fapi-profiles/*.json` is the default policy hash from the TSS specification, and the `tpmkey:uuid=...` string in the GnuTLS `NEWS` file is a changelog example.
+
+**(i) Session hashes in installer logs.** The `key: <sha1>` entries under `var/log/anaconda/` are installer transaction identifiers, not credentials.
+
+**(j) Expired temporary AWS STS tokens in logs.** `var/log/dnf.librepo.log` contains access-key identifiers prefixed `ASIA` and `X-Amz-Security-Token` values captured from pre-signed URLs of RPM mirrors on S3. These are short-lived session credentials, already expired and merely logged, so they are not usable. This is the most borderline pattern in the sample, and it is a false positive under the criterion of a real and usable secret.
+
+No true positive was available to illustrate: the sample contains no production private key, no valid API token and no real configuration password.
+
+## 5. Comparison with prior measurements
+
+Our result sits further towards "almost everything is a false positive" than either published figure, and the corpus explains why.
+
+| Study | Method | Valid or real hits |
 |---|---|---|
-| Este trabalho | Leitura humana de 1.100 de 26.892 (imagens de SO oficiais) | 0,0% (IC 95% [0%, 0,35%]) |
-| Dahlmanns et al. | Validação de secrets em imagens Docker | ~8,5% validados |
-| Dr. Docker | Filtragem de hits | ~99,3% inválidos => ~0,7% válidos |
+| This work | Human reading of 1,100 of 26,892 detections, official OS base images | 0.0% (95% CI [0%, 0.35%]) |
+| Dahlmanns et al. | Validation of secrets in Docker images | about 8.5% validated |
+| Dr. Docker | Filtering of scanner hits | about 99.3% invalid, so about 0.7% valid |
 
-Nosso resultado é ainda mais extremo na direção de "quase tudo é FP" que ambos:
-- vs Dr. Docker (~0,7% válidos): nosso ponto é 0% e o teto do IC (0,35%) fica abaixo de 0,7%. Consistente em ordem de grandeza, porém mais baixo.
-- vs Dahlmanns et al. (8,5%): muito abaixo. Diferença explicável pelo corpus: nosso censo é de imagens base de SO oficiais (almalinux, debian, ubuntu, archlinux, amazonlinux, etc.), com bibliotecas, headers e docs de sistema, mas sem código de aplicação de terceiros com credenciais commitadas por engano. Dahlmanns amostra imagens de aplicação onde segredos reais aparecem. Conclusão: imagens de SO base têm taxa de TP efetivamente nula; o risco de secrets está nas camadas de aplicação, não na base.
+Against Dr. Docker's roughly 0.7% valid hits, our point estimate is 0% and our interval ceiling of 0.35% falls below their figure: consistent in order of magnitude, and lower. Against the roughly 8.5% reported by Dahlmanns et al., our result is far lower. The corpus accounts for the gap. Our census covers official operating-system base images (almalinux, debian, ubuntu, archlinux, amazonlinux and the rest), which carry system libraries, headers and documentation but no third-party application code with accidentally committed credentials. Studies that sample application images find real secrets there. The reading is that operating-system base images have an effectively null true-positive rate, and that the secret-exposure risk lives in the application layers rather than in the base.
 
-## 6. Limitações
+## 6. Limitations
 
-1. Sem verificação ativa: não autentiquei tokens contra o provedor (invasivo/antiético). TP/FP por julgamento de leitura sobre formato, conteúdo, arquivo e contexto. Para os tokens AWS STS, "expirado" foi inferido pelo tipo (STS de sessão, prefixo ASIA, em log de download), não testado.
-2. Corpus enviesado para SO base: o 0% TP aplica-se a imagens base de SO oficiais; NÃO generalizar para imagens de aplicação.
-3. Concentração de FPs: fortemente correlacionados (mesmos arquivos de sistema replicados entre centenas de imagens/tags), reduzindo a diversidade efetiva mesmo com 677 imagens distintas. O IC binomial assume independência (otimista); como a taxa de TP é 0 em todas as categorias, a conclusão qualitativa (~0% real) é robusta.
-4. Dedup: trabalhei sobre 26.892 findings deduplicados, não os 27.285 brutos; diferença ~1,4%, não afeta a conclusão.
-5. Apenas 2 scanners (TruffleHog, Gitleaks); outros poderiam ter perfis de FP diferentes.
+1. **No active verification.** Tokens were not authenticated against their providers, which would be intrusive. Verdicts rest on judgement over format, content, file and context. For the AWS STS tokens, expiry was inferred from the credential type (a session credential with the `ASIA` prefix, found in a download log) rather than tested.
+2. **The corpus is restricted to operating-system base images.** The 0% true-positive rate applies to that population and should not be generalized to application images.
+3. **The false positives are correlated.** They come from the same system files replicated across hundreds of images and tags, which reduces the effective diversity of the sample even though it spans 677 distinct images. The binomial interval assumes independence and is therefore optimistic. Because the true-positive rate is 0 in every category, the qualitative conclusion of approximately 0% real secrets is robust to this.
+4. **Deduplication.** The work is over 26,892 deduplicated findings rather than the 27,285 raw records, a difference of about 1.4% that does not affect the conclusion.
+5. **Two scanners only.** TruffleHog and Gitleaks; other tools could have different false-positive profiles.
 
-## 7. Artefatos (reprodutibilidade)
+## 7. Artifacts
 
-- extract_and_sample.py — extração + amostragem seeded (não classifica).
-- sample.jsonl — os 1.100 findings amostrados (ID estável + metadados).
-- verdicts.jsonl — os 1.100 veredictos (ID + TP/FP/AMB + motivo).
-- population_stats.json — contagens do universo e da amostra.
+- `extract_and_sample.py`: extraction and seeded sampling; it does not classify.
+- `sample.jsonl`: the 1,100 sampled findings, with the stable identifier and metadata.
+- `verdicts.jsonl`: the 1,100 verdicts, each an identifier, a class and a reason.
+- `population_stats.json`: the population and sample counts.
 
-Para reproduzir a amostra: python3 extract_and_sample.py (seed=42 fixo). Para reproduzir as estatísticas: agregue verdicts.jsonl por verdict e aplique IC de Wilson.
+To reproduce the sample, run `python3 extract_and_sample.py`, which fixes `seed=42`. To reproduce the statistics, aggregate `verdicts.jsonl` by verdict and apply the Wilson interval.
