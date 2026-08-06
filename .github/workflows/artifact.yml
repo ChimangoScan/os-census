@@ -1,0 +1,39 @@
+name: artifact
+
+# Runs the evaluator's own path on a clean Ubuntu runner, on every push and once a
+# week. The point is not the code: it is that the exact command the README gives a
+# reviewer keeps working on a machine with none of the author's state. A drift in a
+# resolved dependency, a file forgotten in .gitignore, or a script that only ran
+# because something was already installed shows up here instead of in a review.
+#
+# `reproduce.sh analysis` is deliberately not here: it downloads the 131 MB dataset
+# and expands it to 8.6 GB, which does not fit a hosted runner.
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  reviewer-path:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Minimal test (regenerates every figure, verifies every paper value)
+        run: ./reproduce.sh
+
+      - name: The committed outputs must be untouched
+        run: |
+          if ! git diff --quiet -- expected/ data/; then
+            echo "The reproduction rewrote committed inputs or expected values." >&2
+            git --no-pager diff --stat -- expected/ data/ >&2
+            exit 1
+          fi
+          echo "expected/ and data/ are unchanged"
