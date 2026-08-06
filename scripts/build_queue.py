@@ -23,12 +23,12 @@ def age_days(ts):
 
 def slug(s): return re.sub(r"[^A-Za-z0-9._-]+", "_", s).strip("_")
 
-# pull_count por repo
+# pull_count per repository
 pull = {}
 for line in (ROOT/"data/hub_repos.jsonl").read_text().splitlines():
     r = json.loads(line); pull[f"{r['namespace']}/{r['name']}"] = r.get("pull_count")
 
-# agrupa tags amd64/linux por (repo, digest) -> imagem única
+# group amd64/linux tags by (repo, digest) -> one unique image
 uniq = collections.OrderedDict()
 no_amd64 = collections.Counter()
 for line in (ROOT/"data/hub_tags.jsonl").read_text().splitlines():
@@ -47,11 +47,11 @@ for line in (ROOT/"data/hub_tags.jsonl").read_text().splitlines():
 
 imgs = list(uniq.values())
 for u in imgs:
-    u["age_days"] = min(u["ages"]) if u["ages"] else None      # publicação mais recente do digest
+    u["age_days"] = min(u["ages"]) if u["ages"] else None      # most recent publication of this digest
     u["repr_tag"] = sorted(u["tags"])[0]
     u["n_tags"] = len(u["tags"])
 
-# round-robin: por repo ordena por idade (novo->velho) e intercala frente/trás
+# round-robin: within each repo sort by age (new->old), then interleave front/back
 def interleave(lst):
     lst = sorted(lst, key=lambda u: (u["age_days"] if u["age_days"] is not None else 10**9))
     out = []; i, k = 0, len(lst) - 1

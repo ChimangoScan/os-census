@@ -28,7 +28,7 @@ for r in rows:
               "vuln_total","secrets","misconfig","malware"):
         r[k] = fnum(r.get(k))
 
-# agrega por distro (>=10 imgs)
+# aggregate per distribution (>=10 images)
 byd = collections.defaultdict(list)
 for r in rows: byd[short(r["repo"])].append(r)
 distros = [d for d in byd if len(byd[d]) >= 10]
@@ -42,7 +42,7 @@ fig, ax = plt.subplots(1, 4, figsize=FS)
 ch = sorted(distros, key=lambda d: dmean(d, lambda r: (r["vuln_critical"] or 0)+(r["vuln_high"] or 0)))[-11:]
 ax[0].barh(ch, [dmean(d, lambda r:(r["vuln_critical"] or 0)+(r["vuln_high"] or 0)) for d in ch], color="#b2182b")
 ax[0].set_xlabel("mean crit+high"); ax[0].set_title("(a) Crit+high / distro", loc="left"); ax[0].set_xlim(left=0); ax[0].tick_params(axis="y", labelsize=7.5)
-# (b) composicao de severidade (% empilhado) p/ top distros por total
+# (b) severity composition (stacked %) for the top distributions by total
 tt = sorted(distros, key=lambda d: dmean(d, lambda r:r["vuln_total"]))[-9:]
 sev = ["vuln_critical","vuln_high","vuln_medium","vuln_low"]; cols=["#67000d","#ef3b2c","#fc9272","#fee0d2"]
 bot=[0]*len(tt)
@@ -52,11 +52,11 @@ for s,c in zip(sev,cols):
     pct=[100*v/t for v,t in zip(vals,tot)]
     ax[1].barh(tt,pct,left=bot,color=c,label=s.split("_")[1]); bot=[b+p for b,p in zip(bot,pct)]
 ax[1].set_xlabel("% of findings"); ax[1].set_title("(b) Severity mix", loc="left"); ax[1].tick_params(axis="y", labelsize=7.5); ax[1].legend(fontsize=6, ncol=2, loc="lower right")
-# (c) % com >=1 critica por distro
+# (c) share with >=1 critical finding, per distribution
 pc = sorted(distros, key=lambda d: 100*sum(1 for r in byd[d] if (r["vuln_critical"] or 0)>0)/len(byd[d]))[-11:]
 ax[2].barh(pc, [100*sum(1 for r in byd[d] if (r["vuln_critical"] or 0)>0)/len(byd[d]) for d in pc], color="#d94801")
 ax[2].set_xlabel("% with >=1 critical"); ax[2].set_title("(c) Critical prevalence", loc="left"); ax[2].set_xlim(0,100); ax[2].tick_params(axis="y", labelsize=7.5)
-# (d) mean total vulns por distro
+# (d) mean total vulnerabilities per distribution
 tv = sorted(distros, key=lambda d: dmean(d, lambda r:r["vuln_total"]))[-11:]
 ax[3].barh(tv, [dmean(d, lambda r:r["vuln_total"]) for d in tv], color="#08519c")
 ax[3].set_xlabel("mean total vulns"); ax[3].set_title("(d) Total / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y", labelsize=7.5)
@@ -109,10 +109,10 @@ else:
     with gzip.open(dump,"rt") as fi:
         for s,pairs in json.load(fi).items(): sets[s]={tuple(p) for p in pairs}
     print(f"RQ3: usando dump pre-computado ({dump.name})")
-# Normaliza o identificador para o CVE-id canonico antes de cruzar os conjuntos:
-# o Clair grava metade das entradas como o nome completo do vuln
-# ("CVE-XXXX-YYYY on Ubuntu 20.04 ..."), que sem normalizar nunca cruza com os
-# CVE-ids limpos dos demais engines e inflaria artificialmente a divergencia.
+# Normalize the identifier to the canonical CVE id before intersecting the sets:
+# Clair stores part of its entries under the vulnerability's full name
+# ("CVE-XXXX-YYYY on Ubuntu 20.04 ..."), which without normalization never
+# matches the bare CVE ids of the other engines and would inflate the divergence.
 _CVE=re.compile(r"CVE-\d{4}-\d+")
 for s in SCA:
     sets[s]={(img,_CVE.search(str(c)).group(0)) for (img,c) in sets[s] if _CVE.search(str(c))}
@@ -143,7 +143,7 @@ print("fig_rq3 ok | sizes:", {s:len(v) for s,v in sets.items()})
 
 # ----------------------------------------------------------------- RQ4 (fila: skip + pulls)
 # Le work/os.db se existir; senao o extrato versionado data/analysis/job_status.csv.gz
-# (gerado por scripts/export_job_status.py) -> reproducao sem a fila original.
+# (produced by scripts/export_job_status.py) -> reproduction without the original queue.
 fig, ax = plt.subplots(1, 4, figsize=FS)
 try:
     tot=collections.Counter(); skp=collections.Counter(); pulls={}
@@ -195,12 +195,12 @@ ry1=_pear(Vv,P); ry2=_pear(Vv,A); r12=_pear(P,A); den=(1-r12*r12) or 1
 b_pkg=(ry1-ry2*r12)/den; b_age=(ry2-ry1*r12)/den
 ax[1].bar(["age","packages"],[b_age,b_pkg],color=["#2166ac","#1a9850"]); ax[1].axhline(0,color="k",lw=.5)
 ax[1].set_ylabel("standardized $\\beta$"); ax[1].set_title("(b) Drivers of vuln. load", loc="left")
-# (c) popularidade: pulls vs vulns (popularidade nao protege)
+# (c) popularity: pulls vs vulnerabilities (popularity does not protect)
 pu=[(r["pull_count"],r["vuln_total"]) for r in rows if r["pull_count"] and r["vuln_total"] is not None]
 ax[2].scatter([p for p,_ in pu],[v for _,v in pu],s=5,alpha=.25,color="#b2182b",edgecolors="none")
 ax[2].set_xscale("symlog"); ax[2].set_xlim(left=0); ax[2].set_ylim(bottom=0)
 ax[2].set_xlabel("pulls"); ax[2].set_ylabel("total vulns"); ax[2].set_title("(c) Popularity vs vulns", loc="left")
-# (d) vulns/package por distro
+# (d) vulnerabilities per package, by distribution
 vpp=sorted(distros,key=lambda d: dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0))[-11:]
 ax[3].barh(vpp,[dmean(d, lambda r:(r["vuln_total"] or 0)/r["packages"] if r["packages"] else 0) for d in vpp],color="#6a51a3")
 ax[3].set_xlabel("vulns / package"); ax[3].set_title("(d) Density / distro", loc="left"); ax[3].set_xlim(left=0); ax[3].tick_params(axis="y",labelsize=7.5)
@@ -226,7 +226,7 @@ fig.tight_layout(pad=0.4); fig.savefig(f"{FIG}/fig_repro.pdf"); plt.close(fig); 
 # ----------------------------------------------------------------- fig_repro2
 # Reproduz 4 plots classicos de trabalhos anteriores no NOSSO corpus:
 # (a) Shu'17 Fig.4 CDF de vulns/imagem; (b) Ibrahim'20 Fig.17 / Wist'21 Fig.3 vulns por distro (box);
-# (c) Boles'24 Fig.3 diferenca por-imagem (Grype-Trivy); (d) Wist'21 Fig.6 pulls vs vulns (rho).
+# (c) Boles'24 Fig.3 per-image difference (Grype-Trivy); (d) Wist'21 Fig.6 pulls vs vulns (rho).
 import numpy as _np, gzip as _gz
 def _spear(a, b):
     a = _np.asarray(a, float); b = _np.asarray(b, float)
@@ -239,13 +239,13 @@ ax[0].plot(vt, [(i+1)/len(vt) for i in range(len(vt))], color="#08519c", lw=1.3)
 ax[0].axvline(st.median(vt), color="#d95f02", ls="--", lw=.7)
 ax[0].set_xscale("symlog"); ax[0].set_xlabel("vulns / image"); ax[0].set_ylabel("CDF")
 ax[0].set_title(f"(a) CDF, median {st.median(vt):.0f} [Shu'17]", loc="left")
-# (b) box por distro (top 9 por mediana)
+# (b) box plot per distribution (top 9 by median)
 topd = sorted(distros, key=lambda d: st.median([r["vuln_total"] for r in byd[d] if r["vuln_total"] is not None]))[-9:]
 ax[1].boxplot([[r["vuln_total"] for r in byd[d] if r["vuln_total"] is not None] for d in topd],
               showfliers=False, widths=.6)
 ax[1].set_xticklabels(topd, rotation=40, ha="right", fontsize=7); ax[1].set_yscale("log")
 ax[1].set_ylabel("vulns / image"); ax[1].set_title("(b) vulns by distro [Ibrahim'20]", loc="left")
-# (c) Grype - Trivy por imagem
+# (c) Grype minus Trivy, per image
 _S = json.load(_gz.open(ROOT/"data/analysis/rq3_sca_sets.json.gz", "rt"))
 def _cnt(scan):
     c = collections.Counter()
