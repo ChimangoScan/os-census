@@ -4,12 +4,16 @@ from scanners.config import Config, ConfigError
 from scanners.sources import get_source
 
 
-def test_example_config_loads():
-    cfg = Config.load("config/config.example.yaml")
+def test_defaults_and_path_resolution(tmp_path):
+    cfgdir = tmp_path / "config"
+    cfgdir.mkdir()
+    p = cfgdir / "run.yaml"
+    p.write_text("source:\n  type: csv\n  path: data/inventory.csv\n")
+    cfg = Config.load(p)
     assert cfg.workers.count == 4 and cfg.queue.backend == "sqlite"
     assert cfg.runtime.hardened is True and cfg.source.type == "csv"
     # paths resolve relative to the repo root (config/'s parent)
-    assert cfg.out_dir.name == "out"
+    assert cfg.root == tmp_path and cfg.out_dir.name == "out"
 
 
 def test_unknown_section_rejected(tmp_path):

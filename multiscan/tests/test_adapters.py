@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from scanners.adapters.registry import load_registry, select
 from scanners.adapters import trivy, grype, nuclei, dependency_check, semgrep, yara, clamav, osv
@@ -6,9 +7,13 @@ from scanners.models import Category, Mode, Severity, Target
 
 T = Target("nginx:1.12", name="nginx", ip="172.28.0.7")
 
+# The registry that drove the census lives at the repository root; resolve it
+# from this file so the test does not depend on the working directory.
+REGISTRY = Path(__file__).resolve().parents[2] / "config" / "scanners.yaml"
+
 
 def test_registry_loads_and_renders(tmp_path):
-    reg = load_registry("config/scanners.yaml")
+    reg = load_registry(str(REGISTRY))
     assert {"trivy", "grype", "syft", "osv", "dockle", "trufflehog", "nuclei", "nikto", "zap"} <= set(reg)
     spec = reg["trivy"]
     assert spec.mode is Mode.STATIC and spec.user == "0:0" and spec.needs_tarball
