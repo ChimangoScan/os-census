@@ -47,17 +47,24 @@ for rj in glob.glob(str(OUT / "*/report.json")):
     })
 
 if not rows:
-    print("ainda sem report.json"); raise SystemExit
+    print("no report.json yet"); raise SystemExit
 
+# Deterministic output. The inputs are read with glob(), whose order is
+# filesystem-dependent, so rows and dict keys would otherwise land in a
+# different order on every machine: the content would be identical but the
+# files would show up as modified, and a reviewer re-running the analysis
+# could not tell a real divergence from a reordering. Sorting here, and
+# pinning the gzip mtime, makes a correct re-run byte-identical instead.
 cols = list(rows[0].keys())
+rows.sort(key=lambda r: r["image"])
 with (ANA / "per_image.csv").open("w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=cols); w.writeheader(); w.writerows(rows)
 
 import gzip
-with gzip.open(ANA / "rq3_sca_sets.json.gz", "wt") as f:
-    json.dump({s: sorted(v) for s, v in sca_sets.items()}, f)
+with gzip.GzipFile(ANA / "rq3_sca_sets.json.gz", "wb", mtime=0) as gz:
+    gz.write(json.dumps({s: sorted(sca_sets[s]) for s in sorted(sca_sets)}).encode())
 
-print(f"=== {len(rows)} imagens analisadas -> data/analysis/per_image.csv ===\n")
+print(f"=== {len(rows)} images analyzed -> data/analysis/per_image.csv ===\n")
 
 # RQ1: posture per repository (mean critical+high, package count)
 print("RQ1 — postura por repo (n imgs | críticas+altas médias | pacotes médios):")

@@ -142,10 +142,19 @@ Expected resources: <1 GB RAM, no extra disk.
   slower link takes proportionally longer.
 - **Expected resources:** ~9 GB disk, <2 GB RAM.
 - **Expected result:** `data/analysis/per_image.csv` and the RQ3 sets are
-  rebuilt from the raw `report.json` files, identical to the committed ones,
-  followed by the same 5 figures and the same
-  `**65 PASS / 0 FAIL / 0 SKIP**` as the minimal test — this is what makes the
-  committed aggregates auditable rather than trusted.
+  rebuilt from the raw `report.json` files, followed by the same 5 figures and
+  the same `**65 PASS / 0 FAIL / 0 SKIP**` as the minimal test. This is what
+  makes the committed aggregates auditable rather than trusted.
+- **How to check the rebuild matched:** the aggregation writes in a fixed
+  order, so a correct re-run reproduces the committed files **byte for byte**:
+
+```bash
+git status --porcelain data/analysis/
+```
+
+  Nothing listed means the rebuild is identical to what is committed. (The
+  figures under `figures/` do change on every run: matplotlib stamps a creation
+  date into the PDF. Their content does not.)
 
 ### Claim #2 (optional) — the scan pipeline itself, reduced
 
