@@ -12,6 +12,13 @@ agreement (best pair Jaccard **0.36**).
 
 > Paper: SBSeg 2026. Authors: Cristhian Kapelinski, Diego Kreutz (UNIPAMPA).
 
+[![artifact](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml/badge.svg)](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml)
+
+Continuous integration runs the reviewer's own path on a clean runner on every
+push, so the badge above is a live statement that the 5 figures and all 65
+checked paper numbers still reproduce on a machine with none of the authors'
+state.
+
 ## Estrutura do readme.md
 
 Sections of this document:
@@ -26,7 +33,7 @@ Sections of this document:
 | [Teste mínimo](#teste-mínimo) | One command, ~10 s |
 | [Experimentos](#experimentos) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
 | [LICENSE](#license) | MIT |
-| [How to cite](#how-to-cite) | Referência do artigo e `CITATION.cff` legível por máquina |
+| [How to cite](#how-to-cite) | The paper reference and the machine-readable `CITATION.cff` |
 
 How the repository is organized:
 
