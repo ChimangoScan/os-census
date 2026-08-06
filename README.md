@@ -26,6 +26,7 @@ Sections of this document:
 | [Teste mínimo](#teste-mínimo) | One command, ~10 s |
 | [Experimentos](#experimentos) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
 | [LICENSE](#license) | MIT |
+| [How to cite](#how-to-cite) | Referência do artigo e `CITATION.cff` legível por máquina |
 
 How the repository is organized:
 
@@ -189,3 +190,22 @@ workers.
 ## LICENSE
 
 [MIT](LICENSE).
+
+## How to cite
+
+Cite the paper, not the repository:
+
+> Kapelinski, C. and Kreutz, D. (2026). A Multi-Scanner Census of the Linux Operating-System Base Images of Docker Hub. In *Anais do XXVII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg 2026)*. Sociedade Brasileira de Computação.
+
+```bibtex
+@inproceedings{kapelinski2026,
+  author    = {Kapelinski, Cristhian and Kreutz, Diego},
+  title     = {A Multi-Scanner Census of the Linux Operating-System Base Images of Docker Hub},
+  booktitle = {Anais do XXVII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg 2026)},
+  year      = {2026},
+  publisher = {Sociedade Brasileira de Computação},
+}
+```
+
+[`CITATION.cff`](CITATION.cff) carries the same metadata in machine-readable form, so GitHub's
+"Cite this repository" button and tools such as Zenodo pick it up automatically.

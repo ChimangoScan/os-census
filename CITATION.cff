@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this artifact, please cite the paper it accompanies."
+title: "os-census"
+abstract: "Research artifact for the SBSeg 2026 paper A Multi-Scanner Census of the Linux Operating-System Base Images of Docker Hub."
+type: software
+authors:
+  - family-names: Kapelinski
+    given-names: Cristhian
+    orcid: "https://orcid.org/0009-0005-5750-022X"
+    affiliation: "AI Horizon Labs, Federal University of Pampa (UNIPAMPA)"
+  - family-names: Kreutz
+    given-names: Diego
+    orcid: "https://orcid.org/0000-0003-0830-0238"
+    affiliation: "AI Horizon Labs, Federal University of Pampa (UNIPAMPA)"
+repository-code: "https://github.com/ChimangoScan/os-census"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "A Multi-Scanner Census of the Linux Operating-System Base Images of Docker Hub"
+  authors:
+  - family-names: Kapelinski
+    given-names: Cristhian
+    orcid: "https://orcid.org/0009-0005-5750-022X"
+    affiliation: "AI Horizon Labs, Federal University of Pampa (UNIPAMPA)"
+  - family-names: Kreutz
+    given-names: Diego
+    orcid: "https://orcid.org/0000-0003-0830-0238"
+    affiliation: "AI Horizon Labs, Federal University of Pampa (UNIPAMPA)"
+  collection-title: "Anais do XXVII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg 2026)"
+  year: 2026
+  publisher:
+    name: "Sociedade Brasileira de Computação (SBC)"
