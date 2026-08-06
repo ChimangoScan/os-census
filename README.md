@@ -1,7 +1,5 @@
 # os-census: a multi-scanner census of the Linux OS base images of Docker Hub
 
-[![artifact](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml/badge.svg)](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml)
-
 Reproduction artifact for the paper *"A Multi-Scanner Census of the Linux
 Operating-System Base Images of Docker Hub"*. It measures the **5,606** unique
 `amd64` images of the **20** Linux distributions in Docker Hub's *Operating
@@ -14,9 +12,10 @@ agreement (best pair Jaccard **0.36**).
 
 > Paper: SBSeg 2026. Authors: Cristhian Kapelinski, Diego Kreutz (UNIPAMPA).
 
-The badge above is live: continuous integration runs the reviewer's own path on
-a clean runner, on every push and weekly, regenerating the 5 figures and
-re-checking all 65 paper numbers on a machine with none of the authors' state.
+Continuous integration ([`.github/workflows/artifact.yml`](.github/workflows/artifact.yml))
+runs the reviewer's own path on a clean runner, on every push and weekly,
+regenerating the 5 figures and re-checking all 65 paper numbers on a machine
+with none of the authors' state.
 
 ## Estrutura do readme.md
 
