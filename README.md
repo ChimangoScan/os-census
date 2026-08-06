@@ -14,9 +14,9 @@ agreement (best pair Jaccard **0.36**).
 
 [![artifact](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml/badge.svg)](https://github.com/ChimangoScan/os-census/actions/workflows/artifact.yml)
 
-Continuous integration runs the reviewer's own path on a clean runner on every
-push, so the badge above is a live statement that the 5 figures and all 65
-checked paper numbers still reproduce on a machine with none of the authors'
+Continuous integration runs the reviewer's own path on a clean runner, weekly
+and on demand, so the badge above is a live statement that the 5 figures and all
+65 checked paper numbers still reproduce on a machine with none of the authors'
 state.
 
 ## Estrutura do readme.md
