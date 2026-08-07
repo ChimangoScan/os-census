@@ -17,19 +17,17 @@ runs the reviewer's own path on a clean runner, on every push and weekly,
 regenerating the 5 figures and re-checking all 65 paper numbers on a machine
 with none of the authors' state.
 
-## Estrutura do readme.md
-
-Sections of this document:
+## README structure
 
 | Section | Description |
 |---|---|
-| [Selos considerados](#selos-considerados) | Which seals the artifact targets and why |
-| [Informações básicas](#informações-básicas) | Reference machine and requirements |
-| [Dependências](#dependências) | Pinned tools, and how the dataset is fetched |
-| [Preocupações com segurança](#preocupações-com-segurança) | What the artifact touches |
-| [Instalação](#instalação) | Clone; nothing else for the main path |
-| [Teste mínimo](#teste-mínimo) | One command, ~10 s |
-| [Experimentos](#experimentos) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
+| [Considered seals](#considered-seals) | Which seals the artifact targets and why |
+| [Basic information](#basic-information) | Reference machine and requirements |
+| [Dependencies](#dependencies) | Pinned tools, and how the dataset is fetched |
+| [Security concerns](#security-concerns) | What the artifact touches |
+| [Installation](#installation) | Clone; nothing else for the main path |
+| [Minimal test](#minimal-test) | One command, ~10 s |
+| [Experiments](#experiments) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
 | [LICENSE](#license) | MIT |
 | [How to cite](#how-to-cite) | The paper reference and the machine-readable `CITATION.cff` |
 
@@ -37,16 +35,16 @@ How the repository is organized:
 
 | Path | Contents |
 |---|---|
-| `reproduce.sh` | The only entry point: `data` (default), `analysis`, `scan-smoke`, `all` |
-| `scripts/` | Stdlib-only steps: `crawl_hub.py`, `build_queue.py`, `analyze.py`, `make_figs.py`, `verify_values.py` |
-| `data/` | Committed inputs and aggregates: the crawl (`hub_*.jsonl`), the queue, `analysis/per_image.csv`, and the manual-validation samples |
-| `expected/` | `paper_values.json` — every number asserted in the paper, with its source section |
-| `figures/` | The regenerated PDFs, exactly as embedded in the paper |
-| `multiscan/` | The vendored scan engine: one adapter per scanner, job queue, workers |
-| `config/` | `scanners.yaml` (image references and invocations); `accounts.json` is gitignored |
-| `docs/` | `LAYOUT.md` (data provenance) and `REPRODUCIBILITY_REPORT.md` (generated verification table) |
+| [`reproduce.sh`](reproduce.sh) | The only entry point: `data` (default), `analysis`, `scan-smoke`, `all` |
+| [`scripts/`](scripts/) | Stdlib-only steps: `crawl_hub.py`, `build_queue.py`, `analyze.py`, `make_figs.py`, `verify_values.py` |
+| [`data/`](data/) | Committed inputs and aggregates: the crawl (`hub_*.jsonl`), the queue, `analysis/per_image.csv`, and the manual-validation samples |
+| [`expected/`](expected/) | `paper_values.json`, every number asserted in the paper, with its source section |
+| [`figures/`](figures/) | The regenerated PDFs, exactly as embedded in the paper |
+| [`multiscan/`](multiscan/) | The vendored scan engine: one adapter per scanner, job queue, workers |
+| [`config/`](config/) | `scanners.yaml` (image references and invocations); `accounts.json` is gitignored |
+| [`docs/`](docs/) | `LAYOUT.md` (data provenance) and `REPRODUCIBILITY_REPORT.md` (generated verification table) |
 
-## Selos considerados
+## Considered seals
 
 - **Disponível (SeloD)**: public repository + versioned release with the full
   dataset and checksums.
@@ -60,9 +58,9 @@ How the repository is organized:
   `./reproduce.sh analysis` re-derives them from the raw per-image dataset,
   auto-downloaded and sha256-verified from the release.
 
-## Informações básicas
+## Basic information
 
-Reference machine — every time in this README was measured on it, except where
+Reference machine: every time in this README was measured on it, except where
 a claim states otherwise:
 
 | Item | Reference value |
@@ -73,17 +71,17 @@ a claim states otherwise:
 | GPU | not needed |
 | Software | `python3`, [`uv`](https://docs.astral.sh/uv/); `curl`+`zstd` for `analysis`; Docker only for the optional re-scan |
 
-## Dependências
+## Dependencies
 
 - Analysis/figures: Python 3 stdlib + `matplotlib`/`numpy`, resolved
   automatically by `uv run` at first use (no manual install).
 - Dataset: attached to the [GitHub release](../../releases/tag/dataset-v1),
   checksums in `SHA256SUMS`. `reproduce.sh analysis` downloads and verifies it
-  automatically — nothing to fetch by hand.
+  automatically, with nothing to fetch by hand.
   - `os-census-per-image-reports.tar.zst` (131 MB, 8.6 GB extracted): the
     consolidated dataset: one `report.json` with the normalized findings of all
     14 scanners, for each of the 5,142 images that produced one (the corpus has
-    5,606; 463 are un-pullable and one completed job wrote no report — see
+    5,606; 463 are un-pullable and one completed job wrote no report, see
     `docs/REPRODUCIBILITY_REPORT.md`).
   - `os-census-raw-outputs.tar.zst.part-*` (6 parts, 10.2 GB): the verbatim raw
     output of every scanner run, published for inspection. Reassemble with
@@ -94,14 +92,14 @@ a claim states otherwise:
   engine in `multiscan/` (image references and invocations in
   `config/scanners.yaml`; see `SETUP.md`).
 
-## Preocupações com segurança
+## Security concerns
 
 - Everything runs locally; the main path is offline (no network).
 - `analysis` mode downloads one read-only archive from the GitHub release.
 - The optional re-scan pulls public images from Docker Hub; the token is read
   from `config/accounts.json` (gitignored, never committed).
 
-## Instalação
+## Installation
 
 ```bash
 git clone https://github.com/ChimangoScan/os-census && cd os-census
@@ -109,7 +107,7 @@ git clone https://github.com/ChimangoScan/os-census && cd os-census
 
 Nothing else: `uv run` resolves the plotting dependencies on first use (~30 s).
 
-## Teste mínimo
+## Minimal test
 
 One command (~10 s), offline, no Docker:
 
@@ -128,9 +126,9 @@ and the table is also written to `docs/REPRODUCIBILITY_REPORT.md`.
 
 Expected resources: <1 GB RAM, no extra disk.
 
-## Experimentos
+## Experiments
 
-### Claim #1 (main) — every paper number and figure re-derives from the raw multi-scanner dataset
+### Claim #1 (main): every paper number and figure re-derives from the raw multi-scanner dataset
 
 ```bash
 ./reproduce.sh analysis
@@ -155,11 +153,11 @@ git status --porcelain data/analysis/
   figures under `figures/` do change on every run: matplotlib stamps a creation
   date into the PDF. Their content does not.)
 
-### Claim #2 (optional) — the scan pipeline itself, reduced
+### Claim #2 (optional): the scan pipeline itself, reduced
 
 **Optional, and not needed for any seal.** Claim #1 already re-derives every
 number and figure in the paper from the raw dataset; this claim only exercises
-the collection side — the pipeline that produced that dataset — and it is long
+the collection side, the pipeline that produced that dataset, and it is long
 (see the time below). Run it only if you want to see the scanners execute.
 
 10 corpus images scanned by all 14 scanners into an isolated queue and output
@@ -169,7 +167,7 @@ directory; the census state in `data/` is not touched.
 ./reproduce.sh scan-smoke
 ```
 
-- **Expected time — strongly hardware- and link-dependent.** Measured at
+- **Expected time, strongly hardware- and link-dependent.** Measured at
   **~90 min on an 8-core AMD Ryzen 7 9700X** with a fast connection. On a
   slower or more contended machine, or a slower link, expect **10–20 h**. Most
   of the run is the one-time Clair database preparation and the pull of the 14
