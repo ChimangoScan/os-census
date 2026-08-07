@@ -21,7 +21,11 @@ total=0
 gone() {   # gone <path> <what it is>
   local p="$1" what="$2" sz
   [ -e "$p" ] || return 0
-  sz=$(du -sm "$p" 2>/dev/null | cut -f1); sz=${sz:-0}
+  # du exits non-zero on the files a container wrote as root, and under
+  # `set -o pipefail` that status would abort the cleanup before anything is removed --
+  # the size is cosmetic, so losing it must never cost the removal below.
+  sz=$(du -sm "$p" 2>/dev/null | cut -f1) || sz=""
+  sz=${sz:-0}
   total=$((total + sz))
   printf '  %-40s %6s MB  %s\n' "$p" "$sz" "$what"
   [ "$DRY" = "1" ] || rm -rf "$p"
@@ -37,7 +41,8 @@ gone work           "scratch state of the scan pipeline"
 # scan-smoke output. Containers write part of it as root, so a plain rm fails on those
 # files; one throwaway container removes them with the ownership that created them.
 if [ -e scan-out ]; then
-  sz=$(du -sm scan-out 2>/dev/null | cut -f1); sz=${sz:-0}
+  sz=$(du -sm scan-out 2>/dev/null | cut -f1) || sz=""
+  sz=${sz:-0}
   total=$((total + sz))
   printf '  %-40s %6s MB  %s\n' "scan-out" "$sz" "extracted dataset and scan output"
   if [ "$DRY" != "1" ]; then
