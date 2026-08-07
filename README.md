@@ -30,6 +30,7 @@ with none of the authors' state.
 | [Installation](#installation) | Clone; nothing else for the main path |
 | [Minimal test](#minimal-test) | One command, ~10 s |
 | [Experiments](#experiments) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
+| [Cleaning up](#cleaning-up) | One command removes what a run created |
 | [LICENSE](#license) | MIT |
 | [How to cite](#how-to-cite) | The paper reference and the machine-readable `CITATION.cff` |
 
@@ -44,6 +45,7 @@ How the repository is organized:
 | [`figures/`](figures/) | The regenerated PDFs, exactly as embedded in the paper |
 | [`multiscan/`](multiscan/) | The vendored scan engine: one adapter per scanner, job queue, workers |
 | [`config/`](config/) | `scanners.yaml` (image references and invocations); `accounts.json` is gitignored |
+| [`cleanup.sh`](cleanup.sh) | Removes everything a run created |
 | [`docs/`](docs/) | `LAYOUT.md` (data provenance) and `REPRODUCIBILITY_REPORT.md` (generated verification table) |
 
 ## Considered seals
@@ -187,12 +189,8 @@ directory; the census state in `data/` is not touched.
   not match the census: the scanners resolve current vulnerability databases,
   while the census is the immutable record of when it ran (see
   `docs/REPRODUCIBILITY_REPORT.md`).
-- **Cleanup:** the extracted-filesystem cache is written by containers as root;
-  remove it with
-
-```bash
-docker run --rm -v "$PWD/scan-out:/s" alpine rm -rf /s/smoke
-```
+- **Cleanup:** the extracted-filesystem cache is written by containers as root, so
+  `./cleanup.sh` (see *Cleaning up*) removes it through a throwaway container.
 
 Beyond the two claims, the whole census can be re-run from scratch with
 `./reproduce.sh all`: it crawls the Docker Hub API, rebuilds the queue of 5,606
@@ -200,6 +198,16 @@ images, runs the 14 scanners and then re-enters Claim #1. This takes **weeks of
 scanning** and needs Docker plus a Docker Hub token; see
 [`SETUP.md`](SETUP.md) for the one-time scanner preparation and the distributed
 workers.
+
+## Cleaning up
+
+One command removes everything a run created, the extracted 8.6 GB dataset, the environment and the scan output. It never touches anything tracked by git.
+
+```bash
+./cleanup.sh
+```
+
+Pass `--dry-run` to list what would go without removing it. The scanner images that the optional re-scan pulls are third-party and are kept by default; `./cleanup.sh --images` removes those too.
 
 ## LICENSE
 
