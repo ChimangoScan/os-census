@@ -12,6 +12,8 @@ agreement (best pair Jaccard **0.36**).
 
 > Paper: SBSeg 2026. Authors: Cristhian Kapelinski, Diego Kreutz (UNIPAMPA).
 
+> **For the artifact evaluation, this README is the only file you need to read.** The other Markdown files in the repository are complementary: they document internals and go deeper than the review requires.
+
 Continuous integration ([`.github/workflows/artifact.yml`](.github/workflows/artifact.yml))
 runs the reviewer's own path on a clean runner, on every push and weekly,
 regenerating the 5 figures and re-checking all 65 paper numbers on a machine
