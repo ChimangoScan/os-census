@@ -59,6 +59,19 @@ verify() {
   python3 scripts/verify_values.py
 }
 
+# Check what THIS mode needs, before it does any work. `analysis` in particular used
+# to discover a missing zstd only after downloading 138 MB.
+. ./scripts/require.sh
+require_tools python3
+case "$MODE" in
+  data|figures|analysis|all|full|scan-smoke) require_uv ;;
+esac
+case "$MODE" in
+  analysis)        require_tools curl tar zstd sha256sum ;;
+  scan-smoke)      require_docker ;;
+  all|full)        require_tools curl tar zstd sha256sum; require_docker ;;
+esac
+
 case "$MODE" in
   data|figures)  figures; verify ;;
   verify)        verify ;;

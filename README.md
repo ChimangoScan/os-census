@@ -77,6 +77,29 @@ a claim states otherwise:
 
 ## Dependencies
 
+- Host tools, by mode. `reproduce.sh` checks the ones its mode needs before doing
+  any work and prints the install command for the package manager it finds.
+
+  | Mode | Needs |
+  |---|---|
+  | clone | `git` |
+  | `verify` | `python3` |
+  | `` (default), `data`, `figures` | `python3`, `uv` |
+  | `analysis` (Claim #1) | the above plus `curl`, `tar`, `zstd`, `sha256sum` |
+  | `scan-smoke` (Claim #2) | the above plus **Docker**, with the daemon usable without `sudo` |
+
+  ```bash
+  sudo apt-get update && sudo apt-get install -y git python3 curl tar zstd coreutils docker.io   # Debian, Ubuntu
+  sudo dnf install -y git python3 curl tar zstd coreutils docker                                 # Fedora, RHEL
+  sudo pacman -Sy --needed git python curl tar zstd coreutils docker                             # Arch
+  sudo zypper install -y git python3 curl tar zstd coreutils docker                              # openSUSE
+  curl -LsSf https://astral.sh/uv/install.sh | sh   # uv, then: export PATH="$HOME/.local/bin:$PATH"
+  sudo usermod -aG docker "$USER" && newgrp docker  # only for scan-smoke
+  ```
+
+  Docker package names differ between distributions; the
+  [upstream instructions](https://docs.docker.com/engine/install/) are authoritative.
+
 - Analysis/figures: Python 3 stdlib + `matplotlib`/`numpy`, resolved
   automatically by `uv run` at first use (no manual install).
 - Dataset: attached to the [GitHub release](../../releases/tag/dataset-v1),

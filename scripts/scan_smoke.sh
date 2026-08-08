@@ -6,6 +6,11 @@
 # optional (config/accounts.json).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+. "$(dirname "$0")/require.sh"
+require_tools python3
+require_uv
+require_docker
 N="${SMOKE_N:-10}"
 UV="${UV:-uv}"
 SMOKE="$PWD/scan-out/smoke"
