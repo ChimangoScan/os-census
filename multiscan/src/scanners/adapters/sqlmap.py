@@ -1,3 +1,11 @@
+"""Adapter for sqlmap (targeted SQL-injection exploitation tool).
+
+sqlmap has no single structured report; it writes a per-session directory
+tree under the output dir. This adapter is best-effort by design, matching
+the methodological fact that sqlmap here is run *targeted* (against specific
+discovered parameters), not as a broad scanner: it greps any ``log`` file for
+sqlmap's own "is vulnerable"/"Parameter:" confirmation phrases, and also
+picks up any JSON dump sqlmap produced."""
 from __future__ import annotations
 from pathlib import Path
 

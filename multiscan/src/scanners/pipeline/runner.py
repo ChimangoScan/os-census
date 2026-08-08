@@ -15,16 +15,28 @@ log = logging.getLogger("scanners.runner")
 
 
 def _worker_id(cfg: Config, slot: int) -> str:
+    """Identify this worker as configured, or derive one from host/pid/thread-slot so concurrent workers never collide."""
     return cfg.workers.worker_id or f"{socket.gethostname()}/{os.getpid()}#{slot}"
 
 
 class _Heartbeat(threading.Thread):
+    """Background thread that pings the queue's ``heartbeat`` for one in-flight job at a fixed interval.
+
+    Runs for the lifetime of a single job (started before, stopped after the
+    scan). A failed heartbeat is logged and ignored rather than raised: a
+    transient queue hiccup should not abort an in-progress scan, and if the
+    heartbeat genuinely stops arriving, ``Queue.reset_stale`` on the
+    coordinator side is what reclaims the job.
+    """
+
     def __init__(self, queue: Queue, job_id: int, wid: str, interval: int):
+        """Prepare (but do not start) a heartbeat thread for ``job_id``, ticking every ``interval`` seconds."""
         super().__init__(daemon=True)
         self.queue, self.job_id, self.wid, self.interval = queue, job_id, wid, interval
         self._stop = threading.Event()
 
     def run(self):
+        """Thread body: send a heartbeat every ``interval`` seconds until ``stop()`` is called."""
         while not self._stop.wait(self.interval):
             try:
                 self.queue.heartbeat(self.job_id, self.wid)
@@ -32,12 +44,24 @@ class _Heartbeat(threading.Thread):
                 log.debug("heartbeat failed for job %s", self.job_id)
 
     def stop(self):
+        """Signal the heartbeat loop to exit at its next wait boundary."""
         self._stop.set()
 
 
 def run(cfg: Config, queue: Queue, specs: list[ScannerSpec], *, n_workers: int, watch: bool) -> None:
     """Spawn `n_workers` threads on this machine, each draining the shared queue.
-    Idempotent and crash-safe: stale jobs are reclaimed first."""
+
+    Idempotent and crash-safe: stale jobs (claimed but abandoned by a dead
+    worker) are reclaimed before any new work starts. Each thread claims one
+    job at a time, runs a ``ScanWorker`` on it while a background
+    ``_Heartbeat`` keeps the claim alive, then reports ``complete``/``skip``/
+    ``fail`` back to the queue depending on the outcome — a
+    ``TargetUnscannable`` is a permanent skip, any other exception is a
+    retryable failure. With ``watch=False`` each thread exits once the queue
+    is empty; with ``watch=True`` it polls (with backoff) for new work
+    indefinitely. SIGINT/SIGTERM set a shared stop flag so all threads wind
+    down after their current job instead of being killed mid-scan.
+    """
     reclaimed = queue.reset_stale(cfg.workers.stale_minutes)
     if reclaimed:
         log.info("reclaimed %d stale job(s)", reclaimed)
@@ -47,6 +71,7 @@ def run(cfg: Config, queue: Queue, specs: list[ScannerSpec], *, n_workers: int, 
         signal.signal(sig, lambda *_: stop.set())
 
     def loop(slot: int):
+        """One worker thread's body: claim, heartbeat-while-scanning, then complete/skip/fail — repeated until the queue is empty (or forever under `watch`) or `stop` is set. See `run()` for the full contract."""
         wid = _worker_id(cfg, slot)
         sw = ScanWorker(cfg, specs)
         idle = 0

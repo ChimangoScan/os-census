@@ -1,3 +1,8 @@
+"""Adapter for Nikto (web server misconfiguration/vulnerability scanner).
+
+Reads ``<target>.nikto.json`` and normalizes each per-host vulnerability entry
+as a ``WEB_VULN`` finding at fixed ``Severity.LOW`` — Nikto's own output
+carries no severity grading, only an OSVDB/plugin id."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +11,12 @@ from .base import cves_in, f, read_json
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.nikto.json`` under ``out`` into web findings for target ``t``.
+
+    Nikto's report may be a single host object or a list of host objects
+    (depending on scan mode); both shapes are normalized to a list before
+    iterating.
+    """
     doc = read_json(out / f"{t.name}.nikto.json")
     # nikto may emit a list (one host) or a dict
     hosts = doc if isinstance(doc, list) else ([doc] if isinstance(doc, dict) else [])

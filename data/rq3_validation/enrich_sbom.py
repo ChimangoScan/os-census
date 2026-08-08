@@ -8,6 +8,14 @@ BASE = "scan-out/out_so"
 OUT = "data/rq3_validation"
 
 def load_sbom(dd):
+    """Return (name, version, type, source, purl) for every artifact in image dir `dd`'s Syft SBOM.
+
+    Reads the first *.syft.json.gz found under BASE/dd/syft/; `[]` if none
+    exists. `source` is the package's declared source/source-RPM name when
+    present, used by main() to match a CVE's reported package to what Syft
+    actually found installed (cross-checking scanner package-naming choices
+    for the RQ3 divergence validation sample).
+    """
     files = glob.glob(os.path.join(BASE, dd, "syft", "*.syft.json.gz"))
     if not files:
         return []
@@ -23,6 +31,17 @@ def load_sbom(dd):
     return arts
 
 def main():
+    """Add an "sbom" field (candidate installed-package matches) to every record in data/rq3_validation/sample.jsonl, in place.
+
+    For each record's reported package name, looks up its image's Syft SBOM
+    (cached per image dir) and records exact name matches plus up to 8
+    substring-related matches (methodological choice: catches
+    binary-vs-source-package name mismatches, e.g. a CVE reported against a
+    source RPM name that Syft lists under a different binary package name).
+    Read-only on scan-out/; overwrites sample.jsonl with the enriched
+    records. Gives the human reviewer of the RQ3 divergence sample the actual
+    installed version to check the CVE's affected range against.
+    """
     recs = [json.loads(l) for l in open(os.path.join(OUT, "sample.jsonl"))]
     cache = {}
     for r in recs:

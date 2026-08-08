@@ -12,10 +12,20 @@ ROOT = Path(__file__).resolve().parent.parent
 ANA = ROOT / "data/analysis"
 CVE = re.compile(r"CVE-\d{4}-\d+")
 
-def short(r): return (r or "?").split("/")[-1]
+def short(r):
+    """Return a repo string's last path segment, e.g. "library/debian" -> "debian"."""
+    return (r or "?").split("/")[-1]
 
 def spearman(xs, ys):
+    """Spearman rank correlation between equal-length sequences `xs` and `ys`.
+
+    Ties are averaged-ranked (standard mid-rank method), not broken
+    arbitrarily. Independent re-implementation (no scipy/numpy dependency) used
+    to recompute rq2_spearman_age_total — the age-vs-vulnerability correlation
+    reported in sec 4.2 — directly from per_image.csv.
+    """
     def ranks(v):
+        """Mid-ranks of `v` (1-indexed rank averaged over tied values, 0-based here)."""
         order = sorted(range(len(v)), key=lambda i: v[i])
         r = [0.0] * len(v); i = 0
         while i < len(order):
@@ -34,6 +44,12 @@ def ols_std(y, xs):
     """Regressao multipla padronizada (equacoes normais); retorna betas."""
     n = len(y)
     def z(v):
+        """Standardise `v` to zero mean and unit population standard deviation.
+
+        A constant series has zero spread and would divide by zero, so it maps
+        to all-zeros instead: standardised, it carries no information, and the
+        regression below then simply assigns it no weight.
+        """
         m, s = st.mean(v), st.pstdev(v)
         return [(x - m) / s if s else 0.0 for x in v]
     Y = z(y); X = [z(v) for v in xs]; k = len(X)
@@ -52,12 +68,36 @@ def ols_std(y, xs):
     return beta
 
 def wilson_upper(x, n, z=1.96):
+    """Upper bound (as a percentage) of the Wilson score interval for x/n at confidence z.
+
+    Default z=1.96 is the 95% two-sided critical value. Used on the manual
+    TP/FP validation samples (secrets, malware) to report an upper bound on
+    the true false-positive/true-positive rate over the full population, not
+    just the 1,100-item sample (Appendix validation section).
+    """
     c = x + z * z / 2
     d = n + z * z
     return (c / d + (z / d) * math.sqrt(x * (n - x) / n + z * z / 4)) * 100
 
 # ---------------------------------------------------------------- artefatos
 def load_all():
+    """Recompute every check id used by expected/paper_values.json from the versioned data/ artifacts.
+
+    Reads whichever of data/analysis/per_image.csv, rq3_sca_sets.json.gz,
+    job_status.csv.gz, config/scanners.yaml and data/{secret,malware}_validation
+    exist, and derives one value per artifact-specific claim: RQ1 per-distro
+    crit+high means (sec 4.1), RQ2 age buckets and the age/vuln_total Spearman
+    correlation with a t-test significance check (sec 4.2), RQ3 pairwise
+    Jaccard/coverage/inflation over the CVE-scanner sets (sec 4.3), RQ4
+    un-pullable/legacy-schema rates per repo (sec 4.4), RQ5 standardized
+    regression betas (age/packages/size/pulls, via ols_std) (sec 4.5), the
+    prior-work reproduction percentages, and the manual secret/malware
+    validation sample statistics including the deterministic replay of the
+    malware sampling draw (_replay_malware_draw). An artifact that is not
+    present is simply skipped, so this also runs correctly on partial (WIP)
+    scan data — a missing key just makes verify_values.check() emit SKIP
+    instead of PASS/FAIL for the checks that depend on it.
+    """
     v = {}
     f = ANA / "per_image.csv"
     if f.exists():
@@ -69,7 +109,9 @@ def load_all():
                 except (ValueError, KeyError): r[k] = None
         byd = collections.defaultdict(list)
         for r in rows: byd[short(r["repo"])].append(r)
-        def mch(d): return st.mean([r["vuln_critical"] + r["vuln_high"] for r in byd[d]])
+        def mch(d):
+            """Mean vuln_critical+vuln_high over distribution `d`'s images (RQ1, sec 4.1)."""
+            return st.mean([r["vuln_critical"] + r["vuln_high"] for r in byd[d]])
         v["rq1_debian_mean_ch"] = mch("debian"); v["rq1_debian_n"] = len(byd["debian"])
         v["rq1_debian_sd"] = st.pstdev([r["vuln_critical"] + r["vuln_high"] for r in byd["debian"]])
         v["rq1_centos_mean_ch"] = mch("centos"); v["rq1_centos_n"] = len(byd["centos"])
@@ -118,7 +160,9 @@ def load_all():
         sets = {}
         for s, pairs in raw.items():
             sets[s] = {(img, CVE.search(str(c)).group(0)) for img, c in pairs if CVE.search(str(c))}
-        def jac(a, b): return len(sets[a] & sets[b]) / len(sets[a] | sets[b])
+        def jac(a, b):
+            """Jaccard index of scanners `a` and `b`'s (image, CVE) sets (RQ3, sec 4.3)."""
+            return len(sets[a] & sets[b]) / len(sets[a] | sets[b])
         v["rq3_jaccard_trivy_grype"] = jac("trivy", "grype")
         v["rq3_jaccard_trivy_clair"] = jac("trivy", "clair")
         v["rq3_osv_clair_intersection"] = len(sets["osv"] & sets["clair"])
@@ -216,6 +260,15 @@ def _replay_malware_draw():
 
 # ---------------------------------------------------------------- comparacao
 def check(exp, got):
+    """Compare a recomputed value `got` against one expected-value spec `exp`.
+
+    `exp["expect"]` names exactly one comparison: "equals" (after optional
+    "round" digits), "range" (inclusive [lo, hi]), "gt", or "lt" — matching how
+    each claim in expected/paper_values.json is expressed (an exact count, a
+    reported range, or a one-sided bound). Returns "SKIP" if the artifact that
+    would produce `got` was not present (see load_all), "PASS"/"FAIL"
+    otherwise; unrecognized expectation shapes also SKIP rather than error.
+    """
     if got is None: return "SKIP"
     e = exp["expect"]
     if "round" in e: got = round(got, e["round"]) if e["round"] else round(got)
@@ -227,6 +280,16 @@ def check(exp, got):
     return "PASS" if ok else "FAIL"
 
 def main():
+    """Run every check in expected/paper_values.json against load_all(), report, and exit.
+
+    Prints a Markdown table (check id | paper source | expected | obtained |
+    PASS/FAIL/SKIP) to stdout, rewrites the same table into the
+    `<!-- verify:auto:begin/end -->` block of
+    docs/REPRODUCIBILITY_REPORT.md if present, and exits 1 if any check FAILed
+    (0 otherwise, including when everything SKIPped on partial data). This is
+    the artifact's single reproducibility gate: the "65 PASS / 0 FAIL / 0 SKIP"
+    referenced throughout the README is this function's tally.
+    """
     spec = json.load(open(ROOT / "expected/paper_values.json"))["checks"]
     got = load_all()
     lines, tally = [], collections.Counter()

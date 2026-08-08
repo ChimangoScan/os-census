@@ -1,3 +1,11 @@
+"""Adapter for cdxgen (CycloneDX SBOM generator, run with vulnerability enrichment).
+
+Reads ``<target>.cdxgen.json`` and emits two kinds of findings from the one
+CycloneDX document: every ``components[]`` entry as a ``SBOM_COMPONENT``
+inventory record, and every ``vulnerabilities[]`` entry as a ``PKG_VULN``
+finding. Unlike most scanners here, cdxgen is the adapter responsible for the
+census's software-inventory data, not just vulnerabilities — dropping the
+components loop would silently turn this into a vuln-only scanner."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,12 +14,19 @@ from .base import cves_in, f, read_json
 
 
 def _purl_eco(purl: str) -> str:
+    """Extract the package-ecosystem segment (e.g. ``npm``, ``pypi``) from a purl string."""
     if not purl.startswith("pkg:"):
         return ""
     return purl[4:].split("/", 1)[0]
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.cdxgen.json`` under ``out`` into SBOM-component and vulnerability findings for target ``t``.
+
+    Vulnerability severity prefers the CycloneDX rating's own severity label,
+    falling back to deriving one from the first numeric CVSS score found
+    across ``ratings[]``. Returns ``[]`` if the report is missing or malformed.
+    """
     doc = read_json(out / f"{t.name}.cdxgen.json")
     if not isinstance(doc, dict):
         return []

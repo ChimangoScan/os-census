@@ -17,8 +17,21 @@ plt.rcParams.update({"font.size": 9, "axes.grid": True, "grid.alpha": 0.25, "axe
                      "savefig.bbox": "tight", "axes.titlesize": 9.5, "xtick.labelsize": 8, "ytick.labelsize": 8})
 FS = (12.6, 2.25)   # 1x4 horizontal, baixo
 
-def short(r): return (r or "?").split("/")[-1]
+def short(r):
+    """Return a repo string's last path segment, e.g. "library/debian" -> "debian".
+
+    This is the distribution label used on every per-distro axis (fig_rq1,
+    fig_rq5): it collapses namespace/repo into the short name readers of the
+    paper recognize (debian, alpine, centos, ...).
+    """
+    return (r or "?").split("/")[-1]
 def fnum(x):
+    """Parse `x` as float, returning None (instead of raising) on failure.
+
+    Used to coerce per_image.csv's string cells (age_days, pull_count and the
+    vuln_* / packages columns) to numbers; a None here means the field is
+    missing for that image and rows are filtered on it downstream.
+    """
     try: return float(x)
     except: return None
 
@@ -34,6 +47,12 @@ for r in rows: byd[short(r["repo"])].append(r)
 distros = [d for d in byd if len(byd[d]) >= 10]
 
 def dmean(d, fn):
+    """Mean of `fn(row)` over distribution `d`'s images (byd[d]), ignoring None.
+
+    `d` is a short distro name (see `short()`) restricted to distros with
+    >=10 scanned images (`distros`, the RQ1 minimum-sample-size cutoff).
+    Returns 0 for an empty/all-None sample rather than raising.
+    """
     v = [fn(r) for r in byd[d] if fn(r) is not None]
     return st.mean(v) if v else 0
 
@@ -66,6 +85,12 @@ fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq1.pdf"); plt.clo
 fig, ax = plt.subplots(1, 4, figsize=FS)
 bk=[(0,180,"0-6m"),(180,365,"6-12m"),(365,730,"1-2y"),(730,1460,"2-4y"),(1460,1e9,"4y+")]
 def bucket(col):
+    """Bucket rows by image age (bk) and return (labels, mean(col), pstdev(col)) per bucket.
+
+    `col` is a per_image.csv column name (e.g. "vuln_total", "vuln_critical").
+    Skips a bucket entirely if it has no rows with both an age and that column
+    populated. Feeds fig_rq2's age-vs-vulnerability panels (RQ2, sec 4.2).
+    """
     xs,ys,es=[],[],[]
     for lo,hi,lb in bk:
         g=[r[col] for r in rows if r["age_days"] is not None and r[col] is not None and lo<=r["age_days"]<hi]

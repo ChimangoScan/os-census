@@ -1,3 +1,9 @@
+"""Adapter for Clair (container-image vulnerability scanner).
+
+Reads ``<target>.clair.json`` and normalizes each vulnerability as a
+``PKG_VULN`` finding. Clair's ``vulnerabilities`` field is tolerated as either
+a dict (name -> vuln) or a list, since the exact shape has varied across
+Clair report versions."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import cves_in, f, read_json
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.clair.json`` under ``out`` into package-vulnerability findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.clair.json")
     if not isinstance(doc, dict):
         return []

@@ -1,3 +1,13 @@
+"""Adapter for govulncheck (Go standard-library/module vulnerability scanner).
+
+Reads ``govulncheck.jsonl``: a pretty-printed *stream* of concatenated JSON
+Message objects (not one-object-per-line, despite the ``.jsonl`` extension),
+so this adapter decodes it manually (see ``_iter_json_stream``) instead of
+using the shared ``read_jsonl`` helper. Two message kinds matter: ``osv``
+messages carry vulnerability metadata (summary, references, aliases), and
+``finding`` messages carry the actual hits; the adapter joins them by OSV id
+before emitting one ``PKG_VULN`` finding per unique (vulnerability, binary)
+pair."""
 from __future__ import annotations
 import json
 import re
@@ -43,10 +53,14 @@ def _iter_json_stream(path: Path):
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
-    # govulncheck -format json emits a stream of Message objects. Each Message
-    # has exactly one field populated: config, progress, osv, finding.
-    # We collect osv metadata first (keyed by vuln ID), then emit one Finding
-    # per unique (osv_id, binary) pair from finding messages.
+    """Turn ``govulncheck.jsonl`` under ``out`` into deduplicated package-vulnerability findings for target ``t``.
+
+    govulncheck -format json emits a stream of Message objects, each with
+    exactly one field populated: config, progress, osv, or finding. We collect
+    osv metadata first (keyed by vuln ID), then emit one Finding per unique
+    (osv_id, binary) pair from finding messages, so the same vulnerability
+    reached via different call paths in one binary isn't reported twice.
+    """
     osv_meta: dict[str, dict] = {}
     findings_raw: list[dict] = []
 

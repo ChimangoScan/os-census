@@ -1,3 +1,9 @@
+"""Adapter for njsscan (Node.js/JavaScript static security scanner).
+
+Reads ``<target>.njsscan.json`` and normalizes findings from its two rule
+sections — ``nodejs`` (source code) and ``templates`` (template-engine
+rules) — into uncategorized (``Category.OTHER``) findings, one per matched
+file location under each rule."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -12,10 +18,12 @@ _SEV = {
 
 
 def _strip_rootfs(path: str) -> str:
+    """Drop the ``/scan`` mount prefix so locations read as in-image paths."""
     return path[6:] if path.startswith("/scan/") else (path or "")
 
 
 def _findings_from_section(section: dict) -> list[tuple[str, dict, list[dict]]]:
+    """Flatten one njsscan rule section into ``(rule_id, metadata, matched_files)`` triples."""
     out = []
     for rule_id, body in (section or {}).items():
         if not isinstance(body, dict):
@@ -25,6 +33,7 @@ def _findings_from_section(section: dict) -> list[tuple[str, dict, list[dict]]]:
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.njsscan.json`` under ``out`` into findings for target ``t``, one per matched file per rule. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.njsscan.json")
     if not isinstance(doc, dict):
         return []

@@ -19,6 +19,15 @@ N_MULTI = 80     # pairs reported by 2+ scanners (agreement)
 SCANNERS = ["trivy", "grype", "osv", "clair"]
 
 def distro_family(dirname):
+    """Coarse distro-family label for an output directory name, for sample diversity.
+
+    Strips the trailing 8-hex-char digest suffix, takes the first `_`/`-`
+    separated token as the family name, and collapses a fixed set of
+    RPM-based distros (almalinux, rockylinux, oraclelinux, fedora, centos,
+    sl, mageia, leap, tumbleweed, clearlinux, alt) into "rhel-family". Used
+    only to spread the RQ3 sample across distro families, not to compute any
+    reported number.
+    """
     name = re.sub(r"_[0-9a-f]{8}$", "", dirname)
     fam = re.split(r"[_-]", name)[0]
     rhel = {"almalinux","rockylinux","oraclelinux","fedora","centos","sl","mageia","leap","tumbleweed","clearlinux","alt"}
@@ -27,6 +36,12 @@ def distro_family(dirname):
     return fam
 
 def build_dir_map():
+    """Map each scanned image's 8-hex-char digest prefix to its scan-out/out_so directory name.
+
+    Lets main() go from an (image, cve) pair in rq3_sca_sets.json.gz — whose
+    image string embeds a full sha256 digest — back to the on-disk directory
+    holding that image's raw per-scanner reports.
+    """
     m = {}
     for dd in os.listdir(BASE):
         mo = re.search(r"_([0-9a-f]{8})$", dd)
@@ -35,11 +50,20 @@ def build_dir_map():
     return m
 
 def gzread_json(path):
+    """Read and parse a gzip-compressed JSON file, replacing undecodable bytes."""
     with gzip.open(path, "rt", errors="replace") as f:
         return json.load(f)
 
 # ---- per-scanner extraction of (cve -> {pkg, version, fixed, src, namespace}) for one image dir ----
 def extract_trivy(d):
+    """Map CVE id -> list of {pkg, version, fixed, status, src, type, pkgid} from image dir `d`'s Trivy report.
+
+    Reads the first *.trivy.json.gz under `d`; `{}` if absent/unparsable.
+    One CVE can map to several package matches (e.g. reported for more than
+    one artifact type in the same scan). Feeds the sampled records'
+    "reported package + installed version" shown to the human reviewer for
+    the RQ3 divergence validation.
+    """
     out = {}
     files = glob.glob(os.path.join(d, "trivy", "*.trivy.json.gz"))
     if not files: return out
@@ -61,6 +85,15 @@ def extract_trivy(d):
     return out
 
 def extract_grype(d):
+    """Map CVE id -> list of package matches from image dir `d`'s Grype report.
+
+    Reads the first *.grype.json.gz under `d`; `{}` if absent/unparsable.
+    Methodological choice: a match is indexed under both its primary
+    vulnerability id AND every related-vulnerability id that also starts with
+    "CVE-" (Grype's own aliasing of the same underlying issue), so the same
+    finding shows up under all of its CVE identities rather than only the one
+    Grype picked as primary.
+    """
     out = {}
     files = glob.glob(os.path.join(d, "grype", "*.grype.json.gz"))
     if not files: return out
@@ -92,6 +125,14 @@ def extract_grype(d):
     return out
 
 def extract_osv(d):
+    """Map CVE id -> list of package matches from image dir `d`'s OSV report.
+
+    Reads the first *.osv.json.gz under `d`; `{}` if absent/unparsable.
+    Methodological choice, mirroring extract_grype(): a finding is indexed
+    under its own id AND every alias id starting with "CVE-", since OSV's
+    native ids are often not CVEs themselves (e.g. GHSA-) and the CVE alias
+    is what this study's cross-scanner comparison keys on.
+    """
     out = {}
     files = glob.glob(os.path.join(d, "osv", "*.osv.json.gz"))
     if not files: return out
@@ -118,6 +159,18 @@ def extract_osv(d):
     return out
 
 def extract_clair(d):
+    """Map CVE id -> list of package matches from image dir `d`'s Clair report.
+
+    Reads the first *.clair.json.gz under `d`; `{}` if absent/unparsable.
+    Clair's vulnerability records carry no separate CVE-id field, so the CVE
+    is extracted with a regex over the vulnerability's `name` + `links`
+    text (may yield more than one CVE per Clair vulnerability record). The
+    installed version is resolved by first trying to match the vulnerability's
+    embedded package id against Clair's own package inventory (most precise),
+    falling back to the embedded package's own version field or a name-keyed
+    lookup — because Clair does not always attach a version directly to the
+    vulnerability record.
+    """
     out = {}
     files = glob.glob(os.path.join(d, "clair", "*.clair.json.gz"))
     if not files: return out
@@ -166,6 +219,27 @@ def extract_clair(d):
 EXTRACT = {"trivy": extract_trivy, "grype": extract_grype, "osv": extract_osv, "clair": extract_clair}
 
 def main():
+    """Draw the RQ3 scanner-divergence ground-truth sample: 120 singleton + 80 multi-scanner (image, CVE) pairs.
+
+    Starting from rq3_sca_sets.json.gz (the same normalized (image, CVE) sets
+    scripts/verify_values.py computes the RQ3 Jaccard/coverage numbers from,
+    sec 4.3), splits pairs into "singles" (reported by exactly one of
+    trivy/grype/osv/clair — the divergent cases) and "multis" (reported by
+    2+ scanners — the agreement cases). Samples with seed=42:
+    - singles: N_SINGLE=120, allocated roughly proportional to each scanner's
+      singleton count but with a floor of min(15, available) per scanner so
+      every scanner gets meaningfully represented even if it has few
+      singletons;
+    - multis: N_MULTI=80, first guaranteeing a few examples of any
+      scanner-combination that includes OSV or Clair (rare combos that would
+      otherwise be swamped by the much more common trivy+grype pairs), then
+      filling the rest from the full multi pool.
+    For each sampled pair, extracts the reported package name/version from
+    one reporting scanner's raw output (extract_trivy/grype/osv/clair via
+    get_extract) and writes data/rq3_validation/sample.jsonl plus
+    population_stats.json (population sizes, per-scanner/per-combo counts,
+    and the seed) for the human reviewer to then classify TP/FP.
+    """
     dmap = build_dir_map()
     sets = gzread_json(SETS)
 
@@ -246,15 +320,23 @@ def main():
     # cache per-dir extraction
     cache = {}
     def get_extract(dd, scanner):
+        """Return `scanner`'s CVE->package map for dir `dd` (see EXTRACT), caching per (dd, scanner)."""
         key = (dd, scanner)
         if key not in cache:
             cache[key] = EXTRACT[scanner](os.path.join(BASE, dd))
         return cache[key]
 
     def make_id(img, cve, scanner):
+        """Deterministic 14-hex-char sample record id from (scanner, image, cve): SHA-1 truncated."""
         return "rq3_" + hashlib.sha1(f"{scanner}|{img}|{cve}".encode()).hexdigest()[:14]
 
     def norm_cve(cve):
+        """Strip any trailing suffix off a CVE id, keeping just "CVE-YYYY-NNNN...".
+
+        Needed because rq3_sca_sets.json.gz's ids were CVE-regex-extracted
+        from free text upstream and can retain surrounding characters; the
+        per-scanner extract_*() maps are keyed by the bare id.
+        """
         m = re.match(r"(CVE-\d{4}-\d+)", cve)
         return m.group(1) if m else cve
 

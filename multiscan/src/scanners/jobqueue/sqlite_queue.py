@@ -42,6 +42,7 @@ class SqliteQueue(Queue):
     host; in the distributed setup it sits behind the HTTP coordinator."""
 
     def __init__(self, path: str | Path):
+        """Open (creating if needed) the SQLite queue database at `path`, applying `_SCHEMA` and enabling WAL mode for concurrent access."""
         self.path = str(path)
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()  # serializes claim() within this process
@@ -60,6 +61,12 @@ class SqliteQueue(Queue):
         return closing(c)
 
     def seed(self, targets: list[Target]) -> int:
+        """Insert ``targets`` as pending jobs, skipping any whose image is already queued.
+
+        Idempotent: the ``jobs.image`` UNIQUE constraint plus ``INSERT OR IGNORE``
+        means re-seeding the same target list (e.g. after resuming a run) is a
+        no-op for images already present. Returns the count of rows actually added.
+        """
         now = time.time()
         with self._conn() as c:
             before = c.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
@@ -71,6 +78,14 @@ class SqliteQueue(Queue):
         return after - before
 
     def claim(self, worker_id: str) -> Job | None:
+        """Atomically take the highest-weight pending job and mark it running.
+
+        Uses ``BEGIN IMMEDIATE`` to hold the write lock across the select+update,
+        so two claimers (threads in this process, or other processes/hosts via
+        the HTTP coordinator sharing this file) can never take the same job.
+        Increments ``attempts`` and sets ``started_at`` only on the first claim.
+        Returns ``None`` if no job is pending.
+        """
         now = time.time()
         with self._lock, self._conn() as c:
             c.execute("BEGIN IMMEDIATE")
@@ -89,11 +104,26 @@ class SqliteQueue(Queue):
                        attempts=row["attempts"] + 1)
 
     def heartbeat(self, job_id: int, worker_id: str) -> None:
+        """Refresh ``heartbeat_at`` for this job/worker pair.
+
+        The ``WHERE ... AND worker_id=? AND status='running'`` guard is what
+        makes this safe against a worker that dies and is later revived (e.g. a
+        zombie process): once ``reset_stale`` has reassigned the job to a new
+        worker_id, this call silently matches zero rows instead of clobbering
+        the new worker's claim.
+        """
         with self._conn() as c:
             c.execute("UPDATE jobs SET heartbeat_at=? WHERE id=? AND worker_id=? AND status='running'",
                       (time.time(), job_id, worker_id))
 
     def complete(self, job_id: int, worker_id: str, report: dict) -> None:
+        """Store ``report`` and mark the job ``done``.
+
+        Note: unlike ``heartbeat``, this does not filter on ``worker_id`` or the
+        current ``status``, so a straggling worker that finishes after being
+        declared stale (see ``reset_stale``) can still overwrite a job that has
+        since been reclaimed and re-run by another worker.
+        """
         now = time.time()
         with self._conn() as c:
             c.execute("BEGIN IMMEDIATE")
@@ -106,6 +136,10 @@ class SqliteQueue(Queue):
             c.execute("COMMIT")
 
     def fail(self, job_id: int, worker_id: str, error: str, max_attempts: int) -> None:
+        """Record a transient failure: requeue to ``pending`` if ``attempts < max_attempts``, else mark ``failed``.
+
+        Like ``complete``, this does not check ``worker_id``/``status`` first.
+        """
         with self._conn() as c:
             c.execute("BEGIN IMMEDIATE")
             row = c.execute("SELECT attempts FROM jobs WHERE id=?", (job_id,)).fetchone()
@@ -120,11 +154,19 @@ class SqliteQueue(Queue):
             c.execute("COMMIT")
 
     def skip(self, job_id: int, worker_id: str, reason: str) -> None:
+        """Mark the job permanently ``skipped`` (e.g. image too large, manifest gone); never retried."""
         with self._conn() as c:
             c.execute("UPDATE jobs SET status='skipped', error=?, finished_at=? WHERE id=?",
                       (reason[:2000], time.time(), job_id))
 
     def reset_stale(self, stale_minutes: int) -> int:
+        """Requeue ``running`` jobs with no heartbeat in the last ``stale_minutes``.
+
+        This is the recovery path when a worker dies (crash, OOM-kill, lost
+        network) without calling ``fail``/``skip``: the job's ``worker_id`` is
+        cleared and its status reset to ``pending`` so any worker can claim it
+        again. Returns the number of jobs requeued.
+        """
         cutoff = time.time() - stale_minutes * 60
         with self._conn() as c:
             cur = c.execute(
@@ -133,6 +175,7 @@ class SqliteQueue(Queue):
             return cur.rowcount
 
     def reset(self, *, failed: bool = False, skipped: bool = False, done: bool = False) -> int:
+        """Bulk-requeue jobs in the selected terminal states back to ``pending`` (e.g. to retry after fixing a scanner image). Returns the number of rows touched."""
         which = ([s for s, on in (("failed", failed), ("skipped", skipped), ("done", done)) if on])
         if not which:
             return 0
@@ -143,6 +186,7 @@ class SqliteQueue(Queue):
             return cur.rowcount
 
     def stats(self) -> dict:
+        """Return per-status job counts plus ``total``, ``reports`` and ``findings`` totals."""
         with self._conn() as c:
             counts = {r["status"]: r["n"] for r in
                       c.execute("SELECT status, COUNT(*) n FROM jobs GROUP BY status")}
@@ -155,6 +199,7 @@ class SqliteQueue(Queue):
         return out
 
     def iter_reports(self) -> Iterator[dict]:
+        """Yield every stored report dict, one per completed target."""
         with self._conn() as c:
             for row in c.execute("SELECT report_json FROM reports"):
                 yield json.loads(row["report_json"])

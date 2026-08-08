@@ -32,6 +32,7 @@ class ScanWorker:
     image tar / flattened rootfs they share are produced once, up front."""
 
     def __init__(self, cfg: Config, specs: list[ScannerSpec]):
+        """Bind this worker to a config and the fixed set of scanner specs it will run per target."""
         self.cfg = cfg
         self.specs = specs
         self.cm = ContainerManager(cfg)
@@ -42,6 +43,22 @@ class ScanWorker:
 
     # ── public ──────────────────────────────────────────────────────────────
     def run(self, target: Target) -> TargetReport:
+        """Run every configured scanner against ``target`` and return the assembled ``TargetReport``.
+
+        Methodological ordering, in order: (1) pull the image and, best-effort,
+        resolve the digest ``:latest`` actually pointed at (a failed digest
+        lookup never aborts the scan); (2) build the tarball/rootfs inputs
+        shared by static scanners exactly once, before any scanner runs, to
+        avoid re-export races between concurrent scanners; (3) run static
+        scanners; (4) if dynamic scanners are enabled and not fully satisfied
+        by cached output, bring the container up on the isolated network and
+        run them against it, tagging any pre-existing static findings with the
+        container's IP for correlation; (5) merge in findings/invocations from
+        an earlier pass whose scanners weren't part of this run (so a
+        ``--only X`` re-run adds to the report instead of replacing it) and
+        persist ``report.json``. Cleanup (tarball/workdir removal, image
+        release) always runs, even on error.
+        """
         rep = TargetReport(target=target, started_at=now_iso())
         store = TargetStore(self.cfg.out_dir, target)
         self._rootfs = None
@@ -107,6 +124,12 @@ class ScanWorker:
 
     def _run_phase(self, specs: list[ScannerSpec], target: Target, store: TargetStore,
                    running: Running | None) -> tuple[list[ScanInvocation], list[Finding]]:
+        """Run ``specs`` concurrently (bounded by ``runtime.scan_parallelism``) and collect their invocations/findings.
+
+        Invocation order in the returned list matches ``specs``, independent of
+        completion order, so the report is deterministic regardless of scan
+        timing.
+        """
         if not specs:
             return [], []
         invs: list[ScanInvocation] = [None] * len(specs)   # type: ignore[list-item]
@@ -125,6 +148,18 @@ class ScanWorker:
     # ── one scanner invocation ──────────────────────────────────────────────
     def _invoke(self, spec: ScannerSpec, target: Target, store: TargetStore,
                 running: Running | None) -> tuple[ScanInvocation, list[Finding]]:
+        """Run one scanner container for one target and normalize its result into a ``ScanInvocation`` + findings.
+
+        Encodes the per-scanner gating/skip rules: a non-empty prior output is
+        reused as ``ok-cached`` instead of re-running (resume semantics); a
+        dynamic scanner needing an HTTP endpoint is skipped if none was
+        discovered; a scanner needing the tarball/rootfs errors out if that
+        input wasn't produced. Exit status is ``ok``/``nonzero-ok`` if the exit
+        code is in ``spec.ok_exit_codes`` or output was produced anyway (some
+        scanners exit non-zero on "findings present"), ``timeout`` if the wall
+        clock ran out, else ``error``. A crashing scan process is caught so one
+        bad scanner never aborts the target's pipeline.
+        """
         out_dir = store.scanner_dir(spec.name)
         rendered = spec.render(self._context(spec, target, running))
         inv = ScanInvocation(scanner=spec.name, target_name=target.name, target_image=target.image,
@@ -203,6 +238,14 @@ class ScanWorker:
 
     def _parse(self, spec: ScannerSpec, out_dir: Path, target: Target,
                inv: ScanInvocation) -> list[Finding]:
+        """Load the scanner's adapter and normalize its raw output into ``Finding`` records.
+
+        Only attempted for invocations that produced usable output (``ok``,
+        ``nonzero-ok``, ``ok-cached``); a parser exception is caught and logged
+        into ``inv.error`` rather than propagated, so a malformed scanner
+        output degrades that scanner's findings to empty instead of failing
+        the whole target.
+        """
         files = [p for p in out_dir.iterdir() if p.is_file()]
         inv.artifacts = sorted(p.name for p in files)
         inv.output_bytes = sum(p.stat().st_size for p in files)
@@ -219,6 +262,7 @@ class ScanWorker:
 
     # ── helpers ─────────────────────────────────────────────────────────────
     def _cached(self, spec: ScannerSpec, target: Target, store: TargetStore) -> bool:
+        """True if a previous run already produced non-empty output for ``spec`` on ``target`` (resume support)."""
         if not self.cfg.output.skip_done:
             return False
         d_ = store.root / spec.name
@@ -252,12 +296,15 @@ class ScanWorker:
             rep.http_endpoints = old["http_endpoints"]
 
     def _target_work(self, target: Target) -> Path:
+        """Scratch directory for this target's exported rootfs and other working files."""
         return self.cache_dir / "work" / target.name
 
     def _tarball_path(self, target: Target) -> Path:
+        """Path where this target's ``docker save`` tarball is cached."""
         return self.cache_dir / "tars" / f"{target.name}.tar"
 
     def _cleanup(self, target: Target) -> None:
+        """Remove the target's tarball (unless ``keep_image_tarball``) and scratch workdir after scanning."""
         if self.cfg.output.keep_image_tarball:
             return
         try:
@@ -270,6 +317,7 @@ class ScanWorker:
         self._rootfs = None
 
     def _ensure_scanner_image(self, spec: ScannerSpec) -> None:
+        """Pull the scanner's own Docker image once per worker process, memoized in ``self._pulled``."""
         if not spec.pull:
             return
         with self._pull_lock:
@@ -279,6 +327,13 @@ class ScanWorker:
             self._pulled.add(spec.image)
 
     def _context(self, spec: ScannerSpec, target: Target, running: Running | None) -> dict:
+        """Build the placeholder context used to render ``spec``'s argv/outputs templates.
+
+        Derives ``host``/``port`` from the first discovered HTTP endpoint if
+        any, else falls back to the container's IP and first open port; this
+        is what lets a dynamic scanner's argv template (e.g. ``{host}:{port}``)
+        stay generic across targets with different discovered surfaces.
+        """
         url = (running.http_endpoints[0] if running and running.http_endpoints else "")
         host, port = "", ""
         if url:
@@ -294,6 +349,7 @@ class ScanWorker:
 
     def _mounts(self, spec: ScannerSpec, target: Target,
                 out_dir: Path) -> tuple[list[tuple[str, str, bool]], str | None]:
+        """Compute this invocation's bind mounts (host_path, container_path, read_only) and effective workdir."""
         if spec.out_as_workdir and spec.workdir:
             mounts = [(str(out_dir), spec.workdir, False)]
         else:
@@ -310,10 +366,12 @@ class ScanWorker:
 
     @staticmethod
     def _has_output(rendered, out_dir: Path) -> bool:
+        """True if any of the spec's declared output files exists under ``out_dir`` and is non-empty."""
         names = list(rendered.outputs) + ([rendered.capture_stdout] if rendered.capture_stdout else [])
         return any(name and (out_dir / name).exists() and (out_dir / name).stat().st_size > 0 for name in names)
 
     @staticmethod
     def _cname(spec: ScannerSpec, target: Target, suffix: str = "") -> str:
+        """Generate a unique container name for one scanner invocation, safe for concurrent runs."""
         import uuid
         return f"sc-{spec.name}-{target.name[:24]}-{uuid.uuid4().hex[:6]}{suffix}"

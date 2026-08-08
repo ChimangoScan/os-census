@@ -1,3 +1,4 @@
+"""Tests for SqliteQueue: seeding idempotency, claim/heartbeat/complete/fail/skip semantics, and stale-job reclamation."""
 from scanners.jobqueue.sqlite_queue import SqliteQueue
 from scanners.models import Target
 

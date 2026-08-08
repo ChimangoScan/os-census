@@ -1,3 +1,10 @@
+"""Adapter for OWASP ZAP (dynamic web application security scanner).
+
+Reads ``<target>.zap.json`` and normalizes each alert (across every scanned
+``site``) as a ``WEB_VULN`` finding. Severity prefers ZAP's numeric
+``riskcode``, falling back to parsing its free-text ``riskdesc`` only when the
+code is unrecognized. HTML in ZAP's ``desc``/``reference`` fields is stripped
+by ``_strip`` since ZAP's report embeds raw HTML fragments, not plain text."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -8,6 +15,7 @@ _RISK = {"3": Severity.HIGH, "2": Severity.MEDIUM, "1": Severity.LOW, "0": Sever
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.zap.json`` under ``out`` into web-vulnerability findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.zap.json")
     if not isinstance(doc, dict):
         return []
@@ -30,5 +38,6 @@ def parse(out: Path, t: Target) -> list[Finding]:
 
 
 def _strip(html: str) -> str:
+    """Crudely remove HTML tags and unescape ``&amp;`` from ZAP's HTML-flavored description/reference text."""
     import re
     return re.sub(r"<[^>]+>", " ", html or "").replace("&amp;", "&").strip()

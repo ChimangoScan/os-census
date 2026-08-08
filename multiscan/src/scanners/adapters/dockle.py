@@ -1,3 +1,9 @@
+"""Adapter for Dockle (Docker image best-practices / config linter).
+
+Reads ``<target>.dockle.json`` and normalizes each non-passing check as an
+``IMAGE_CONFIG`` finding. Checks at level ``PASS``, ``SKIP`` or ``IGNORE`` are
+not findings and are dropped before reaching ``_LEVEL``, so that mapping only
+ever needs to cover the remaining, genuinely-reported levels."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -9,6 +15,7 @@ _LEVEL = {"FATAL": Severity.HIGH, "WARN": Severity.MEDIUM, "INFO": Severity.LOW,
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.dockle.json`` under ``out`` into image-config findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.dockle.json")
     if not isinstance(doc, dict):
         return []

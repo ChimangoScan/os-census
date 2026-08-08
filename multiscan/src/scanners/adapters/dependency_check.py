@@ -1,3 +1,9 @@
+"""Adapter for OWASP Dependency-Check (dependency vulnerability scanner).
+
+Reads ``dependency-check-report.json`` and emits one ``PKG_VULN`` finding per
+(dependency, vulnerability) pair — a single scanned file can carry several
+vulnerable identified libraries, each of which can have several CVEs, so the
+finding count is not 1:1 with dependencies."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import cves_in, f, read_json
 
 
 def _cvss(v: dict) -> float | None:
+    """Pick the vulnerability's base CVSS score, preferring the newest schema version (v4 > v3 > v2) present."""
     for key in ("cvssv4", "cvssv3", "cvssv2"):
         node = v.get(key) or {}
         score = node.get("baseScore") if isinstance(node, dict) else None
@@ -20,12 +27,20 @@ def _cvss(v: dict) -> float | None:
 
 
 def _purl_eco(purl: str) -> str:
+    """Extract the package-ecosystem segment (e.g. ``npm``, ``maven``) from a purl string."""
     if not purl.startswith("pkg:"):
         return ""
     return purl[4:].split("/", 1)[0]
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``dependency-check-report.json`` under ``out`` into per-vulnerability findings for target ``t``.
+
+    ``id``/``cves`` treat the vulnerability name as a CVE only if it actually
+    looks like one (Dependency-Check also reports non-CVE advisories, e.g.
+    GHSA, under the same field). Returns ``[]`` if the report is missing or
+    malformed.
+    """
     doc = read_json(out / "dependency-check-report.json")
     if not isinstance(doc, dict):
         return []

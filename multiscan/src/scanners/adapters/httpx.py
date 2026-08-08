@@ -1,3 +1,10 @@
+"""Adapter for httpx (ProjectDiscovery's HTTP probe / tech fingerprinter).
+
+Reads ``<target>.httpx.jsonl`` (one probe result per line) and turns each
+live endpoint into ``WEB_VULN``-category ``INFO`` findings: one per detected
+technology, or — if httpx detected no technology at all — a single
+"HTTP endpoint alive" finding, so a bare live endpoint is never silently
+dropped from the report just because fingerprinting found nothing."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +13,7 @@ from .base import endpoint_of, f, read_jsonl
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.httpx.jsonl`` under ``out`` into endpoint/technology findings for target ``t``."""
     res = []
     for rec in read_jsonl(out / f"{t.name}.httpx.jsonl"):
         if not isinstance(rec, dict):

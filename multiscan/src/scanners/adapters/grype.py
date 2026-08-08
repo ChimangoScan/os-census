@@ -1,3 +1,9 @@
+"""Adapter for Grype (Anchore's SBOM/image vulnerability matcher).
+
+Reads ``<target>.grype.json`` and normalizes each ``matches[]`` entry as a
+``PKG_VULN`` finding. Severity prefers Grype's own graded ``severity`` field,
+falling back to deriving one from CVSS only when Grype reports
+``"Unknown"``."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import cves_in, f, read_json
 
 
 def _cvss(v: dict) -> float | None:
+    """Highest base score across all CVSS entries Grype attached to this vulnerability, or None if none are numeric."""
     best = None
     for c in v.get("cvss") or []:
         m = (c.get("metrics") or {}).get("baseScore")
@@ -15,6 +22,7 @@ def _cvss(v: dict) -> float | None:
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.grype.json`` under ``out`` into package-vulnerability findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.grype.json")
     if not isinstance(doc, dict):
         return []

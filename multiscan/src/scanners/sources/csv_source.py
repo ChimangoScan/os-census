@@ -1,3 +1,4 @@
+"""CSV target source: one image per row, with configurable column names."""
 from __future__ import annotations
 import csv
 from collections.abc import Iterator

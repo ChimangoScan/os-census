@@ -31,11 +31,13 @@ def _coerce(cls, d: dict):
 
 
 class ConfigError(Exception):
+    """Raised for any malformed run configuration: unknown top-level section, unknown key within a section, or a section that isn't a mapping."""
     pass
 
 
 @dataclass
 class QueueCfg:
+    """Which job-queue backend a run uses: in-process `sqlite` (single host) or `http` (multi-host, pointed at `url`/`bind`)."""
     backend: str = "sqlite"
     sqlite_path: str = "work/queue.db"
     url: str = "http://127.0.0.1:8900"
@@ -45,6 +47,7 @@ class QueueCfg:
 
 @dataclass
 class SourceCfg:
+    """Where the target inventory comes from and how to map its columns onto a `Target`."""
     type: str = "csv"
     path: str = "data/inventory.csv"
     image_column: str = "Image"
@@ -56,6 +59,7 @@ class SourceCfg:
 
 @dataclass
 class ScannersCfg:
+    """Which scanners to run: the registry file to load, an `only`/`skip` allow/deny list, and whether static and/or dynamic phases run at all."""
     registry: str = "config/scanners.yaml"
     only: list[str] = field(default_factory=list)
     skip: list[str] = field(default_factory=list)
@@ -65,6 +69,7 @@ class ScannersCfg:
 
 @dataclass
 class WorkersCfg:
+    """Worker-pool sizing and the timings that drive the worker-death recovery path (heartbeat interval, staleness threshold before `reset_stale()` reclaims a job, retry budget per job)."""
     count: int = 4
     scan_timeout: int = 1200
     job_attempts: int = 3
@@ -75,6 +80,7 @@ class WorkersCfg:
 
 @dataclass
 class OutputCfg:
+    """Where results and caches are written, and whether a re-run may reuse a scanner's prior non-empty output (`skip_done`) instead of re-scanning."""
     dir: str = "out"
     keep_image_tarball: bool = False
     cache_dir: str = "cache"
@@ -84,6 +90,7 @@ class OutputCfg:
 
 @dataclass
 class RuntimeCfg:
+    """Docker/container-runtime tuning: the scan network and container resource limits, which ports get probed/treated as HTTP for dynamic discovery, pull retry/backoff and account rotation, and image-size/disk-pressure guards."""
     network: str = "scannet"
     subnet: str = "172.28.0.0/16"
     startup_wait: int = 8
@@ -113,11 +120,13 @@ class RuntimeCfg:
 
 @dataclass
 class ImportsCfg:
+    """External data merged into the corpus outside the scan pipeline (currently just an OpenVAS export path)."""
     openvas: str = ""
 
 
 @dataclass
 class ClusterCfg:
+    """Multi-host cluster deployment settings used by the cluster driver scripts (which hosts, how workers are distributed, how they're reached)."""
     hosts: list[str] = field(default_factory=lambda: ["host1", "host2"])
     remote_dir: str = "~/scanners"
     workers_per_host: int = 4
@@ -127,6 +136,7 @@ class ClusterCfg:
 
 @dataclass
 class Config:
+    """The full run configuration, built from a YAML file merged over per-section defaults. Load with `Config.load`; access resolved paths via `out_dir`/`cache_dir`/`queue_db`/`path()`."""
     queue: QueueCfg = field(default_factory=QueueCfg)
     source: SourceCfg = field(default_factory=SourceCfg)
     scanners: ScannersCfg = field(default_factory=ScannersCfg)
@@ -139,15 +149,22 @@ class Config:
 
     # absolute-path helpers (all config paths are relative to `root`)
     def path(self, p: str) -> Path:
+        """Resolve a possibly-relative config path against `root`; an absolute or `~`-prefixed path is returned as-is."""
         q = Path(p).expanduser()
         return q if q.is_absolute() else (self.root / q)
 
     @property
-    def out_dir(self) -> Path: return self.path(self.output.dir)
+    def out_dir(self) -> Path:
+        """Resolved output directory (`output.dir` relative to `root`)."""
+        return self.path(self.output.dir)
     @property
-    def cache_dir(self) -> Path: return self.path(self.output.cache_dir)
+    def cache_dir(self) -> Path:
+        """Resolved cache directory (`output.cache_dir` relative to `root`)."""
+        return self.path(self.output.cache_dir)
     @property
-    def queue_db(self) -> Path: return self.path(self.queue.sqlite_path)
+    def queue_db(self) -> Path:
+        """Resolved SQLite queue database path (`queue.sqlite_path` relative to `root`)."""
+        return self.path(self.queue.sqlite_path)
 
     _SECTIONS = {
         "queue": QueueCfg, "source": SourceCfg, "scanners": ScannersCfg,
@@ -157,6 +174,15 @@ class Config:
 
     @classmethod
     def load(cls, path: str | os.PathLike | None) -> "Config":
+        """Build a Config from a YAML file, merged over each section's dataclass defaults; `path=None` yields the all-defaults Config rooted at the current directory.
+
+        `root` is inferred as the YAML file's parent directory, or its
+        grandparent when the file lives in a `config/` subdirectory (so
+        relative paths inside the config resolve against the repo root, not
+        the config directory). Raises `ConfigError` on a missing file, an
+        unknown top-level section, an unknown key within a section, or a
+        section that isn't a mapping.
+        """
         data: dict[str, Any] = {}
         root = Path.cwd()
         if path:
@@ -178,4 +204,5 @@ class Config:
 
 
 def _section_dict(obj) -> dict:
+    """Flatten a config-section dataclass instance back to a plain dict, so it can be merged with the corresponding YAML overrides."""
     return {f.name: getattr(obj, f.name) for f in fields(obj)}

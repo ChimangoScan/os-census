@@ -1,3 +1,9 @@
+"""Adapter for Jaeles (signature-based web vulnerability scanner).
+
+Reads ``<target>.jaeles.jsonl`` and normalizes each match as a ``WEB_VULN``
+finding. Jaeles' JSON field naming has been inconsistent across versions
+(``Request``/``request``, ``Sign``/``sign``, etc.), so every field lookup
+below tries both the Pascal-case and lowercase key before giving up."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import cves_in, endpoint_of, f, read_jsonl
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.jaeles.jsonl`` under ``out`` into web-vulnerability findings for target ``t``."""
     res = []
     for rec in read_jsonl(out / f"{t.name}.jaeles.jsonl"):
         if not isinstance(rec, dict):

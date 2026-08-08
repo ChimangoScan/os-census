@@ -17,11 +17,20 @@ ROOT = Path(__file__).resolve().parent.parent
 NOW = datetime.now(timezone.utc)
 
 def age_days(ts):
+    """Return the whole days between an ISO-8601 UTC timestamp `ts` and now.
+
+    `ts` is a Docker Hub tag's `last_pushed`/`tag_last_pushed` field. Returns
+    None for a missing or unparsable timestamp, which build_queue.py then
+    treats as "unknown age" (sorted last, excluded from age-based RQ2 buckets).
+    """
     if not ts: return None
     try: return (NOW - datetime.fromisoformat(ts.replace("Z", "+00:00"))).days
     except Exception: return None
 
-def slug(s): return re.sub(r"[^A-Za-z0-9._-]+", "_", s).strip("_")
+def slug(s):
+    """Turn `s` into a filesystem-safe job name: keep [A-Za-z0-9._-], collapse
+    everything else to a single underscore, trim leading/trailing underscores."""
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", s).strip("_")
 
 # pull_count per repository
 pull = {}
@@ -53,6 +62,15 @@ for u in imgs:
 
 # round-robin: within each repo sort by age (new->old), then interleave front/back
 def interleave(lst):
+    """Reorder one repository's unique images newest-first/oldest-last, alternating.
+
+    Sorts `lst` by age_days ascending (unknown age sorts last via the 10**9
+    sentinel), then emits newest, oldest, 2nd-newest, 2nd-oldest, ... This is
+    the methodological guard for RQ2 (age-vs-vulnerability): if scanning is
+    interrupted partway, every repository still contributes both fresh and
+    stale images to the partial dataset, instead of the run being biased
+    toward whichever end of the age range happened to be scanned first.
+    """
     lst = sorted(lst, key=lambda u: (u["age_days"] if u["age_days"] is not None else 10**9))
     out = []; i, k = 0, len(lst) - 1
     while i <= k:

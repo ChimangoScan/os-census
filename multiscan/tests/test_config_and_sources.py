@@ -1,3 +1,4 @@
+"""Tests for run-config loading/validation and the target-source readers (CSV/JSONL/TXT)."""
 import pytest
 
 from scanners.config import Config, ConfigError

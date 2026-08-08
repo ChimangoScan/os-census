@@ -9,6 +9,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 def pick(env, rel):
+    """Return the env var `env` if set, else ROOT/`rel`.
+
+    Lets the output/cache directories be overridden per-clone (OSCENSUS_OUT,
+    OSCENSUS_CACHE) while defaulting to a path inside this repo checkout.
+    """
     return os.environ.get(env) or str(ROOT / rel)
 
 OUT   = pick("OSCENSUS_OUT",   "scan-out/out_so")

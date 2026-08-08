@@ -1,3 +1,4 @@
+"""Tests for HttpQueue's retry/backoff behavior against a fake HTTP server, using an injectable sleeper/clock to run without real delays."""
 import http.server
 import socket
 import threading

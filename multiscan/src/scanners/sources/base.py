@@ -12,6 +12,7 @@ class Source(ABC):
     """Yields the targets to scan. Implementations read a catalog file."""
 
     def __init__(self, cfg: Config):
+        """Bind to a run config; resolves `cfg.source.path` up front so subclasses' `_iter()` can just open it."""
         self.cfg = cfg
         self.path = cfg.path(cfg.source.path)
 
@@ -36,4 +37,5 @@ class Source(ABC):
                 return
 
     def targets(self) -> list[Target]:
+        """Materialize the full deduped target list, highest-weight first. Loads everything into memory; prefer `iter_deduped()` for very large catalogs."""
         return sorted(self.iter_deduped(), key=lambda t: t.weight, reverse=True)

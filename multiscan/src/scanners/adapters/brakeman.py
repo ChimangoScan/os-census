@@ -1,3 +1,10 @@
+"""Adapter for Brakeman (Ruby on Rails static security scanner).
+
+Reads ``<target>.brakeman.json`` and normalizes each ``warnings[]`` entry as
+an uncategorized (``Category.OTHER``) finding. Brakeman reports a
+*confidence* level rather than a severity, so ``_SEV`` maps confidence onto
+our severity scale (``Weak`` confidence is treated as low severity, not
+dropped)."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -13,10 +20,12 @@ _SEV = {
 
 
 def _strip_rootfs(path: str) -> str:
+    """Drop the ``/scan`` mount prefix so locations read as in-image paths."""
     return path[6:] if path.startswith("/scan/") else (path or "")
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.brakeman.json`` under ``out`` into findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.brakeman.json")
     if not isinstance(doc, dict):
         return []

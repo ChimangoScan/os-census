@@ -1,3 +1,10 @@
+"""Adapter for Bandit (Python static security linter).
+
+Reads ``<target>.bandit.json`` and normalizes each ``results[]`` entry as an
+uncategorized (``Category.OTHER``) finding — Bandit's issues span many kinds
+of Python security smells that don't map cleanly onto our other categories.
+Severity comes from Bandit's own ``issue_severity``, not its separate
+confidence score."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -8,10 +15,12 @@ _SEV = {"HIGH": Severity.HIGH, "MEDIUM": Severity.MEDIUM, "LOW": Severity.LOW}
 
 
 def _strip_rootfs(path: str) -> str:
+    """Drop the ``/scan`` mount prefix so locations read as in-image paths."""
     return path[6:] if path.startswith("/scan/") else (path or "")
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.bandit.json`` under ``out`` into findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.bandit.json")
     if not isinstance(doc, dict):
         return []

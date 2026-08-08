@@ -1,3 +1,11 @@
+"""Adapter for osv-scanner (OSV.dev vulnerability matcher).
+
+Reads ``<target>.osv.json`` and normalizes each result into a ``PKG_VULN``
+finding. The bulk of this file is a from-scratch CVSS v3.1/v4 base-score
+calculator (see ``_cvss_v3_score``/``_cvss_v4_score``): OSV stores CVSS as a
+raw vector string with no numeric score attached, so severity has to be
+computed here rather than just parsed, with a qualitative fallback
+(``_qual_severity``) for entries that carry no CVSS vector at all."""
 from __future__ import annotations
 import re
 from pathlib import Path
@@ -26,11 +34,13 @@ _V4_IMPACT = {"H": 0.56, "L": 0.22, "N": 0.0}
 
 
 def _roundup(x: float) -> float:
+    """Round up to 1 decimal place, per the CVSS v3.1 spec's rounding rule."""
     # CVSS v3.1 "Round up to 1 decimal place".
     return -(-x * 10 // 1) / 10
 
 
 def _cvss_v3_score(vec: str) -> float | None:
+    """Compute a CVSS v3.x base score from a ``CVSS:3.x/AV:.../...`` vector string, or None if a required metric is missing."""
     parts = dict(p.split(":", 1) for p in vec.split("/")[1:] if ":" in p)
     try:
         scope_changed = parts.get("S") == "C"
@@ -51,9 +61,14 @@ def _cvss_v3_score(vec: str) -> float | None:
 
 
 def _cvss_v4_score(vec: str) -> float | None:
-    # Coarse estimate: max of impact metrics × exploit-friendliness. Enough to
-    # bucket into critical/high/medium/low; precise scoring would need the full
-    # CVSS v4 lookup tables.
+    """Coarse CVSS v4 score estimate from a ``CVSS:4.0/...`` vector: max impact metric x exploit-friendliness bonus.
+
+    This is a deliberate methodological simplification, not a precise CVSS v4
+    implementation: it's enough to bucket a finding into
+    critical/high/medium/low, but exact scores should not be taken as
+    authoritative. Full v4 scoring needs the official (much larger) lookup
+    tables.
+    """
     parts = dict(p.split(":", 1) for p in vec.split("/")[1:] if ":" in p)
     try:
         impact = max(_V4_IMPACT[parts["VC"]], _V4_IMPACT[parts["VI"]], _V4_IMPACT[parts["VA"]])
@@ -109,6 +124,7 @@ def _qual_severity(v: dict) -> Severity:
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.osv.json`` under ``out`` into package-vulnerability findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.osv.json")
     if not isinstance(doc, dict):
         return []

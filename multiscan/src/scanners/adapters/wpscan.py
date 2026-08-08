@@ -1,3 +1,9 @@
+"""Adapter for WPScan (WordPress-specific vulnerability scanner).
+
+Reads ``<target>.wpscan.json`` and emits ``WEB_VULN`` findings from three
+separate sections of one report — WordPress core, each installed plugin, each
+installed theme — since WPScan enumerates the whole WordPress stack in one
+run rather than one component at a time."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import cves_in, endpoint_of, f, read_json
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.wpscan.json`` under ``out`` into WordPress-vulnerability findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.wpscan.json")
     if not isinstance(doc, dict):
         return []
@@ -14,6 +21,7 @@ def parse(out: Path, t: Target) -> list[Finding]:
     ep = endpoint_of(target_url)
 
     def _emit(vuln: dict, context: str) -> None:
+        """Normalize and append one WPScan vulnerability entry, tagging it with where it was found (core/plugin/theme)."""
         title = vuln.get("title") or ""
         cvss_val = None
         cvss_block = vuln.get("cvss")

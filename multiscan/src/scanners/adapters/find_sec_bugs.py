@@ -1,3 +1,10 @@
+"""Adapter for find-sec-bugs (SpotBugs plugin for Java security bugs).
+
+Unlike most adapters here, find-sec-bugs' native report is XML (SpotBugs'
+format), not JSON, so this adapter parses ``find-sec-bugs.xml`` with
+``xml.etree.ElementTree`` instead of ``read_json``. Every bug is filed under
+``Category.OTHER`` since find-sec-bugs' bug categories don't map onto our
+finding categories."""
 from __future__ import annotations
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -10,10 +17,12 @@ _PRIORITY = {"1": Severity.HIGH, "2": Severity.MEDIUM, "3": Severity.LOW}
 
 
 def _sev(bug: ET.Element) -> Severity:
+    """Map a SpotBugs ``priority`` attribute (1-5) to our severity scale."""
     return _PRIORITY.get(bug.get("priority", ""), Severity.UNKNOWN)
 
 
 def _location(bug: ET.Element) -> str:
+    """Best-effort ``class:line[-line]`` (or bare class) location for one BugInstance."""
     src = bug.find(".//SourceLine")
     if src is not None:
         cls = src.get("classname", "")
@@ -28,6 +37,7 @@ def _location(bug: ET.Element) -> str:
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``find-sec-bugs.xml`` under ``out`` into findings for target ``t``. Returns ``[]`` if the file is missing or not well-formed XML."""
     xml_file = out / "find-sec-bugs.xml"
     try:
         tree = ET.parse(xml_file)

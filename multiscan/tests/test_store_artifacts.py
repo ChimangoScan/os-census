@@ -1,3 +1,4 @@
+"""Tests for TargetStore's on-disk artifact layout (raw scanner output persistence)."""
 from scanners.findings.store import TargetStore
 from scanners.models import Target
 

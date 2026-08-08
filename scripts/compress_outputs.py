@@ -14,11 +14,26 @@ EXfiles = {"report.json"}
 NOW = time.time()
 
 def done_names():
+    """Return the set of job names whose status is 'done' in the queue DB.
+
+    Read-only query against DB (`work/os.db` by default). Used to decide which
+    scan-output directories are safe to gzip: only images the coordinator has
+    finished, never one still being scanned.
+    """
     c = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, timeout=20)
     try: return {r[0] for r in c.execute("SELECT name FROM jobs WHERE status='done'")}
     finally: c.close()
 
 def main():
+    """Gzip every eligible raw scanner-output file under OUT in place.
+
+    Eligible = file belongs to a directory whose job is 'done' (done_names()),
+    is not report.json (kept raw for analyze.py/make_figs.py), is not already
+    .gz, and has an mtime older than 120s (skips files a still-running scan may
+    still be writing). Deletes the raw file after compressing; safe to re-run
+    since already-.gz files are skipped. Does not affect any paper number —
+    it only shrinks disk usage of the working scan-out/ tree.
+    """
     if not OUT.exists(): print("out_so ainda não existe"); return
     names = done_names()
     n_gz = saved = 0

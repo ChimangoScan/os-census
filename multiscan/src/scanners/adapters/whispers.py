@@ -1,3 +1,11 @@
+"""Adapter for whispers (secret/hardcoded-credential scanner, run against the exported rootfs).
+
+Reads ``whispers.json`` and normalizes each hit as a ``SECRET`` finding,
+except for the two rules in ``NOISE_RULES`` which are dropped: they don't
+indicate a secret was found, only that a comment or a recognisable filename
+exists, and together they account for ~99% of whispers' raw output. Excluding
+them here is a deliberate methodological filter, not a bug — without it,
+whispers' finding counts would swamp every other scanner's."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -11,6 +19,7 @@ NOISE_RULES = {"comment", "file-known"}
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``whispers.json`` under ``out`` into secret findings for target ``t``, excluding ``NOISE_RULES``. Returns ``[]`` if the report is missing or not a JSON list."""
     doc = read_json(out / "whispers.json")
     if not isinstance(doc, list):
         return []

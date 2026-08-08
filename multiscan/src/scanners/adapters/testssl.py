@@ -1,3 +1,10 @@
+"""Adapter for testssl.sh (TLS/SSL configuration scanner).
+
+Reads ``<target>.testssl.json`` (a flat list of finding objects, or a dict
+wrapping one under ``scanResult`` depending on testssl version) and normalizes
+each entry as a ``NETWORK_VULN`` finding. Pure connection/service-info lines
+(``id`` starting with ``service`` at ``INFO`` severity) are dropped as noise —
+they describe the probe itself, not a security-relevant observation."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -17,6 +24,7 @@ _SEV = {
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.testssl.json`` under ``out`` into TLS/network findings for target ``t``, skipping pure service-info noise."""
     doc = read_json(out / f"{t.name}.testssl.json")
     # testssl flat JSON is a list of finding objects
     items = doc if isinstance(doc, list) else (doc.get("scanResult") or [] if isinstance(doc, dict) else [])

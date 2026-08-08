@@ -1,3 +1,9 @@
+"""Adapter for pip-audit (Python dependency vulnerability scanner).
+
+Reads ``pip-audit.json`` (a JSON array of installed packages, each carrying
+its own ``vulns[]``) and emits one ``PKG_VULN`` finding per vulnerability.
+pip-audit reports no severity of its own, so every finding here is fixed at
+``Severity.UNKNOWN`` rather than guessed."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import cves_in, f, read_json
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``pip-audit.json`` under ``out`` into package-vulnerability findings for target ``t``. Returns ``[]`` if the report is missing or not a JSON list."""
     data = read_json(out / "pip-audit.json")
     if not isinstance(data, list):
         return []

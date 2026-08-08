@@ -1,3 +1,4 @@
+"""Tests for the corpus-rebuild and Markdown cross-scanner analysis report."""
 from scanners.findings.analysis import analyze
 from scanners.findings.store import CorpusStore
 

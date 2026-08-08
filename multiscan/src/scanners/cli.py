@@ -82,6 +82,7 @@ def _selected_specs(cfg: Config):
 # ── commands ────────────────────────────────────────────────────────────────
 
 def cmd_seed(cfg: Config, args) -> int:
+    """`scanners seed`: stream the configured source into the queue in fixed-size batches, so seeding a multi-million-row catalog never buffers it all in memory. Idempotent — re-seeding only inserts targets not already in the queue (`seed()`'s UNIQUE-constraint dedup)."""
     if args.limit:
         cfg.source.limit = args.limit
     q = get_queue(cfg)
@@ -102,6 +103,7 @@ def cmd_seed(cfg: Config, args) -> int:
 
 
 def cmd_run(cfg: Config, args) -> int:
+    """`scanners run`: verify the Docker daemon is reachable, apply any CLI scanner-selection overrides, pre-pull every selected scanner image once (single-threaded, so N workers don't race N pulls of the same image), then start the worker pool draining the queue. Returns 2 without starting workers if the daemon is unreachable or no scanners are selected."""
     from .dockerctl import client as d
     if not d.daemon_ok():
         print("error: docker daemon not reachable", file=sys.stderr)
@@ -132,6 +134,7 @@ def cmd_run(cfg: Config, args) -> int:
 
 
 def cmd_coordinator(cfg: Config, args) -> int:
+    """`scanners coordinator`: serve the SQLite-backed job queue over HTTP so remote workers (using the `http` queue backend) can claim/ack jobs against this host. Blocks forever."""
     from .jobqueue.server import serve
     bind = args.bind or cfg.queue.bind
     host, _, port = bind.partition(":")
@@ -140,6 +143,7 @@ def cmd_coordinator(cfg: Config, args) -> int:
 
 
 def cmd_status(cfg: Config, args) -> int:
+    """`scanners status`: print current queue progress (counts by status, findings so far) as a one-line summary or, with `--json`, the raw `stats()` dict."""
     st = get_queue(cfg).stats()
     total = st.get("total", 0) or 1
     done = st.get("done", 0) + st.get("failed", 0) + st.get("skipped", 0)
@@ -154,6 +158,7 @@ def cmd_status(cfg: Config, args) -> int:
 
 
 def cmd_reset(cfg: Config, args) -> int:
+    """`scanners reset`: requeue jobs back to pending — stale ones (worker presumed dead, past `--stale`'s staleness window) and/or, per flag, jobs already `failed`/`skipped`/`done` (the last useful for forcing a re-run after adding a scanner)."""
     q = get_queue(cfg)
     n = 0
     if args.stale:
@@ -165,6 +170,7 @@ def cmd_reset(cfg: Config, args) -> int:
 
 
 def cmd_import_openvas(cfg: Config, args) -> int:
+    """`scanners import-openvas`: convert an external OpenVAS export into normalized Findings, correlated to targets by IP, and stash them as `_corpus/openvas_extra.jsonl` for `_extra_findings()` to fold into the next corpus rebuild. Does not touch the queue or trigger a rebuild itself."""
     src_path = args.path or cfg.imports.openvas
     if not src_path:
         print("error: nothing to import (pass --from PATH or set imports.openvas)", file=sys.stderr)
@@ -233,6 +239,7 @@ def cmd_prepare(cfg: Config, args) -> int:
 
 
 def cmd_report(cfg: Config, args) -> int:
+    """`scanners report`: rebuild the `_corpus/` aggregates from every per-target report (plus imported OpenVAS findings), then render the single-file HTML dashboard."""
     corpus = CorpusStore(cfg.out_dir).rebuild(_all_reports(cfg), _extra_findings(cfg))
     out_path = Path(args.out) if args.out else (cfg.out_dir / "report.html")
     render_html(corpus, out_path)
@@ -267,6 +274,7 @@ def _all_reports(cfg: Config):
 
 
 def cmd_analyze(cfg: Config, args) -> int:
+    """`scanners analyze`: rebuild the corpus (same as `report`) and write the Markdown cross-scanner statistics report (overlap, exclusivity, throughput) instead of the HTML dashboard."""
     corpus = CorpusStore(cfg.out_dir).rebuild(_all_reports(cfg), _extra_findings(cfg))
     md = _analyze(corpus, top=args.top)
     out = Path(args.out) if args.out else (cfg.out_dir / "_corpus" / "analysis.md")
@@ -279,6 +287,7 @@ def cmd_analyze(cfg: Config, args) -> int:
 
 
 def cmd_collect(cfg: Config, args) -> int:
+    """`scanners collect`: rsync each cluster host's `out/` directory back to the local output dir, skipping files that already exist locally (`--ignore-existing`) so re-collecting after a partial run doesn't re-transfer completed targets."""
     hosts = args.hosts or cfg.cluster.hosts
     if not hosts:
         print("error: no hosts (pass --hosts or set cluster.hosts)", file=sys.stderr)
@@ -296,6 +305,17 @@ def cmd_collect(cfg: Config, args) -> int:
 
 
 def cmd_cluster(cfg: Config, args) -> int:
+    """`scanners cluster {up,prepare,down,status}`: drive workers on the configured remote hosts over SSH.
+
+    `up` rsyncs the repo, opens a reverse SSH tunnel back to the local
+    coordinator (so remote workers can reach it at `localhost:<port>`),
+    copies the DockerHub account pool if configured, and launches `scanners
+    run` in the background on each host. `prepare` runs the cache-warming
+    step in the foreground instead. `down` kills remote worker processes and
+    the local tunnel. `status` reports what's currently running on each
+    host. Assumes SSH access and (unless `cluster.use_uv` is false) that
+    `uv` can be installed/used on the remote hosts.
+    """
     hosts = cfg.cluster.hosts
     if not hosts:
         print("error: cluster.hosts is empty in the config", file=sys.stderr)
@@ -383,6 +403,7 @@ def _common(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the `scanners` argparse CLI: one subparser per command (`seed`, `run`, `prepare`, `coordinator`, `status`, `reset`, `import-openvas`, `report`, `analyze`, `collect`, `cluster`), each wired to its `cmd_*` handler via `set_defaults(fn=...)` and sharing the `-c/--config` and queue/output override flags from `_common`."""
     ap = argparse.ArgumentParser(prog="scanners", description="distributed container scanning pipeline")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -438,6 +459,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI entry point: parse arguments, configure logging (`-v`/`-vv` raises verbosity; Docker-subprocess logging is quieted unless verbose), load the run config, and dispatch to the selected command's handler.
+
+    Returns 2 on a config error (before or during the command), 130 on
+    Ctrl-C, otherwise the handler's own exit code.
+    """
     args = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.verbose >= 2 else logging.INFO if args.verbose else logging.INFO,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt="%H:%M:%S")

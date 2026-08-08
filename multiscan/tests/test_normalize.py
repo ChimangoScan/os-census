@@ -1,3 +1,4 @@
+"""Tests for finding normalization: severity ordering (`worst`) and cross-scanner dedup/merge (`dedup`)."""
 from scanners.findings.merge import dedup, worst
 from scanners.models import Category, Finding, Severity
 

@@ -25,6 +25,7 @@ class TargetUnscannable(Exception):
 
 @dataclass
 class Running:
+    """A live target container: its name, assigned IP, and what dynamic-phase probing discovered (open ports, guessed HTTP(S) endpoints)."""
     name: str
     ip: str
     open_ports: list[int] = field(default_factory=list)
@@ -37,6 +38,7 @@ class ContainerManager:
     it can prune images periodically."""
 
     def __init__(self, cfg: Config):
+        """Bind to a run's `RuntimeCfg`; the scan network is created lazily on first `run()`, not here."""
         self.cfg = cfg
         self.r = cfg.runtime
         self._done = 0
@@ -44,6 +46,7 @@ class ContainerManager:
 
     # ── pulling (needed by every phase) ─────────────────────────────────────
     def ensure_pulled(self, image: str) -> float | None:
+        """Pull `image` (with retry/backoff), then enforce the `max_image_mb` cap. Raises `TargetUnscannable` (permanent, not retried) if the image is over the size limit; returns the image size in MB, or None if the size couldn't be determined."""
         d.pull(image, retries=self.r.pull_retries, backoff=self.r.pull_backoff)
         size = d.image_size_mb(image)
         if size is not None and self.r.max_image_mb and size > self.r.max_image_mb:
@@ -51,11 +54,13 @@ class ContainerManager:
         return size
 
     def maybe_prune(self) -> None:
+        """Count one more completed target; prune dangling Docker images every `prune_every` completions to bound local disk usage over a long run."""
         self._done += 1
         if self.r.prune_every and self._done % self.r.prune_every == 0:
             d.prune_images()
 
     def release_image(self, image: str) -> None:
+        """Remove `image` from the local Docker cache if `remove_image_after` is set, freeing disk space once a target has been fully scanned."""
         if self.r.remove_image_after:
             d.rm_image(image)
 

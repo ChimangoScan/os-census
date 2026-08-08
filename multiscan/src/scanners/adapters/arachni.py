@@ -1,3 +1,10 @@
+"""Adapter for Arachni (dynamic web vulnerability scanner).
+
+Reads ``arachni.json`` (Arachni's native JSON report) from the scanner's
+output directory and normalizes each ``issues[]`` entry into a
+``Category.WEB_VULN`` finding. The finding's location is Arachni's ``vector``
+URL (falling back to the target's IP) so results can be tied back to the
+specific request that triggered the issue."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -15,6 +22,12 @@ _SEV = {
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``arachni.json`` under ``out`` into web-vulnerability findings for target ``t``.
+
+    Returns ``[]`` if the report is missing or not a JSON object (scanner
+    crashed or produced no output). CVEs are pulled from the issue description
+    and its collected reference URLs.
+    """
     doc = read_json(out / "arachni.json")
     if not isinstance(doc, dict):
         return []

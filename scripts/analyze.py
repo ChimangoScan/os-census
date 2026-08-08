@@ -18,7 +18,13 @@ for rj in glob.glob(str(OUT / "*/report.json")):
     except Exception: continue
     m = r.get("target", {}).get("meta", {})
     inv = {i["scanner"]: i for i in r.get("invocations", [])}
-    def sev(scn):  # dict severidade do scanner
+    def sev(scn):
+        """Return one report's per-severity finding counts for SCA scanner `scn`.
+
+        Reads `invocations[].findings_by_severity` from the parsed report.json;
+        `{}` if the scanner did not run on this image. Feeds the vuln_critical/
+        high/medium/low columns of data/analysis/per_image.csv (RQ1/RQ2/RQ5).
+        """
         return (inv.get(scn, {}) or {}).get("findings_by_severity", {}) or {}
     pkgvuln = collections.Counter()
     for scn in SCA:

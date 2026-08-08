@@ -1,3 +1,4 @@
+"""Tests for the scanner registry (loading/selection) and a sample of adapter parse() contracts."""
 import json
 from pathlib import Path
 

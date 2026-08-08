@@ -15,6 +15,7 @@ from .util import slugify, normalize_image
 
 
 class Severity(str, Enum):
+    """The one severity scale every adapter normalizes its scanner's own vocabulary into."""
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -24,6 +25,7 @@ class Severity(str, Enum):
 
     @classmethod
     def parse(cls, v: Any) -> "Severity":
+        """Map a scanner's free-text severity/level word (any case, several synonyms) onto this scale. Unrecognized or missing input maps to UNKNOWN, never raises."""
         if v is None:
             return cls.UNKNOWN
         s = str(v).strip().lower()
@@ -38,6 +40,7 @@ class Severity(str, Enum):
 
     @classmethod
     def from_cvss(cls, score: float | None) -> "Severity":
+        """Bucket a numeric CVSS base score (0-10) into a Severity using the standard CVSS v3 rating thresholds (>=9 CRITICAL, >=7 HIGH, >=4 MEDIUM, >0 LOW, 0 or None -> INFO/UNKNOWN)."""
         if score is None:
             return cls.UNKNOWN
         if score >= 9.0:
@@ -52,6 +55,7 @@ class Severity(str, Enum):
 
 
 class Category(str, Enum):
+    """The finding taxonomy every adapter's output is classified into, independent of which scanner produced it."""
     PKG_VULN = "pkg-vuln"          # CVE in an installed package / dependency
     SECRET = "secret"              # embedded credential / key / token
     IMAGE_CONFIG = "image-config"  # hardening / CIS / Dockerfile smell
@@ -63,12 +67,14 @@ class Category(str, Enum):
 
 
 class Mode(str, Enum):
+    """Whether a scanner inspects the image at rest (STATIC) or a running container (DYNAMIC)."""
     STATIC = "static"
     DYNAMIC = "dynamic"
 
 
 @dataclass(frozen=True)
 class Target:
+    """One container image to scan, as read from the inventory source. Immutable; identity is `image` (normalized on construction), `name` is derived from it if not given explicitly."""
     image: str
     name: str = ""                 # slug; derived from image if empty
     ip: str | None = None          # known container IP (catalog) or assigned at runtime
@@ -76,16 +82,19 @@ class Target:
     meta: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
+        """Normalize the image reference and derive `name` from it if not given explicitly (bypassing `frozen=True` via `object.__setattr__`, the standard pattern for post-init mutation on a frozen dataclass)."""
         object.__setattr__(self, "image", normalize_image(self.image))
         if not self.name:
             object.__setattr__(self, "name", slugify(self.image))
 
     def to_json(self) -> dict:
+        """Serialize to the plain dict stored in queue jobs and the on-disk catalog."""
         return {"image": self.image, "name": self.name, "ip": self.ip,
                 "weight": self.weight, "meta": self.meta}
 
     @classmethod
     def from_json(cls, d: dict) -> "Target":
+        """Reconstruct a Target from its `to_json` dict; `d["image"]` is required, everything else defaults."""
         return cls(image=d["image"], name=d.get("name", ""), ip=d.get("ip"),
                    weight=float(d.get("weight", 0.0)), meta=dict(d.get("meta") or {}))
 
@@ -115,10 +124,12 @@ class Finding:
     raw: dict[str, Any] = field(default_factory=dict)   # the original record, untouched
 
     def merge_key(self) -> tuple:
+        """Identity used to deduplicate/correlate findings across scanners and re-runs: same category, id-or-title, package, and endpoint-or-location (all case-folded) are treated as the same underlying finding."""
         return (self.category.value, (self.id or self.title).lower(),
                 self.package.lower(), (self.endpoint or self.location).lower())
 
     def to_json(self) -> dict:
+        """Serialize to the compact dict persisted in report.json/the corpus, dropping the bulky `raw` field (kept only in the scanner's native output file)."""
         d = asdict(self)
         d["category"] = self.category.value
         d["severity"] = self.severity.value
@@ -132,6 +143,7 @@ class Finding:
 
     @classmethod
     def from_json(cls, d: dict) -> "Finding":
+        """Reconstruct a Finding from its `to_json` dict; `raw` will be empty since it is never serialized."""
         return cls(
             scanner=d.get("scanner", ""), category=Category(d.get("category", "other")),
             severity=Severity(d.get("severity", "unknown")), id=d.get("id", ""),
@@ -168,6 +180,7 @@ class ScanInvocation:
     artifacts: list[str] = field(default_factory=list)
 
     def to_json(self) -> dict:
+        """Serialize the full invocation record, including its native output-file byte counts and exit status."""
         return asdict(self)
 
 
@@ -186,6 +199,7 @@ class TargetReport:
     skipped_reason: str = ""
 
     def to_json(self) -> dict:
+        """Serialize the whole per-target report as written to `<slug>/report.json`."""
         return {
             "target": self.target.to_json(),
             "started_at": self.started_at, "finished_at": self.finished_at,

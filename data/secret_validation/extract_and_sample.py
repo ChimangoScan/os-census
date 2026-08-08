@@ -24,18 +24,31 @@ SEED = 42
 
 
 def open_maybe_gz(path):
+    """Open `path` for text reading, transparently gzip-decompressing if it ends in .gz."""
     if path.endswith(".gz"):
         return gzip.open(path, "rt", encoding="utf-8", errors="replace")
     return open(path, "r", encoding="utf-8", errors="replace")
 
 
 def stable_id(scanner, image, file_, rule, locator, value):
+    """Deterministic id for a secret finding, prefixed by scanner ("tr_"/"gi_").
+
+    SHA-1 of (scanner, image, file_, rule, locator, value) joined by "|",
+    truncated to 16 hex chars, prefixed with the scanner's first 2 letters.
+    Same inputs always yield the same id, so re-running extract() reproduces
+    the ids already committed in sample.jsonl/population_stats.json.
+    """
     h = hashlib.sha1()
     h.update("|".join([scanner, image, file_, rule, str(locator), value]).encode("utf-8", "replace"))
     return scanner[:2] + "_" + h.hexdigest()[:16]
 
 
 def trunc(s, n=600):
+    """Stringify `s` and truncate to `n` chars, appending a "[TRUNCATED k chars]" marker if cut.
+
+    Used on secret values/context/descriptions so the committed sample.jsonl
+    stays reviewable-sized even for pathological (very long) matches.
+    """
     if s is None:
         return ""
     s = str(s)
@@ -43,6 +56,17 @@ def trunc(s, n=600):
 
 
 def extract():
+    """Scan every image dir under ROOT and return every raw TruffleHog + Gitleaks finding.
+
+    For each image: parses *.trufflehog.jsonl* (one JSON object per line,
+    pulling the Docker source file path, detector name, raw secret value,
+    verified flag) and *.gitleaks.json* (a JSON array, pulling rule, secret,
+    match context, file, start line, entropy). A malformed/unreadable file is
+    skipped with a warning to stderr rather than aborting the whole extraction.
+    This is the population from which a seeded validation sample is drawn
+    (main()) for the manual TP/FP review behind the secrets true-positive
+    rate reported in the paper's Appendix validation section.
+    """
     findings = []
     images = sorted(os.listdir(ROOT))
     for image in images:
@@ -125,6 +149,19 @@ def extract():
 
 
 def main():
+    """Deduplicate extract()'s findings, draw a seed=42 stratified sample of 1,100, and write it out.
+
+    Deduplicates by id (last write wins per id — same finding extracted twice
+    would otherwise double-count), sorts deterministically before sampling.
+    Allocates the sample between TruffleHog and Gitleaks in proportion to each
+    scanner's share of the deduplicated population (rounded; Gitleaks gets the
+    remainder so the two quotas always sum to SAMPLE_N), then draws each
+    scanner's quota with random.Random(SEED).sample and shuffles the combined
+    sample. Writes data/secret_validation/sample.jsonl and
+    population_stats.json (population/sample sizes per scanner + the seed),
+    consumed by scripts/verify_values.py's secrets_draw_strata check to verify
+    the committed sample matches what this exact draw produces.
+    """
     findings = extract()
     # De-duplicate by id (same finding could in theory collide)
     seen = {}

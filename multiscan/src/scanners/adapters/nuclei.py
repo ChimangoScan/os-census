@@ -1,3 +1,8 @@
+"""Adapter for Nuclei (ProjectDiscovery's template-based web vulnerability scanner).
+
+Reads ``<target>.nuclei.jsonl`` and normalizes each match as a ``WEB_VULN``
+finding, using the matched template's own graded severity and any
+CVE ids/CVSS score attached to its classification metadata."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +11,7 @@ from .base import endpoint_of, f, read_jsonl
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.nuclei.jsonl`` under ``out`` into web-vulnerability findings for target ``t``."""
     res = []
     for rec in read_jsonl(out / f"{t.name}.nuclei.jsonl"):
         if not isinstance(rec, dict):

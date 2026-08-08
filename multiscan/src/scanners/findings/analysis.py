@@ -70,6 +70,16 @@ def _category_agreement(findings: list[dict], category: str, scs: list[str], lin
 
 
 def analyze(corpus: dict, top: int = 20) -> str:
+    """Render a Markdown cross-scanner analysis report from a built corpus dict (as produced by ``CorpusStore.rebuild``/``load``).
+
+    Covers overview counts, throughput, a per-scanner runs/status/timing/
+    exclusivity table, within-category pairwise agreement (Jaccard overlap),
+    a severity-by-category breakdown, and the top-`top` most-exposed
+    containers by finding count. Every comparison is scoped to one finding
+    category at a time — categories measure fundamentally different things,
+    so cross-category counts are never compared as if they were competing
+    coverage of the same ground truth.
+    """
     summary = corpus.get("summary") or {}
     targets = corpus.get("targets") or []
     invocations = corpus.get("invocations") or []

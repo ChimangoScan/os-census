@@ -146,6 +146,15 @@ mkTable('#t-find', D.findings, [
 
 
 def render(corpus: dict, out_path: Path) -> None:
+    """Render the corpus aggregate (as produced by ``CorpusStore.rebuild``/``load``) to a single self-contained HTML file at `out_path`.
+
+    All data (targets, findings, cross tables) is embedded as one inline
+    JSON blob plus inline CSS/JS — the page has no external dependencies and
+    works when opened directly from disk. Client-side JS handles sorting and
+    filtering of the (large) target/finding tables so the server-side
+    template only needs to serialize the data once. Overwrites `out_path`
+    unconditionally.
+    """
     s = corpus.get("summary", {}) or {}
     targets = corpus.get("targets", []) or []
     findings = corpus.get("findings", []) or []
@@ -201,6 +210,7 @@ def render(corpus: dict, out_path: Path) -> None:
             "sxc": {sv: dict(sxc.get(sv, {})) for sv in _SEV_ORDER}, "cats": cats_seen, "most_exposed": most_exposed}
 
     def card(value, label, sub=""):
+        """Render one summary stat tile (value + label + optional sub-caption) for the overview section."""
         return (f'<div class="card"><div class="v">{value}</div><div class="l">{_esc(label)}</div>'
                 + (f'<div class="s">{_esc(sub)}</div>' if sub else "") + "</div>")
 

@@ -24,6 +24,12 @@ _PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
 @dataclass(frozen=True)
 class ScannerSpec:
+    """Static declaration of how to run one scanner and where to find its output.
+
+    Loaded from ``config/scanners.yaml`` (see :func:`scanners.adapters.registry.load_registry`).
+    Immutable: a run never mutates a spec, it only renders one via :meth:`render`.
+    """
+
     name: str
     image: str
     mode: Mode
@@ -50,6 +56,12 @@ class ScannerSpec:
     prepare_host: list[str] = field(default_factory=list)  # one-time host shell commands ({cache} expanded)
 
     def render(self, ctx: dict[str, Any]) -> "RenderedSpec":
+        """Substitute ``{placeholder}`` tokens in argv/outputs with values from ``ctx``.
+
+        ``ctx`` typically carries per-run paths (``out``, ``tarball``, ``rootfs``,
+        ``cache_mount``, ...). Placeholders with no matching key in ``ctx`` are left
+        untouched (see :func:`_fmt`), so a missing key fails later rather than here.
+        """
         return RenderedSpec(
             spec=self,
             argv=[_fmt(a, ctx) for a in self.argv],
@@ -59,6 +71,12 @@ class ScannerSpec:
         )
 
     def load_parser(self) -> ParseFn:
+        """Import this scanner's adapter module and return its ``parse`` function.
+
+        The module name defaults to ``self.name`` unless ``self.parser`` overrides
+        it (used when several scanner specs share one adapter implementation).
+        Raises ``TypeError`` if the module has no callable ``parse``.
+        """
         mod = importlib.import_module(f"scanners.adapters.{self.parser or self.name}")
         fn = getattr(mod, "parse", None)
         if not callable(fn):
@@ -68,6 +86,8 @@ class ScannerSpec:
 
 @dataclass
 class RenderedSpec:
+    """A :class:`ScannerSpec` with its ``{placeholder}`` tokens already substituted for one run."""
+
     spec: ScannerSpec
     argv: list[str]
     extra: list[list[str]]
@@ -76,12 +96,19 @@ class RenderedSpec:
 
 
 def _fmt(s: str, ctx: dict[str, Any]) -> str:
+    """Replace each ``{key}`` in ``s`` with ``ctx[key]``; unknown keys are left as-is."""
     return _PLACEHOLDER.sub(lambda m: str(ctx.get(m.group(1), m.group(0))), s)
 
 
 # ── helpers shared by adapter parsers ───────────────────────────────────────
 
 def read_json(p: Path) -> Any:
+    """Parse ``p`` as JSON, returning ``None`` if the file is missing or malformed.
+
+    Adapters call this on scanner output that may legitimately not exist (e.g. the
+    scanner found nothing and wrote no file) or be truncated by a crashed scanner;
+    ``None`` lets the caller treat both as "no findings" instead of raising.
+    """
     try:
         return json.loads(p.read_text())
     except (OSError, json.JSONDecodeError):
@@ -89,6 +116,12 @@ def read_json(p: Path) -> Any:
 
 
 def read_jsonl(p: Path):
+    """Yield one parsed JSON object per non-blank line of ``p``.
+
+    Missing files yield nothing. Individual malformed lines are skipped rather
+    than aborting the whole scan, since some scanners emit partial/corrupt lines
+    on timeout.
+    """
     try:
         for line in p.read_text().splitlines():
             line = line.strip()
@@ -102,11 +135,13 @@ def read_jsonl(p: Path):
 
 
 def endpoint_of(url_or_host: str) -> str:
+    """Extract the host[:port] portion from a URL, or return the input unchanged if it has no scheme."""
     m = re.match(r"^\w+://([^/]+)", url_or_host or "")
     return m.group(1) if m else (url_or_host or "")
 
 
 def cves_in(s: Any) -> list[str]:
+    """Return every CVE-YYYY-NNNN... identifier found in ``str(s)``, case-insensitively."""
     return re.findall(r"CVE-\d{4}-\d{4,7}", str(s or ""), re.I)
 
 

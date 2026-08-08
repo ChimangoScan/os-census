@@ -1,3 +1,9 @@
+"""Adapter for Checkov (IaC/config static analyzer, run against the exported rootfs).
+
+Reads ``results_json.json`` and normalizes every *failed* check across all
+frameworks Checkov ran (Dockerfile, Kubernetes manifests, etc.) as an
+``IMAGE_CONFIG`` finding. Passed/skipped checks are not findings and are
+never emitted."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -9,10 +15,12 @@ _SEV = {"CRITICAL": Severity.CRITICAL, "HIGH": Severity.HIGH,
 
 
 def _strip_rootfs(path: str) -> str:
+    """Drop the ``/scan`` mount prefix so locations read as in-image paths."""
     return path[6:] if path.startswith("/scan/") else (path or "")
 
 
 def _parse_checks(checks: list, scanner: str, t) -> list:
+    """Normalize one framework's list of failed Checkov checks into findings."""
     res = []
     for c in checks or []:
         if not isinstance(c, dict):
@@ -31,6 +39,7 @@ def _parse_checks(checks: list, scanner: str, t) -> list:
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``results_json.json`` under ``out`` into IaC/config findings for target ``t``. Returns ``[]`` if the report is missing."""
     doc = read_json(out / "results_json.json")
     if doc is None:
         return []

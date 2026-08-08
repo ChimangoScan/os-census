@@ -23,10 +23,12 @@ class TargetStore:
     """`out/<slug>/` — one directory per target; raw scanner artifacts kept verbatim."""
 
     def __init__(self, out_dir: Path, target: Target):
+        """Create (if needed) and bind to `out_dir/<target.name>/`."""
         self.root = out_dir / target.name
         self.root.mkdir(parents=True, exist_ok=True)
 
     def scanner_dir(self, scanner: str) -> Path:
+        """Return (creating if needed) `<slug>/<scanner>/`, where that scanner's raw artifacts live."""
         d = self.root / scanner
         d.mkdir(parents=True, exist_ok=True)
         return d
@@ -46,6 +48,7 @@ class TargetStore:
             (d / "exit_code").write_text(f"{exit_code if exit_code is not None else ''}\n")
 
     def write_report(self, report: TargetReport) -> None:
+        """Overwrite `<slug>/report.json` with this target's full normalized report. Compact JSON (no indent) — the readable record is the raw artifacts alongside it, not this file."""
         # compact (no indent) — at scale these add up; the raw artifacts next to it are the readable record
         (self.root / "report.json").write_text(json.dumps(report.to_json(), separators=(",", ":")))
 
@@ -55,10 +58,21 @@ class CorpusStore:
     wholesale from a stream of per-target reports (queue or on-disk)."""
 
     def __init__(self, out_dir: Path):
+        """Create (if needed) and bind to `out_dir/_corpus/`."""
         self.root = out_dir / _CORPUS
         self.root.mkdir(parents=True, exist_ok=True)
 
     def rebuild(self, reports: Iterable[dict], extra_findings: Iterable[Finding] = ()) -> dict:
+        """Rebuild the whole `_corpus/` view from scratch out of a stream of per-target report dicts (plus any externally-imported findings, e.g. from OpenVAS).
+
+        Consumes `reports` lazily and clears each report's `findings` list
+        once merged in, so memory stays bounded even for a corpus with
+        thousands of targets. Writes `findings.jsonl` (deduplicated),
+        `metrics.csv` (one row per scanner invocation), `targets.jsonl`, and
+        `summary.json`, then returns the same aggregate as `load()`. This is
+        a full overwrite, not an incremental update — it always reflects
+        exactly the `reports` passed in.
+        """
         findings: list[Finding] = list(extra_findings)
         invocations: list[dict] = []
         targets: list[dict] = []
@@ -90,6 +104,7 @@ class CorpusStore:
         return {"summary": summary, "targets": targets, "invocations": invocations, "findings": merged}
 
     def load(self) -> dict | None:
+        """Load the previously-built `_corpus/` view without recomputing it. Returns None if no corpus has been built yet (no `summary.json`)."""
         s = self.root / "summary.json"
         if not s.is_file():
             return None

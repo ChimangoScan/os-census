@@ -25,30 +25,42 @@ log = logging.getLogger("scanners.coordinator")
 
 
 class _Handler(BaseHTTPRequestHandler):
+    """Request handler translating the wire protocol above 1:1 onto a ``SqliteQueue``.
+
+    Stateless per request: all state lives in ``self.server.queue``, shared by
+    every thread of the ``ThreadingHTTPServer``.
+    """
+
     protocol_version = "HTTP/1.1"
 
     @property
     def q(self) -> SqliteQueue:
+        """The shared `SqliteQueue` instance, stashed on the server object so every handler/thread reaches the same queue."""
         return self.server.queue          # type: ignore[attr-defined]
 
     @property
     def token(self) -> str:
+        """The configured bearer token (empty string if auth is disabled)."""
         return self.server.token          # type: ignore[attr-defined]
 
     def log_message(self, fmt, *args):    # quieter default logging
+        """Override BaseHTTPRequestHandler's default stderr access log to route through the module logger at debug level instead."""
         log.debug("%s - %s", self.address_string(), fmt % args)
 
     # ── helpers ─────────────────────────────────────────────────────────────
     def _auth_ok(self) -> bool:
+        """True if no token is configured, or the request's bearer token matches it."""
         if not self.token:
             return True
         return self.headers.get("Authorization", "") == f"Bearer {self.token}"
 
     def _body(self) -> dict:
+        """Read and JSON-decode the request body, or ``{}`` if there is none."""
         n = int(self.headers.get("Content-Length") or 0)
         return json.loads(self.rfile.read(n) or b"{}") if n else {}
 
     def _send(self, code: int, obj=None, *, raw: bytes | None = None, ctype="application/json"):
+        """Write a full HTTP response: ``obj`` JSON-encoded, or ``raw`` bytes verbatim if given."""
         payload = raw if raw is not None else (b"" if obj is None else json.dumps(obj).encode())
         self.send_response(code)
         self.send_header("Content-Type", ctype)
@@ -58,6 +70,7 @@ class _Handler(BaseHTTPRequestHandler):
             self.wfile.write(payload)
 
     def _guard(self) -> bool:
+        """Send 401 and return False if auth fails; otherwise return True."""
         if not self._auth_ok():
             self._send(401, {"error": "unauthorized"})
             return False
@@ -65,6 +78,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     # ── routes ──────────────────────────────────────────────────────────────
     def do_GET(self):
+        """Dispatch GET /healthz, /stats, /reports; 404 otherwise."""
         if not self._guard():
             return
         if self.path == "/healthz":
@@ -77,6 +91,12 @@ class _Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
+        """Dispatch each mutating queue op to the matching ``SqliteQueue`` method.
+
+        A missing required field raises ``KeyError``, reported as 400; any other
+        exception is logged and reported as 500 rather than crashing the
+        (shared, multi-threaded) server process.
+        """
         if not self._guard():
             return
         try:
@@ -117,11 +137,18 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class _Server(ThreadingHTTPServer):
+    """A ``ThreadingHTTPServer`` with daemon worker threads and address reuse for quick restarts."""
+
     daemon_threads = True
     allow_reuse_address = True
 
 
 def serve(db_path: str, host: str, port: int, token: str = "") -> None:
+    """Run the coordinator forever: open/create the SQLite queue at ``db_path`` and serve it on ``host:port``.
+
+    Blocks until interrupted (``Ctrl-C``), then shuts the server down cleanly.
+    ``token``, if set, is required as a bearer token on every request.
+    """
     srv = _Server((host, port), _Handler)
     srv.queue = SqliteQueue(db_path)      # type: ignore[attr-defined]
     srv.token = token                     # type: ignore[attr-defined]

@@ -1,3 +1,11 @@
+"""Adapter for Nmap (port scan + NSE scripts, e.g. vuln-detection scripts).
+
+Reads ``<target>.nmap.xml`` (Nmap's native XML, not JSON) and emits two kinds
+of ``NETWORK_VULN`` findings per open port: one per NSE script result (severity
+heuristically bucketed by keywords in the script's own output text, since NSE
+scripts don't expose a structured severity field), plus one fixed-``INFO``
+"open port" finding per port so the port inventory itself is always captured
+even when no NSE script fired."""
 from __future__ import annotations
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -7,6 +15,7 @@ from .base import cves_in, f
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.nmap.xml`` under ``out`` into port/NSE-script findings for target ``t``. Returns ``[]`` if the file is missing or not well-formed XML."""
     p = out / f"{t.name}.nmap.xml"
     try:
         tree = ET.parse(p)

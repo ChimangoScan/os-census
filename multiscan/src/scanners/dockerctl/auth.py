@@ -15,6 +15,7 @@ class AccountPool:
     200/6h each (free tier), so a handful of accounts covers a large run."""
 
     def __init__(self, path: str | Path):
+        """Load the account pool from a JSON file (list of `{username, password}` objects); raises `ValueError` if none have both fields set."""
         accounts = json.loads(Path(path).read_text())
         self._accounts = [a for a in accounts if a.get("username") and a.get("password")]
         if not self._accounts:
@@ -24,13 +25,16 @@ class AccountPool:
         self._logged_in: str | None = None
 
     def __len__(self) -> int:
+        """Number of usable accounts in the pool."""
         return len(self._accounts)
 
     @property
     def current(self) -> str:
+        """Username of the account the pool is currently on."""
         return self._accounts[self._idx]["username"]
 
     def login_current(self) -> bool:
+        """`docker login` as the current account (a no-op if it's already the logged-in one). Returns whether the login succeeded."""
         with self._lock:
             return self._login(self._accounts[self._idx])
 

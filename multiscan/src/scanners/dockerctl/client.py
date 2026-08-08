@@ -32,11 +32,13 @@ _account_pool = None  # set via set_account_pool(); rotated on a pull rate-limit
 
 
 def set_account_pool(pool) -> None:
+    """Install the module-global `AccountPool` that `pull()` rotates through on a Docker Hub rate-limit. Pass None to disable rotation (single anonymous/authenticated pull path)."""
     global _account_pool
     _account_pool = pool
 
 
 class DockerError(RuntimeError):
+    """Raised for any `docker` CLI failure this module doesn't itself recover from (missing binary, non-retryable pull failure, failed create/save/run)."""
     pass
 
 
@@ -55,6 +57,7 @@ def _run(argv: list[str], *, timeout: float | None = None, check: bool = False) 
 
 
 def daemon_ok() -> bool:
+    """Return whether the Docker daemon is reachable and responsive. Never raises — any error or timeout is treated as "not ok"."""
     try:
         return _run(["info", "--format", "{{.ServerVersion}}"], timeout=20).returncode == 0
     except (DockerError, subprocess.TimeoutExpired):
@@ -62,6 +65,7 @@ def daemon_ok() -> bool:
 
 
 def ensure_network(name: str, subnet: str) -> None:
+    """Create the scan bridge network `name` on `subnet` if it doesn't already exist. If the requested subnet conflicts, falls back to letting Docker pick a default subnet rather than failing the run."""
     if _run(["network", "inspect", name], timeout=15).returncode == 0:
         return
     p = _run(["network", "create", "--subnet", subnet, name], timeout=20)
@@ -71,6 +75,17 @@ def ensure_network(name: str, subnet: str) -> None:
 
 
 def pull(image: str, *, retries: int = 4, backoff: float = 30.0) -> None:
+    """Pull `image`, retrying transient failures and rotating Docker Hub accounts on a rate-limit.
+
+    A fatal error (unknown manifest, access denied, repo not found — see
+    `_FATAL_PULL_HINTS`) raises `DockerError` immediately rather than
+    burning through the retry budget on a target that can never succeed. A
+    rate-limit instead triggers an immediate account rotation (via the pool
+    set by `set_account_pool`) when more than one account is available, so
+    the effective retry budget scales with the pool size; otherwise it
+    backs off exponentially. `retries` is applied per account. Raises
+    `DockerError` if every attempt (across accounts) fails.
+    """
     # `retries` is per account; with a pool, a rate-limit triggers an immediate
     # rotation rather than a backoff, so the effective retry budget is larger.
     for attempt in range(retries):
@@ -105,6 +120,7 @@ def pull(image: str, *, retries: int = 4, backoff: float = 30.0) -> None:
 
 
 def image_size_mb(image: str) -> float | None:
+    """Local (uncompressed) size of a pulled image in MB, or None if it can't be determined."""
     p = _run(["image", "inspect", "-f", "{{.Size}}", image], timeout=20)
     if p.returncode != 0:
         return None
@@ -137,6 +153,7 @@ def image_repo_digest(image: str) -> str:
 
 
 def save(image: str, dest: str | Path) -> None:
+    """`docker save` the image as a tarball at `dest`, creating parent directories as needed. Raises `DockerError` on failure."""
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
     p = _run(["save", "-o", str(dest), image], timeout=3600)
@@ -173,14 +190,17 @@ def export_rootfs(image: str, dest_dir: str | Path) -> None:
 
 
 def rm(name: str) -> None:
+    """Force-remove a container by name; a no-op (best-effort) if it doesn't exist."""
     _run(["rm", "-f", name], timeout=30)
 
 
 def rm_image(image: str) -> None:
+    """Force-remove a pulled image, freeing disk space."""
     _run(["image", "rm", "-f", image], timeout=120)
 
 
 def login(user: str, token: str) -> bool:
+    """`docker login` with a single username/token pair, piping the token via stdin. Returns whether it succeeded; logs a warning (does not raise) on failure."""
     p = subprocess.run([_docker(), "login", "-u", user, "--password-stdin"],
                        input=token, capture_output=True, text=True, timeout=60)
     if p.returncode != 0:
@@ -189,6 +209,7 @@ def login(user: str, token: str) -> bool:
 
 
 def container_ip(name: str, network: str) -> str | None:
+    """IP address assigned to container `name` on `network`, or None if it has none (not running / not on that network)."""
     p = _run(["inspect", "-f", "{{(index .NetworkSettings.Networks \"" + network + "\").IPAddress}}", name],
              timeout=15)
     ip = p.stdout.strip()
@@ -196,11 +217,13 @@ def container_ip(name: str, network: str) -> str | None:
 
 
 def container_running(name: str) -> bool:
+    """Whether container `name` is currently in the running state."""
     p = _run(["inspect", "-f", "{{.State.Running}}", name], timeout=15)
     return p.stdout.strip() == "true"
 
 
 def container_exit_code(name: str) -> int | None:
+    """Exit code of container `name`, or None if it can't be determined (e.g. still running, or already removed)."""
     p = _run(["inspect", "-f", "{{.State.ExitCode}}", name], timeout=15)
     try:
         return int(p.stdout.strip())
@@ -209,15 +232,18 @@ def container_exit_code(name: str) -> int | None:
 
 
 def logs_tail(name: str, lines: int = 40) -> str:
+    """Last `lines` lines of container `name`'s logs, truncated to the final 4000 characters."""
     return _run(["logs", "--tail", str(lines), name], timeout=15).stdout[-4000:]
 
 
 def prune_images() -> None:
+    """`docker image prune -f`: drop dangling (untagged, unreferenced) images to bound local disk usage."""
     _run(["image", "prune", "-f"], timeout=120)
 
 
 @dataclass
 class RunResult:
+    """Outcome of one `run_monitored` invocation: exit status, captured stdout/stderr, wall time, and the peak CPU/memory sampled while it ran."""
     exit_code: int
     stdout: bytes
     stderr: bytes
@@ -302,6 +328,14 @@ def run_detached(image: str, *, name: str, network: str, ip: str | None = None,
                  cpu_quota: int = 0, cap_drop_all: bool = False, no_new_privileges: bool = False,
                  command: list[str] | None = None, environment: dict | None = None,
                  tty: bool = False) -> None:
+    """`docker run -d --rm` a target container for the dynamic phase; the caller is responsible for eventually calling `rm()`.
+
+    If the image ships no `CMD`/`ENTRYPOINT` and no explicit `command` was
+    given, retries once with `sleep infinity` appended so the container
+    stays up long enough for the dynamic phase to probe whatever ports it
+    exposes, instead of exiting immediately. Raises `DockerError` if the
+    container still fails to start.
+    """
     # modern Docker/containerd default LimitNOFILE to ~1e9; old-glibc images
     # then try to allocate a fd table that large and segfault on startup
     # ("unable to allocate file descriptor table"). Cap it to a sane value.

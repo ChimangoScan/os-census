@@ -18,6 +18,13 @@ _TRUE_LIST_FIELDS = {"argv", "outputs", "extra_invocations"}
 
 
 def load_registry(path: str | Path) -> dict[str, ScannerSpec]:
+    """Load and validate ``path`` (``config/scanners.yaml``) into ``name -> ScannerSpec``.
+
+    Each entry is the file's ``defaults`` block merged with the scanner's own
+    keys (scanner keys win). Raises :class:`~scanners.config.ConfigError` if the
+    file is absent, defines no scanners, a scanner is missing ``mode``/``image``,
+    or a scanner uses a key that ``ScannerSpec`` does not declare.
+    """
     path = Path(path)
     if not path.is_file():
         raise ConfigError(f"scanner registry not found: {path}")

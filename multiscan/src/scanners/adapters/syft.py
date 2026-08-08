@@ -1,3 +1,9 @@
+"""Adapter for Syft (Anchore's SBOM generator).
+
+Reads ``<target>.syft.json`` and normalizes each discovered package/artifact
+as a ``SBOM_COMPONENT`` finding at fixed ``Severity.INFO`` — this adapter
+contributes to the census's software-inventory data, it does not report
+vulnerabilities (that's Grype, which consumes the same SBOM format)."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +12,7 @@ from .base import f, read_json
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.syft.json`` under ``out`` into SBOM-component findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.syft.json")
     if not isinstance(doc, dict):
         return []

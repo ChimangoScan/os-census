@@ -1,3 +1,10 @@
+"""Adapter for droopescan (Drupal/SilverStripe CMS fingerprinting scanner).
+
+Reads ``<target>.droopescan.json`` and emits ``WEB_VULN`` findings for every
+discovered plugin, theme, "interesting URL", and the fingerprinted CMS
+version itself. These are enumeration/fingerprint results rather than
+confirmed vulnerabilities, so severity is ``INFO`` (or ``LOW`` for interesting
+URLs) throughout — droopescan doesn't grade its own findings."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +13,7 @@ from .base import endpoint_of, f, read_json
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.droopescan.json`` under ``out`` into CMS-fingerprint findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.droopescan.json")
     if not isinstance(doc, dict):
         return []

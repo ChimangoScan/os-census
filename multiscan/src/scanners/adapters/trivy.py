@@ -1,3 +1,10 @@
+"""Adapter for Trivy (Aqua's all-in-one image scanner: vulnerabilities, secrets, misconfigurations).
+
+Reads ``<target>.trivy.json`` and, unlike single-purpose adapters, emits three
+different finding categories from the one report — ``PKG_VULN`` from
+``Vulnerabilities[]``, ``SECRET`` from ``Secrets[]``, and ``IMAGE_CONFIG``
+from ``Misconfigurations[]`` — because Trivy itself covers all three in one
+invocation."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -6,6 +13,7 @@ from .base import cves_in, f, read_json
 
 
 def _cvss(v: dict) -> float | None:
+    """Highest base CVSS score Trivy attached to this vulnerability across all vendor sources and CVSS versions."""
     best = None
     for vendor in (v.get("CVSS") or {}).values():
         for k in ("V3Score", "V40Score", "V2Score"):
@@ -16,6 +24,7 @@ def _cvss(v: dict) -> float | None:
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn ``<target>.trivy.json`` under ``out`` into vulnerability, secret, and misconfiguration findings for target ``t``. Returns ``[]`` if the report is missing or malformed."""
     doc = read_json(out / f"{t.name}.trivy.json")
     if not isinstance(doc, dict):
         return []

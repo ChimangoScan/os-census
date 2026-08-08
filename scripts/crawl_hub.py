@@ -25,6 +25,11 @@ REPOS = [
 
 
 def get(url, tries=4):
+    """GET `url` as JSON, retrying on error with linear backoff (2s, 4s, 6s...).
+
+    Returns the parsed JSON body, or None if the resource is a 404 or all
+    `tries` attempts fail (network error, timeout, non-2xx). Never raises.
+    """
     for i in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "os-census-crawler"})
@@ -40,6 +45,15 @@ def get(url, tries=4):
 
 
 def main():
+    """Crawl the Docker Hub API for every repo in REPOS and write the two raw corpus files.
+
+    For each of the 22 repositories: fetches repository metadata (pull_count
+    etc.) into data/hub_repos.jsonl (one JSON line per repo), and paginates
+    through /tags/ into data/hub_tags.jsonl (one JSON line per tag, tagged with
+    `_ns`/`_name` so build_queue.py can group by repo). This is the entry point
+    of the corpus: it produces the raw input that build_queue.py filters/dedups
+    into the scan queue behind corpus_repos/corpus_distros/corpus_images (sec 3).
+    """
     (ROOT / "data").mkdir(exist_ok=True)
     nrepo = ntag = 0
     with (ROOT / "data/hub_repos.jsonl").open("w") as frepos, \

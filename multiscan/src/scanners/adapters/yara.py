@@ -1,3 +1,9 @@
+"""Adapter for plain YARA (rule-based malware/IOC scanner, run against the exported rootfs).
+
+Like ClamAV, YARA here has no JSON output mode in use; the adapter parses the
+plain-text stdout of ``yara -r -s rules dir``, reassembling each match's
+matched-string lines (indented "offset:identifier:value" entries following a
+"<rule> <path>" match line) into one ``MALWARE`` finding per match."""
 from __future__ import annotations
 import re
 from pathlib import Path
@@ -12,6 +18,7 @@ _STR = re.compile(r"^0x[0-9a-f]+:\$")
 
 
 def parse(out: Path, t: Target) -> list[Finding]:
+    """Turn the captured ``yara`` text output under ``out`` into malware findings for target ``t``. Returns ``[]`` if no ``*.yara.txt`` capture exists."""
     txt = next(out.glob("*.yara.txt"), None)
     if not txt or not txt.is_file():
         return []
@@ -30,6 +37,7 @@ def parse(out: Path, t: Target) -> list[Finding]:
 
 
 def _finding(t: Target, rule: str, path: str, strings: list[str]) -> Finding:
+    """Build one YARA-match Finding from a rule name, matched file path, and up to 30 matched-string lines."""
     loc = path[6:] if path.startswith("/scan/") else path
     return f("yara", t, category=Category.MALWARE, severity=Severity.MEDIUM,
              id=rule, title=f"YARA rule {rule}",
