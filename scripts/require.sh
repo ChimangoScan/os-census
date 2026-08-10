@@ -72,6 +72,8 @@ require_docker() {
             echo "  start it:  sudo systemctl start docker"
             echo "  and allow this user without sudo:"
             echo "    sudo usermod -aG docker \"\$USER\" && newgrp docker"
+            echo "  (no newgrp? it is in util-linux-extra on recent Ubuntu, util-linux"
+            echo "   elsewhere; logging out and back in has the same effect)"
         } >&2
         exit 1
     }
