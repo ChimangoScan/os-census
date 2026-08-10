@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Gera config/os.yaml com os caminhos corretos para ESTE clone, sem edicao
-manual. Caminhos de saida/cache: env OSCENSUS_OUT/OSCENSUS_CACHE, senao
-scan-out/ dentro do repo.
-Rodar:  python3 scripts/render_config.py
+"""Generates config/os.yaml with the correct paths for THIS clone, without manual
+editing. Output/cache paths: env OSCENSUS_OUT/OSCENSUS_CACHE, otherwise
+scan-out/ inside the repo.
+Run:  python3 scripts/render_config.py
 """
 import os
 from pathlib import Path
@@ -52,4 +52,4 @@ runtime:
   dockerhub_accounts: {ROOT}/config/accounts.json
 """
 (ROOT / "config/os.yaml").write_text(cfg)
-print(f"config/os.yaml gerado. out={OUT} cache={CACHE}")
+print(f"config/os.yaml generated. out={OUT} cache={CACHE}")

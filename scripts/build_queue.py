@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Monta a fila de scan (data/jobs_unique.jsonl) a partir do pull da API do
-Docker Hub (data/hub_tags.jsonl + data/hub_repos.jsonl).
+"""Builds the scan queue (data/jobs_unique.jsonl) from the Docker Hub API pull
+(data/hub_tags.jsonl + data/hub_repos.jsonl).
 
-- filtra imagens amd64/linux
-- deduplica por digest (bytes idênticos = 1 job; tags viram metadado)
-- ordena em round-robin entre repos, alternando recente<->antigo dentro do repo
-  (protege a análise de defasagem com poucas rodadas)
-- emite no formato que o source JSONL do multiscan entende: {"image","name","weight",...}
-  weight decrescente = ordem de scan (o coordenador reivindica por weight desc)
+- filters amd64/linux images
+- deduplicates by digest (identical bytes = 1 job; tags become metadata)
+- orders round-robin across repos, alternating new<->old within each repo
+  (protects the staleness analysis with few rounds)
+- emits in the format the multiscan JSONL source understands: {"image","name","weight",...}
+  decreasing weight = scan order (the coordinator claims by weight desc)
 """
 import json, collections, re
 from datetime import datetime, timezone
@@ -83,26 +83,26 @@ byrepo = collections.defaultdict(list)
 for u in imgs: byrepo[u["repo"]].append(u)
 seqs = {r: interleave(v) for r, v in byrepo.items()}
 ordered = []
-for passo in range(max(len(v) for v in seqs.values())):
+for step in range(max(len(v) for v in seqs.values())):
     for r in sorted(seqs):
-        if passo < len(seqs[r]): ordered.append((passo, seqs[r][passo]))
+        if step < len(seqs[r]): ordered.append((step, seqs[r][step]))
 
 total = len(ordered)
 out_path = ROOT/"data/jobs_unique.jsonl"
 with out_path.open("w") as f:
-    for gi, (passo, u) in enumerate(ordered):
+    for gi, (step, u) in enumerate(ordered):
         ref = (f"{u['name_repo']}@{u['amd64_digest']}" if u["ns"] == "library"
                else f"{u['ns']}/{u['name_repo']}@{u['amd64_digest']}")
         name = slug(f"{u['name_repo']}_{u['repr_tag']}_{u['amd64_digest'][7:15]}")
         f.write(json.dumps({
-            "image": ref, "name": name, "weight": total - gi,    # weight desc = ordem
+            "image": ref, "name": name, "weight": total - gi,    # weight desc = scan order
             "repo": u["repo"], "repr_tag": u["repr_tag"], "tags": u["tags"], "n_tags": u["n_tags"],
             "amd64_digest": u["amd64_digest"], "size": u["size"],
-            "age_days": u["age_days"], "pull_count": u["pull_count"], "round": passo + 1,
+            "age_days": u["age_days"], "pull_count": u["pull_count"], "round": step + 1,
         }) + "\n")
 
-print(f"imagens únicas (jobs): {total} -> {out_path.relative_to(ROOT)}")
+print(f"unique images (jobs): {total} -> {out_path.relative_to(ROOT)}")
 ages = [u["age_days"] for _, u in ordered if u["age_days"] is not None]
-print(f"idade (dias): min {min(ages)} | mediana {sorted(ages)[len(ages)//2]} | max {max(ages)}")
-print("por repo:", {r: len(v) for r, v in sorted(byrepo.items(), key=lambda x: -len(x[1]))})
-if no_amd64: print("tags sem amd64 (puladas):", dict(no_amd64))
+print(f"age (days): min {min(ages)} | median {sorted(ages)[len(ages)//2]} | max {max(ages)}")
+print("per repo:", {r: len(v) for r, v in sorted(byrepo.items(), key=lambda x: -len(x[1]))})
+if no_amd64: print("tags without amd64 (skipped):", dict(no_amd64))

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Crawl da categoria 'Operating systems' do Docker Hub -> data/hub_repos.jsonl
-+ data/hub_tags.jsonl, no formato consumido por build_queue.py. Reproduz o
-corpus do estudo a partir da API publica do Docker Hub. stdlib only (urllib).
+"""Crawl the 'Operating systems' category of Docker Hub -> data/hub_repos.jsonl
++ data/hub_tags.jsonl, in the format consumed by build_queue.py. Reproduces the
+study corpus from the public Docker Hub API. stdlib only (urllib).
 
-A lista REPOS abaixo e a categoria 'Operating systems' do Docker Hub no momento
-do estudo (inclui clefos, sem imagem amd64, e rockylinux nos dois namespaces).
-Re-rodar regenera hub_repos.jsonl/hub_tags.jsonl com os tags/digests atuais; o
-numero de imagens unicas pode variar levemente conforme novas tags sao
-publicadas. Uso:  python3 scripts/crawl_hub.py
+The REPOS list below is the 'Operating systems' category of Docker Hub at the
+time of the study (includes clefos, without an amd64 image, and rockylinux in
+both namespaces). Re-running regenerates hub_repos.jsonl/hub_tags.jsonl with the
+current tags/digests; the number of unique images may vary slightly as new tags
+are published. Usage:  python3 scripts/crawl_hub.py
 """
 import json, time, urllib.request, urllib.error
 from pathlib import Path

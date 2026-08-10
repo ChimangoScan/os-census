@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Agrega os report.json em data/analysis/per_image.csv e imprime um resumo das
-RQs. Roda em dados parciais (a cada momento do scan). stdlib only.
+"""Aggregates the report.json files into data/analysis/per_image.csv and prints
+an RQ summary. Runs on partial data (at any point during the scan). stdlib only.
 """
 import json, csv, glob, statistics, collections, os
 from pathlib import Path
@@ -12,7 +12,7 @@ ANA.mkdir(parents=True, exist_ok=True)
 SCA = {"trivy", "grype", "osv", "clair"}
 
 rows = []
-sca_sets = collections.defaultdict(set)   # scanner -> {(image,cve)}  p/ divergencia (RQ3)
+sca_sets = collections.defaultdict(set)   # scanner -> {(image,cve)}  for divergence (RQ3)
 for rj in glob.glob(str(OUT / "*/report.json")):
     try: r = json.load(open(rj))
     except Exception: continue
@@ -73,7 +73,7 @@ with gzip.GzipFile(ANA / "rq3_sca_sets.json.gz", "wb", mtime=0) as gz:
 print(f"=== {len(rows)} images analyzed -> data/analysis/per_image.csv ===\n")
 
 # RQ1: posture per repository (mean critical+high, package count)
-print("RQ1 — postura por repo (n imgs | críticas+altas médias | pacotes médios):")
+print("RQ1 — posture per repo (n imgs | mean critical+high | mean packages):")
 by = collections.defaultdict(list)
 for r in rows: by[r["repo"]].append(r)
 for repo, v in sorted(by.items(), key=lambda x: -statistics.mean([i["vuln_critical"]+i["vuln_high"] for i in x[1]])):
@@ -81,15 +81,15 @@ for repo, v in sorted(by.items(), key=lambda x: -statistics.mean([i["vuln_critic
     pk = statistics.mean([i["packages"] for i in v])
     print(f"  {repo:24} {len(v):>4} | {ch:6.1f} | {pk:6.0f}")
 
-# RQ2: idade vs vulnerabilidades (buckets de defasagem)
-print("\nRQ2 — defasagem (idade) x vuln_total médio:")
-buckets = [(0,180,"0-6m"),(180,365,"6-12m"),(365,730,"1-2a"),(730,1460,"2-4a"),(1460,99999,"4a+")]
+# RQ2: age vs vulnerabilities (staleness buckets)
+print("\nRQ2 — staleness (age) x mean vuln_total:")
+buckets = [(0,180,"0-6m"),(180,365,"6-12m"),(365,730,"1-2y"),(730,1460,"2-4y"),(1460,99999,"4y+")]
 for lo,hi,lbl in buckets:
     g=[r["vuln_total"] for r in rows if r["age_days"] is not None and lo<=r["age_days"]<hi]
-    if g: print(f"  {lbl:6} n={len(g):>4}  vuln_total médio={statistics.mean(g):7.1f}")
+    if g: print(f"  {lbl:6} n={len(g):>4}  mean vuln_total={statistics.mean(g):7.1f}")
 
 # RQ3: SCA divergence (pairwise Jaccard over (image, cve, pkg))
-print("\nRQ3 — divergência SCA (Jaccard par-a-par de (imagem,cve,pacote)):")
+print("\nRQ3 — SCA divergence (pairwise Jaccard over (image,cve,package)):")
 present=[s for s in ["trivy","grype","osv","clair"] if sca_sets.get(s)]
 for i,a in enumerate(present):
     for b in present[i+1:]:
@@ -97,6 +97,6 @@ for i,a in enumerate(present):
         print(f"  {a}∩{b}: Jaccard={len(A&B)/u if u else 0:.2f}  ({a}={len(A)}, {b}={len(B)}, ∩={len(A&B)})")
 
 # RQ5: is a smaller image safer? (package count vs vuln_total)
-print("\nRQ5 — pacotes x vuln_total (amostra ordenada por pacotes):")
+print("\nRQ5 — packages x vuln_total (sample ordered by packages):")
 for r in sorted(rows, key=lambda x: x["packages"])[:3] + sorted(rows, key=lambda x: -x["packages"])[:3]:
     print(f"  {r['repo']:20} pkgs={r['packages']:>5} vuln_total={r['vuln_total']:>5}")

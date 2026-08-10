@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Exporta o status da fila (work/os.db) para data/analysis/job_status.csv.gz,
-a base versionada da RQ4 (imagens un-pullable / legacy schema). stdlib only.
-Rodar:  OSCENSUS_DB=/caminho/os.db python3 scripts/export_job_status.py
+"""Exports the queue status (work/os.db) to data/analysis/job_status.csv.gz,
+the versioned base for RQ4 (un-pullable images / legacy schema). stdlib only.
+Run:  OSCENSUS_DB=/path/to/os.db python3 scripts/export_job_status.py
 """
 import csv, gzip, json, os, sqlite3
 from pathlib import Path
@@ -19,4 +19,4 @@ with gzip.open(OUT, "wt", newline="") as f:
         m = d.get("meta") or {}
         w.writerow([d.get("image", ""), m.get("repo", "?"), stt, m.get("pull_count") or ""])
 c.close()
-print(f"{OUT} escrito")
+print(f"{OUT} written")

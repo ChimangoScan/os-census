@@ -50,9 +50,9 @@ class SqliteQueue(Queue):
             c.executescript(_SCHEMA)
 
     def _conn(self):
-        # closing() garante .close() no __exit__ — sqlite3.Connection.__exit__
-        # só faz commit/rollback e vaza o fd. Em autocommit (isolation_level=None)
-        # nao tem transaçao implícita pra perder.
+        # closing() guarantees .close() on __exit__ — sqlite3.Connection.__exit__
+        # only commits/rolls back and leaks the fd. In autocommit (isolation_level=None)
+        # there is no implicit transaction to lose.
         c = sqlite3.connect(self.path, timeout=30, isolation_level=None)
         c.row_factory = sqlite3.Row
         c.execute("PRAGMA journal_mode=WAL")

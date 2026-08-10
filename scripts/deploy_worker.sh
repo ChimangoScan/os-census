@@ -1,16 +1,16 @@
 #!/bin/bash
-# Deploya um worker remoto do censo de SO num host remoto, consistente com o local:
-# engine multiscan + scanners.yaml (clair --image-ref) + matcher.db + whispers.
-# O worker consome a fila via coordinator local (porta 8918) por túnel reverso.
-# Uso: bash deploy_worker.sh <host>     (rode do PC local; precisa ssh <host> e ssh -R)
+# Deploys a remote OS-census worker onto a remote host, consistent with the local one:
+# multiscan engine + scanners.yaml (clair --image-ref) + matcher.db + whispers.
+# The worker consumes the queue via the local coordinator (port 8918) over a reverse tunnel.
+# Usage: bash deploy_worker.sh <host>     (run from the local PC; requires ssh <host> and ssh -R)
 set -e
-H="$1"; [ -z "$H" ] && { echo "uso: deploy_worker.sh <host>"; exit 1; }
+H="$1"; [ -z "$H" ] && { echo "usage: deploy_worker.sh <host>"; exit 1; }
 COORD=8918
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"          # raiz do repo (auto)
-LOCAL_REPO="${OSCENSUS_ENGINE:-$ROOT/multiscan}"  # engine: submodulo por padrao
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"          # repo root (auto)
+LOCAL_REPO="${OSCENSUS_ENGINE:-$ROOT/multiscan}"  # engine: submodule by default
 LOCAL_CFG="$ROOT/config"
 MATCHER="${OSCENSUS_MATCHER:-${OSCENSUS_CACHE:-$ROOT/scan-out/cache_so}/clair/matcher.db}"
-RD=os-worker   # dir no remoto (relativo ao home)
+RD=os-worker   # remote dir (relative to home)
 
 echo "[$H] 1. dirs"
 ssh "$H" "mkdir -p ~/$RD/{cache/clair,out,work}"
@@ -20,10 +20,10 @@ rsync -az --delete --exclude '.venv' --exclude '.git' --exclude '__pycache__' "$
 rsync -az "$LOCAL_CFG/scanners.yaml" "$H:~/$RD/scanners.yaml"
 rsync -az "$LOCAL_CFG/accounts.json" "$H:~/$RD/accounts.json"
 
-echo "[$H] 3. matcher.db do clair (~1GB, LAN)"
+echo "[$H] 3. clair matcher.db (~1GB, LAN)"
 rsync -az "$MATCHER" "$H:~/$RD/cache/clair/matcher.db"
 
-echo "[$H] 4. config do worker (http backend -> coordinator via tunel; 1 pull/maquina)"
+echo "[$H] 4. worker config (http backend -> coordinator via tunnel; 1 pull/machine)"
 HOME_R=$(ssh "$H" 'echo $HOME')
 ssh "$H" "cat > ~/$RD/config.yaml" <<EOF
 queue:
@@ -42,7 +42,7 @@ output:
   cache_dir: $HOME_R/$RD/cache
   keep_image_tarball: false
 workers:
-  count: 1          # 1 pull por vez por maquina (limite de rede)
+  count: 1          # 1 pull at a time per machine (network limit)
   scan_timeout: 1800
 runtime:
   remove_image_after: true
@@ -52,16 +52,16 @@ runtime:
 EOF
 ssh "$H" "touch ~/$RD/empty.txt"
 
-echo "[$H] 5. uv (instala se faltar)"
+echo "[$H] 5. uv (install if missing)"
 ssh "$H" 'command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sh)'
 
 echo "[$H] 6. build whispers"
 ssh "$H" 'd=$(mktemp -d); printf "FROM python:3.12.10-alpine3.21\nRUN pip install --no-cache-dir whispers==2.4.0\nENTRYPOINT [\"whispers\"]\n" > $d/Dockerfile; docker build -q -t multiscan/whispers:1 $d >/dev/null && echo whispers-ok'
 
-echo "[$H] 7. tunel reverso PC->$H (coordinator)"
+echo "[$H] 7. reverse tunnel PC->$H (coordinator)"
 pkill -f "R $COORD:localhost:$COORD $H" 2>/dev/null || true
 sleep 1
-ssh -f -N -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes -R $COORD:localhost:$COORD "$H" || echo "AVISO: tunel pode ja existir"
+ssh -f -N -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes -R $COORD:localhost:$COORD "$H" || echo "WARNING: tunnel may already exist"
 
 echo "[$H] 8. start worker (nohup)"
 ssh "$H" "cd ~/$RD/multiscan && nohup \$HOME/.local/bin/uv run scanners run --config ~/$RD/config.yaml > ~/$RD/worker.log 2>&1 & echo started pid \$!"

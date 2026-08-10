@@ -115,8 +115,9 @@ ax[3].set_ylabel("% with >=1 crit"); ax[3].set_title("(d) Critical vs age", loc=
 fig.tight_layout(pad=0.4, w_pad=0.8); fig.savefig(f"{FIG}/fig_rq2.pdf"); plt.close(fig); print("fig_rq2 ok")
 
 # ----------------------------------------------------------------- RQ3
-# Le os report.json brutos se existirem; senao usa o dump pre-computado
-# (data/analysis/rq3_sca_sets.json.gz) -> reproducao sem precisar do scan bruto.
+# Read the raw report.json files if they are present; otherwise fall back to the
+# pre-computed dump (data/analysis/rq3_sca_sets.json.gz), so the figure
+# reproduces without the raw scan output.
 SCA=["trivy","grype","osv","clair"]; sets={s:set() for s in SCA}
 _reports=glob.glob(f"{OUT}/*/report.json")
 if _reports:
@@ -133,7 +134,7 @@ else:
     dump=ROOT/"data/analysis/rq3_sca_sets.json.gz"
     with gzip.open(dump,"rt") as fi:
         for s,pairs in json.load(fi).items(): sets[s]={tuple(p) for p in pairs}
-    print(f"RQ3: usando dump pre-computado ({dump.name})")
+    print(f"RQ3: using the pre-computed dump ({dump.name})")
 # Normalize the identifier to the canonical CVE id before intersecting the sets:
 # Clair stores part of its entries under the vulnerability's full name
 # ("CVE-XXXX-YYYY on Ubuntu 20.04 ..."), which without normalization never
@@ -166,8 +167,8 @@ ax[3].set_ylabel("unique pairs"); ax[3].set_title("(d) Scanner-only", loc="left"
 fig.tight_layout(pad=0.4, w_pad=0.9); fig.savefig(f"{FIG}/fig_rq3.pdf"); plt.close(fig)
 print("fig_rq3 ok | sizes:", {s:len(v) for s,v in sets.items()})
 
-# ----------------------------------------------------------------- RQ4 (fila: skip + pulls)
-# Le work/os.db se existir; senao o extrato versionado data/analysis/job_status.csv.gz
+# ----------------------------------------------------------- RQ4 (queue: skip + pulls)
+# Read work/os.db if it exists; otherwise the versioned extract data/analysis/job_status.csv.gz
 # (produced by scripts/export_job_status.py) -> reproduction without the original queue.
 fig, ax = plt.subplots(1, 4, figsize=FS)
 try:
@@ -184,7 +185,7 @@ try:
         import gzip
         with gzip.open(ROOT/"data/analysis/job_status.csv.gz","rt") as fi:
             jobs=[(short(r["repo"]), r["status"], fnum(r["pull_count"])) for r in csv.DictReader(fi)]
-        print("RQ4: usando extrato pre-computado (job_status.csv.gz)")
+        print("RQ4: using the pre-computed extract (job_status.csv.gz)")
     for rp,stt,pc in jobs:
         tot[rp]+=1
         if stt=="skipped": skp[rp]+=1

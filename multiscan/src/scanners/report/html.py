@@ -10,9 +10,9 @@ from pathlib import Path
 _SEV_ORDER = ["critical", "high", "medium", "low", "info", "unknown"]
 _SEV_COLOR = {"critical": "#991b1b", "high": "#dc2626", "medium": "#d97706",
               "low": "#16a34a", "info": "#64748b", "unknown": "#94a3b8"}
-_CAT_LABEL = {"pkg-vuln": "pacote/CVE", "secret": "segredo", "image-config": "config da imagem",
-              "web-vuln": "web", "network-vuln": "rede", "malware": "malware",
-              "sbom-component": "componente (SBOM)", "other": "outro"}
+_CAT_LABEL = {"pkg-vuln": "package/CVE", "secret": "secret", "image-config": "image config",
+              "web-vuln": "web", "network-vuln": "network", "malware": "malware",
+              "sbom-component": "component (SBOM)", "other": "other"}
 
 
 def _esc(x) -> str:
@@ -80,7 +80,7 @@ const D = JSON.parse(document.getElementById('data').textContent);
 const SEV = ['critical','high','medium','low','info','unknown'];
 const SEVC = {critical:'#991b1b',high:'#dc2626',medium:'#d97706',low:'#16a34a',info:'#64748b',unknown:'#94a3b8'};
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const nf = n => (typeof n==='number' ? n.toLocaleString('pt-BR') : esc(n));
+const nf = n => (typeof n==='number' ? n.toLocaleString('en-US') : esc(n));
 const chip = s => `<span class="chip" style="background:${SEVC[s]||'#94a3b8'}">${esc(s)}</span>`;
 function sevbar(o,w){ w=w||110; const t = SEV.reduce((a,s)=>a+(o[s]||0),0)||1;
   const seg = SEV.filter(s=>o[s]).map(s=>`<span title="${s}: ${o[s]}" style="background:${SEVC[s]};width:${(o[s]/t*100).toFixed(2)}%"></span>`).join('') || '<span style="background:#e2e8f0;width:100%"></span>';
@@ -215,13 +215,13 @@ def render(corpus: dict, out_path: Path) -> None:
                 + (f'<div class="s">{_esc(sub)}</div>' if sub else "") + "</div>")
 
     cards = "".join([
-        card(_n(n_targets), "containers escaneados"),
-        card(_n(n_findings), "findings (consolidados)"),
-        card(_n(by_sev.get("critical", 0)), "críticos", f'+{_n(by_sev.get("high", 0))} altos'),
-        card(_n(distinct_cves) if distinct_cves else "—", "CVEs distintos"),
-        card(_n(n_scanners), "scanners (com saída)"),
-        card(f'{thru.get("targets_per_hour", "?")}', "containers / hora",
-             f'≈ {thru.get("avg_seconds_per_target", "?")} s por container'),
+        card(_n(n_targets), "containers scanned"),
+        card(_n(n_findings), "findings (consolidated)"),
+        card(_n(by_sev.get("critical", 0)), "critical", f'+{_n(by_sev.get("high", 0))} high'),
+        card(_n(distinct_cves) if distinct_cves else "—", "distinct CVEs"),
+        card(_n(n_scanners), "scanners (with output)"),
+        card(f'{thru.get("targets_per_hour", "?")}', "containers / hour",
+             f'≈ {thru.get("avg_seconds_per_target", "?")} s per container'),
     ])
     sev_legend = " ".join(f'{_sev_chip(k)} {_n(by_sev.get(k, 0))}' for k in _SEV_ORDER if by_sev.get(k))
     cat_legend = " &nbsp; ".join(f'<b>{_n(v)}</b> {_esc(_CAT_LABEL.get(k, k))}'
@@ -235,11 +235,11 @@ def render(corpus: dict, out_path: Path) -> None:
         merged = b.get("merged_findings", 0)
         flag = ""
         if runs and ok == 0:
-            flag = ' <span class="warn">falhou em todas</span>'
+            flag = ' <span class="warn">failed on all</span>'
         elif runs and ok < runs:
-            flag = f' <span class="warn">{runs - ok} erro(s)</span>'
+            flag = f' <span class="warn">{runs - ok} error(s)</span>'
         if name == "clamav":
-            flag += ' <span class="muted">(parcial — removido: lento)</span>'
+            flag += ' <span class="muted">(partial — removed: slow)</span>'
         sc_rows.append(
             f'<tr><td class="mono b">{_esc(name)}{flag}</td><td class="num">{_n(runs)}</td>'
             f'<td class="num">{okpct}</td><td class="num">{b.get("avg_wall_s", "?")} s</td>'
@@ -249,82 +249,82 @@ def render(corpus: dict, out_path: Path) -> None:
 
     n_pv = by_cat.get("pkg-vuln", 0) or 1
     agr_rows = "".join(
-        f'<tr><td>encontrado por <b>{_esc(k)}{"+" if k == "4" else ""}</b> scanner(s) de CVE</td>'
+        f'<tr><td>found by <b>{_esc(k)}{"+" if k == "4" else ""}</b> CVE scanner(s)</td>'
         f'<td class="num">{_n(v)}</td><td class="num">{v / n_pv * 100:.1f}%</td></tr>'
         for k, v in sorted(agr.items(), key=lambda kv: int(kv[0])))
     thru_rows = "".join(
         f'<tr><td>{_esc(k)}</td><td class="num mono">{_esc(v)}</td></tr>' for k, v in [
-            ("relógio de parede (s)", thru.get("wall_clock_seconds")),
-            ("containers / minuto", thru.get("targets_per_minute")),
-            ("containers / hora", thru.get("targets_per_hour")),
-            ("média s / container", thru.get("avg_seconds_per_target")),
-            ("mediana s / container", thru.get("median_seconds_per_target")),
-            ("CPU-segundos de scanner (total)", thru.get("scanner_cpu_seconds_total")),
-            ("paralelismo efetivo (scanner-containers simultâneos)", thru.get("parallel_efficiency")),
+            ("wall clock (s)", thru.get("wall_clock_seconds")),
+            ("containers / minute", thru.get("targets_per_minute")),
+            ("containers / hour", thru.get("targets_per_hour")),
+            ("avg s / container", thru.get("avg_seconds_per_target")),
+            ("median s / container", thru.get("median_seconds_per_target")),
+            ("scanner CPU-seconds (total)", thru.get("scanner_cpu_seconds_total")),
+            ("effective parallelism (concurrent scanner-containers)", thru.get("parallel_efficiency")),
         ] if v is not None)
     sxc_head = "".join(f'<th class="no-sort num">{_esc(_CAT_LABEL.get(c, c))}</th>' for c in cats_seen)
 
     head = f"""<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Multiscan · varredura multi-scanner de containers vulneráveis</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Multiscan · multi-scanner scan of vulnerable containers</title>
 <style>{_CSS}</style></head><body>
 <header class="top">
-  <h1>Multiscan — varredura multi-scanner de containers vulneráveis</h1>
-  <div class="sub"><b>{_n(n_targets)}</b> imagens de container vulneráveis varridas por uma bateria de <b>{_n(n_scanners)}</b> scanners de segurança. <b>{_n(n_findings)}</b> findings consolidados; cada um traceia de volta para a imagem (e o IP do container) que o originou. Gerado em {gen}.</div>
+  <h1>Multiscan — multi-scanner scan of vulnerable containers</h1>
+  <div class="sub"><b>{_n(n_targets)}</b> vulnerable container images scanned by a battery of <b>{_n(n_scanners)}</b> security scanners. <b>{_n(n_findings)}</b> consolidated findings; each one traces back to the image (and the container IP) that produced it. Generated at {gen}.</div>
 </header>
 <nav class="sticky">
-  <a href="#resumo">Resumo</a><a href="#desempenho">Desempenho</a><a href="#scanners">Cobertura por scanner</a>
-  <a href="#concordancia">Concordância</a><a href="#severidade">Severidade × categoria</a>
-  <a href="#expostos">Mais expostos</a><a href="#containers">Todos os containers</a><a href="#findings">Findings</a>
+  <a href="#summary">Summary</a><a href="#performance">Performance</a><a href="#scanners">Scanner coverage</a>
+  <a href="#agreement">Agreement</a><a href="#severity">Severity × category</a>
+  <a href="#exposed">Most exposed</a><a href="#containers">All containers</a><a href="#findings">Findings</a>
 </nav>
 <main>
-<section id="resumo">
-  <h2>Resumo <span class="sub">o que foi medido</span></h2>
-  <p class="note">Bateria estática (varre o <code>docker save</code> tar da imagem e o rootfs achatado — não precisa rodar o container): <b>syft</b> (SBOM), <b>trivy</b> · <b>grype</b> · <b>osv-scanner</b> · <b>clair</b> (CVEs de pacote, quatro motores), <b>dockle</b> (boas práticas/config da imagem), <b>trufflehog</b> (segredos). Os {_n(n_targets)} containers já tinham resultados de OpenVAS coletados (scanner de rede dinâmico — referência). Scanners de filesystem lentos (clamav) ou quebrados (semgrep — erro de config) aparecem nas tabelas, sinalizados, mas não geraram findings.</p>
+<section id="summary">
+  <h2>Summary <span class="sub">what was measured</span></h2>
+  <p class="note">Static battery (scans the <code>docker save</code> tar of the image and the flattened rootfs — no need to run the container): <b>syft</b> (SBOM), <b>trivy</b> · <b>grype</b> · <b>osv-scanner</b> · <b>clair</b> (package CVEs, four engines), <b>dockle</b> (image best practices/config), <b>trufflehog</b> (secrets). The {_n(n_targets)} containers already had OpenVAS results collected (dynamic network scanner — reference). Slow filesystem scanners (clamav) or broken ones (semgrep — config error) appear in the tables, flagged, but produced no findings.</p>
   <div class="cards">{cards}</div>
-  <div class="legend"><b>Severidade:</b> &nbsp; {sev_legend}</div>
-  <div class="legend"><b>Categoria:</b> &nbsp; {cat_legend}</div>
+  <div class="legend"><b>Severity:</b> &nbsp; {sev_legend}</div>
+  <div class="legend"><b>Category:</b> &nbsp; {cat_legend}</div>
 </section>
-<section id="desempenho">
-  <h2>Desempenho <span class="sub">throughput da varredura</span></h2>
-  <p class="note">Vazão ponta-a-ponta dos {_n(n_targets)} containers (inclui intervalos de reinício de workers — em regime estável foi mais rápido). <b>Paralelismo efetivo</b> = média de containers de scanner rodando ao mesmo tempo.</p>
-  <table style="max-width:560px"><thead><tr><th class="no-sort">métrica</th><th class="no-sort num">valor</th></tr></thead><tbody>{thru_rows}</tbody></table>
+<section id="performance">
+  <h2>Performance <span class="sub">scan throughput</span></h2>
+  <p class="note">End-to-end throughput of the {_n(n_targets)} containers (includes worker restart intervals — faster in steady state). <b>Effective parallelism</b> = average number of scanner containers running at the same time.</p>
+  <table style="max-width:560px"><thead><tr><th class="no-sort">metric</th><th class="no-sort num">value</th></tr></thead><tbody>{thru_rows}</tbody></table>
 </section>
 <section id="scanners">
-  <h2>Cobertura por scanner</h2>
-  <p class="note"><b>runs</b> = invocações · <b>ok</b> = % que terminou com saída útil · <b>tempo méd.</b> = parede por invocação · <b>brutos → consolidados</b> = depois do dedup intra-scanner · <b>fatia</b> = % do total consolidado. Clique para ordenar.</p>
-  <table id="t-scan"><thead><tr><th class="no-sort">scanner</th><th class="num">runs</th><th class="num">ok</th><th class="num">tempo méd.</th><th class="num">mem. pico</th><th class="num">brutos</th><th class="num">consolidados</th><th class="no-sort">fatia</th></tr></thead><tbody>{''.join(sc_rows)}</tbody></table>
+  <h2>Scanner coverage</h2>
+  <p class="note"><b>runs</b> = invocations · <b>ok</b> = % that finished with useful output · <b>avg time</b> = wall time per invocation · <b>raw → consolidated</b> = after intra-scanner dedup · <b>share</b> = % of the consolidated total. Click to sort.</p>
+  <table id="t-scan"><thead><tr><th class="no-sort">scanner</th><th class="num">runs</th><th class="num">ok</th><th class="num">avg time</th><th class="num">peak mem</th><th class="num">raw</th><th class="num">consolidated</th><th class="no-sort">share</th></tr></thead><tbody>{''.join(sc_rows)}</tbody></table>
 </section>
-<section id="concordancia">
-  <h2>Concordância entre os scanners de CVE <span class="sub">trivy · grype · osv · clair</span></h2>
-  <p class="note">Esses scanners medem a <i>mesma</i> coisa (CVEs de pacote) — só conta como "concordância" quando o mesmo CVE é reportado para o mesmo pacote no mesmo caminho. A concordância exata é baixa em parte porque os scanners normalizam nomes de pacote diferente (<code>org.apache.activemq:activemq-client</code> vs <code>activemq-client</code>) — não porque algum esteja errado. Trufflehog (segredos), syft (componentes) e dockle (config) medem outras coisas e não entram aqui.</p>
-  <table style="max-width:560px"><thead><tr><th class="no-sort">acordo</th><th class="no-sort num">CVEs de pacote</th><th class="no-sort num">% dos CVEs</th></tr></thead><tbody>{agr_rows or '<tr><td class="muted" colspan="3">sem vulns de pacote</td></tr>'}</tbody></table>
+<section id="agreement">
+  <h2>Agreement among CVE scanners <span class="sub">trivy · grype · osv · clair</span></h2>
+  <p class="note">These scanners measure the <i>same</i> thing (package CVEs) — it only counts as "agreement" when the same CVE is reported for the same package at the same path. Exact agreement is low partly because the scanners normalize package names differently (<code>org.apache.activemq:activemq-client</code> vs <code>activemq-client</code>) — not because any of them is wrong. Trufflehog (secrets), syft (components) and dockle (config) measure other things and are not included here.</p>
+  <table style="max-width:560px"><thead><tr><th class="no-sort">agreement</th><th class="no-sort num">package CVEs</th><th class="no-sort num">% of CVEs</th></tr></thead><tbody>{agr_rows or '<tr><td class="muted" colspan="3">no package vulns</td></tr>'}</tbody></table>
 </section>
-<section id="severidade">
-  <h2>Severidade × categoria</h2>
-  <p class="note">Findings consolidados em cada cruzamento severidade × categoria (intensidade ∝ √contagem).</p>
-  <table class="heat" id="t-sxc"><thead><tr><th class="no-sort">severidade</th>{sxc_head}<th class="no-sort num">total</th></tr></thead><tbody></tbody></table>
+<section id="severity">
+  <h2>Severity × category</h2>
+  <p class="note">Consolidated findings at each severity × category cross (intensity ∝ √count).</p>
+  <table class="heat" id="t-sxc"><thead><tr><th class="no-sort">severity</th>{sxc_head}<th class="no-sort num">total</th></tr></thead><tbody></tbody></table>
 </section>
-<section id="expostos">
-  <h2>Containers mais expostos <span class="sub">top 25 por (críticos×4 + altos)</span></h2>
-  <p class="note">Onde se concentram os achados de alta gravidade. <code>IP</code> é o endereço do container no lab — a chave de correlação vuln↔container.</p>
-  <table id="t-exp"><thead><tr><th>container</th><th>imagem</th><th>IP</th><th>categoria</th><th class="num">findings</th><th class="num">crít.</th><th class="num">altos</th><th class="no-sort">severidade</th></tr></thead><tbody></tbody></table>
+<section id="exposed">
+  <h2>Most exposed containers <span class="sub">top 25 by (critical×4 + high)</span></h2>
+  <p class="note">Where the high-severity findings concentrate. <code>IP</code> is the container address in the lab — the key that correlates vuln↔container.</p>
+  <table id="t-exp"><thead><tr><th>container</th><th>image</th><th>IP</th><th>category</th><th class="num">findings</th><th class="num">crit.</th><th class="num">high</th><th class="no-sort">severity</th></tr></thead><tbody></tbody></table>
 </section>
 <section id="containers">
-  <h2>Todos os {_n(len(t_rows))} containers</h2>
-  <p class="note">Clique no cabeçalho para ordenar; filtre por nome/imagem/IP/categoria.</p>
-  <div class="toolbar"><input id="q-cont" placeholder="filtrar containers…"><span class="muted" id="q-cont-n"></span></div>
-  <div class="scroll"><table id="t-cont"><thead><tr><th>container</th><th>imagem</th><th>IP</th><th>categoria</th><th class="num">findings</th><th class="num">crít.</th><th class="num">altos</th><th class="num">médios</th><th class="num">baixos</th><th class="num">info</th><th class="no-sort">severidade</th><th>obs.</th></tr></thead><tbody></tbody></table></div>
+  <h2>All {_n(len(t_rows))} containers</h2>
+  <p class="note">Click a column header to sort; filter by name/image/IP/category.</p>
+  <div class="toolbar"><input id="q-cont" placeholder="filter containers…"><span class="muted" id="q-cont-n"></span></div>
+  <div class="scroll"><table id="t-cont"><thead><tr><th>container</th><th>image</th><th>IP</th><th>category</th><th class="num">findings</th><th class="num">crit.</th><th class="num">high</th><th class="num">medium</th><th class="num">low</th><th class="num">info</th><th class="no-sort">severity</th><th>note</th></tr></thead><tbody></tbody></table></div>
 </section>
 <section id="findings">
-  <h2>Findings de maior severidade <span class="sub">top {_n(len(f_rows))}</span></h2>
-  <p class="note">Ordenados por severidade e CVSS. Filtre por CVE, pacote, container, IP, scanner. (O conjunto completo — {_n(n_findings)} findings — está em <code>findings.jsonl</code>; os outputs nativos de cada scanner, em <b>todos os formatos que geram</b>, em <code>out/&lt;container&gt;/&lt;scanner&gt;/</code>.)</p>
-  <div class="toolbar"><input id="q-find" placeholder="filtrar findings…"><span class="muted" id="q-find-n"></span></div>
-  <div class="scroll"><table id="t-find"><thead><tr><th>sev</th><th class="num">CVSS</th><th>id</th><th>título</th><th>categoria</th><th>pacote / local</th><th>versão → fix</th><th>container</th><th>IP</th><th>visto por</th></tr></thead><tbody></tbody></table></div>
+  <h2>Highest-severity findings <span class="sub">top {_n(len(f_rows))}</span></h2>
+  <p class="note">Sorted by severity and CVSS. Filter by CVE, package, container, IP, scanner. (The full set — {_n(n_findings)} findings — is in <code>findings.jsonl</code>; each scanner's native outputs, in <b>all the formats they produce</b>, are in <code>out/&lt;container&gt;/&lt;scanner&gt;/</code>.)</p>
+  <div class="toolbar"><input id="q-find" placeholder="filter findings…"><span class="muted" id="q-find-n"></span></div>
+  <div class="scroll"><table id="t-find"><thead><tr><th>sev</th><th class="num">CVSS</th><th>id</th><th>title</th><th>category</th><th>package / path</th><th>version → fix</th><th>container</th><th>IP</th><th>seen by</th></tr></thead><tbody></tbody></table></div>
 </section>
 <footer>
-  <p><b>Metodologia.</b> Fila de trabalho distribuída, um container Docker por scanner (endurecido: <code>cap-drop ALL</code>, rootfs read-only, limites de memória/PIDs, rede isolada), normalização e dedup de findings com <code>found_by</code>, importação dos resultados de OpenVAS por IP. Severidade <code>unknown</code> = sem rating/CVSS atribuído pelo scanner. "consolidados" = depois do dedup intra-scanner (mesmo CVE/pacote/caminho).</p>
-  <p>Gerado em {gen}.</p>
+  <p><b>Methodology.</b> Distributed work queue, one Docker container per scanner (hardened: <code>cap-drop ALL</code>, read-only rootfs, memory/PID limits, isolated network), finding normalization and dedup with <code>found_by</code>, OpenVAS results imported by IP. Severity <code>unknown</code> = no rating/CVSS assigned by the scanner. "consolidated" = after intra-scanner dedup (same CVE/package/path).</p>
+  <p>Generated at {gen}.</p>
 </footer>
 </main>"""
 

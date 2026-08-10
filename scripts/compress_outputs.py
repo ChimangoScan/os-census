@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Compacta (gzip) incrementalmente as saídas das imagens já 'done', pra caber
-em disco sem perder dado. Seguro: só toca dirs cujo job está 'done' na fila e
-arquivos com mtime > 120s (não pega scan em andamento). Mantém report.json cru
-(pequeno, usado pelo dashboard/análise). Idempotente — pode rodar a cada ciclo.
+"""Incrementally gzip-compresses the outputs of images already 'done', to fit
+on disk without losing data. Safe: only touches dirs whose job is 'done' in the
+queue and files with mtime > 120s (does not catch an in-progress scan). Keeps
+report.json raw (small, used by the dashboard/analysis). Idempotent — can run
+every cycle.
 """
 import gzip, shutil, sqlite3, time, sys, os
 from pathlib import Path
@@ -34,19 +35,19 @@ def main():
     since already-.gz files are skipped. Does not affect any paper number —
     it only shrinks disk usage of the working scan-out/ tree.
     """
-    if not OUT.exists(): print("out_so ainda não existe"); return
+    if not OUT.exists(): print("out_so does not exist yet"); return
     names = done_names()
     n_gz = saved = 0
     for d in OUT.iterdir():
         if not d.is_dir() or d.name not in names: continue
         for f in d.rglob("*"):
             if not f.is_file() or f.suffix == ".gz" or f.name in EXfiles: continue
-            if NOW - f.stat().st_mtime < 120: continue            # ainda pode estar escrevendo
+            if NOW - f.stat().st_mtime < 120: continue            # may still be writing
             raw = f.stat().st_size
             with f.open("rb") as fi, gzip.open(str(f) + ".gz", "wb", compresslevel=6) as fo:
                 shutil.copyfileobj(fi, fo)
             saved += raw - (Path(str(f) + ".gz").stat().st_size); f.unlink(); n_gz += 1
-    print(f"[{time.strftime('%H:%M:%S')}] compactados {n_gz} arquivos, ~{saved/1024**2:.0f} MB economizados")
+    print(f"[{time.strftime('%H:%M:%S')}] compressed {n_gz} files, ~{saved/1024**2:.0f} MB saved")
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Verifica cada numero publicado no paper (expected/paper_values.json) contra os
-artefatos versionados em data/. Regras: artefato ausente -> SKIP (roda em dados
-parciais); artefato presente sem o valor -> FAIL; sai com 0 somente sem FAIL.
-Reescreve a secao automatica de docs/REPRODUCIBILITY_REPORT.md. stdlib only.
-Rodar:  python3 scripts/verify_values.py
+"""Check every number published in the paper (expected/paper_values.json) against
+the versioned artifacts in data/. Rules: artifact absent -> SKIP (so this also
+runs on partial data); artifact present but without the value -> FAIL; exits 0
+only when nothing FAILed. Rewrites the auto-generated section of
+docs/REPRODUCIBILITY_REPORT.md. stdlib only.
+Run:  python3 scripts/verify_values.py
 """
 import csv, gzip, json, math, re, sys, collections, statistics as st
 from pathlib import Path
@@ -79,7 +80,7 @@ def wilson_upper(x, n, z=1.96):
     d = n + z * z
     return (c / d + (z / d) * math.sqrt(x * (n - x) / n + z * z / 4)) * 100
 
-# ---------------------------------------------------------------- artefatos
+# ---------------------------------------------------------------- artifacts
 def load_all():
     """Recompute every check id used by expected/paper_values.json from the versioned data/ artifacts.
 
@@ -227,8 +228,8 @@ def load_all():
     return v
 
 def _replay_malware_draw():
-    """Re-executa o sorteio do apendice (seed=42, estratificado por regra) sobre
-    o all_findings.jsonl committado e compara com o sample.jsonl committado."""
+    """Replay the appendix's draw (seed=42, stratified by rule) over the committed
+    all_findings.jsonl and compare it with the committed sample.jsonl."""
     import random
     d = ROOT / "data/malware_validation"
     seen = {}
@@ -258,7 +259,7 @@ def _replay_malware_draw():
     committed = [json.loads(l)["id"] for l in open(d / "sample.jsonl")]
     return [s["id"] for s in sample] == committed
 
-# ---------------------------------------------------------------- comparacao
+# --------------------------------------------------------------- comparison
 def check(exp, got):
     """Compare a recomputed value `got` against one expected-value spec `exp`.
 
@@ -298,9 +299,9 @@ def main():
         r = check(c, g)
         tally[r] += 1
         shown = round(g, 4) if isinstance(g, float) else g
-        alvo = c["expect"].get("equals", c["expect"])
-        lines.append(f"| {c['id']} | {c['source']} | {alvo} | {shown} | {r} |")
-    md = ["| check | fonte no paper | esperado | obtido | resultado |",
+        target = c["expect"].get("equals", c["expect"])
+        lines.append(f"| {c['id']} | {c['source']} | {target} | {shown} | {r} |")
+    md = ["| check | paper source | expected | obtained | result |",
           "|---|---|---|---|---|"] + lines + [
           "", f"**{tally['PASS']} PASS / {tally['FAIL']} FAIL / {tally['SKIP']} SKIP**"]
     rep = ROOT / "docs/REPRODUCIBILITY_REPORT.md"
@@ -308,8 +309,8 @@ def main():
         txt = rep.read_text()
         a, b = "<!-- verify:auto:begin -->", "<!-- verify:auto:end -->"
         if a in txt and b in txt:
-            pre, resto = txt.split(a, 1); _, pos = resto.split(b, 1)
-            rep.write_text(pre + a + "\n" + "\n".join(md) + "\n" + b + pos)
+            pre, rest = txt.split(a, 1); _, post = rest.split(b, 1)
+            rep.write_text(pre + a + "\n" + "\n".join(md) + "\n" + b + post)
     print("\n".join(md))
     sys.exit(1 if tally["FAIL"] else 0)
 
