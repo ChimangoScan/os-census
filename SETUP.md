@@ -33,9 +33,14 @@ python3 scripts/render_config.py     # writes config/os.yaml with this clone's p
 
 ## 3. Docker Hub credentials
 ```bash
-printf '[{"username":"YOUR_USER","password":"YOUR_TOKEN"}]' > config/accounts.json
+cp config/accounts.example.json config/accounts.json   # then edit in real credentials
 ```
-(`config/accounts.json` is gitignored and never committed.)
+`config/accounts.example.json` is the committed template: a JSON list of
+`{"username", "password"}` objects, used round-robin so the free tier's
+200-pulls-per-6-h limit per account does not stall a long run. The `password` is
+a Docker Hub access token, not the account password. `config/accounts.json`
+itself is gitignored and never committed; without it the pipeline pulls
+anonymously, at the lower anonymous rate limit.
 
 ## 4. One-time scanner prep
 ```bash

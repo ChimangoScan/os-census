@@ -1,0 +1,10 @@
+[
+  {
+    "username": "YOUR_DOCKER_HUB_USERNAME",
+    "password": "YOUR_DOCKER_HUB_ACCESS_TOKEN"
+  },
+  {
+    "username": "ANOTHER_ACCOUNT_OPTIONAL",
+    "password": "ANOTHER_ACCESS_TOKEN_OPTIONAL"
+  }
+]
