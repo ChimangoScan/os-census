@@ -59,7 +59,7 @@ records the known limitations found while building the reproduction pipeline.
 ## Verification results (auto-generated)
 
 <!-- verify:auto:begin -->
-| check | fonte no paper | esperado | obtido | resultado |
+| check | paper source | expected | obtained | result |
 |---|---|---|---|---|
 | corpus_images | abstract; sec 3 | 5606 | 5606 | PASS |
 | corpus_distros | abstract; sec 3 '20 distributions' | 20 | 20 | PASS |
