@@ -23,7 +23,7 @@ with none of the authors' state.
 
 | Section | Description |
 |---|---|
-| [Considered seals](#considered-seals) | Which seals the artifact targets and why |
+| [Considered badges](#considered-badges) | Which badges the artifact targets and why |
 | [Basic information](#basic-information) | Reference machine and requirements |
 | [Dependencies](#dependencies) | Pinned tools, and how the dataset is fetched |
 | [Security concerns](#security-concerns) | What the artifact touches |
@@ -42,13 +42,13 @@ How the repository is organized:
 | [`scripts/`](scripts/) | Stdlib-only steps: `crawl_hub.py`, `build_queue.py`, `analyze.py`, `make_figs.py`, `verify_values.py` |
 | [`data/`](data/) | Committed inputs and aggregates: the crawl (`hub_*.jsonl`), the queue, `analysis/per_image.csv`, and the manual-validation samples |
 | [`expected/`](expected/) | `paper_values.json`, every number asserted in the paper, with its source section |
-| [`figures/`](figures/) | The regenerated PDFs, exactly as embedded in the paper |
+| [`figures/`](figures/) | `fig_rq1`–`fig_rq5`, the 5 PDFs exactly as embedded in the paper, plus `fig_repro`/`fig_repro2` (replications of prior work on this corpus, not in the paper) |
 | [`multiscan/`](multiscan/) | The vendored scan engine: one adapter per scanner, job queue, workers |
-| [`config/`](config/) | `scanners.yaml` (image references and invocations); `accounts.json` is gitignored |
+| [`config/`](config/) | `scanners.yaml` (image references and invocations) and [`accounts.example.json`](config/accounts.example.json); the real `accounts.json` is gitignored |
 | [`cleanup.sh`](cleanup.sh) | Removes everything a run created |
 | [`docs/`](docs/) | `LAYOUT.md` (data provenance) and `REPRODUCIBILITY_REPORT.md` (generated verification table) |
 
-## Considered seals
+## Considered badges
 
 - **Disponível (SeloD)**: public repository + versioned release with the full
   dataset and checksums.
@@ -71,9 +71,22 @@ a claim states otherwise:
 |---|---|
 | OS | Linux (any distro with Python 3.10+) |
 | CPU/RAM | AMD Ryzen 5 8600G, 30 GB RAM (any 4-core/8 GB machine works) |
-| Disk | ~1 GB for the repo; +9 GB only for `analysis` mode (raw dataset) |
+| Disk | depends on the mode; see the table right below |
 | GPU | not needed |
 | Software | `python3`, [`uv`](https://docs.astral.sh/uv/); `curl`+`zstd` for `analysis`; Docker only for the optional re-scan |
+
+Disk is the one requirement that varies a lot between modes, so size the machine
+for the mode you intend to run. Measured with `du` on the reference machine,
+cumulative (each row includes the ones above it):
+
+| Mode | Disk | What takes it |
+|---|---|---|
+| clone | ~65 MB | 33 MB checkout + 29 MB git history |
+| [minimal test](#minimal-test) (default) | **~250 MB** | the above + ~150 MB for the `matplotlib`/`numpy` environment `uv` caches on first use |
+| [Claim #1](#claim-1-main-every-paper-number-and-figure-re-derives-from-the-raw-multi-scanner-dataset) (`analysis`) | **~9 GB** | the above + the dataset: a 131 MB download that becomes 8.6 GB extracted |
+| [Claim #2](#claim-2-optional-the-scan-pipeline-itself-reduced) (`scan-smoke`, optional) | **~24 GB** | the above + ~15 GB of scanner images and the Clair database |
+
+[`./cleanup.sh`](#cleaning-up) releases everything in the rows below the clone.
 
 ## Dependencies
 
@@ -84,21 +97,32 @@ a claim states otherwise:
   |---|---|
   | clone | `git` |
   | `verify` | `python3` |
-  | `` (default), `data`, `figures` | `python3`, `uv` |
+  | no argument (default), `data`, `figures` | `python3`, `uv` |
   | `analysis` (Claim #1) | the above plus `curl`, `tar`, `zstd`, `sha256sum` |
   | `scan-smoke` (Claim #2) | the above plus **Docker**, with the daemon usable without `sudo` |
 
   ```bash
-  sudo apt-get update && sudo apt-get install -y git python3 curl tar zstd coreutils docker.io   # Debian, Ubuntu
-  sudo dnf install -y git python3 curl tar zstd coreutils docker                                 # Fedora, RHEL
-  sudo pacman -Sy --needed git python curl tar zstd coreutils docker                             # Arch
-  sudo zypper install -y git python3 curl tar zstd coreutils docker                              # openSUSE
+  sudo apt-get update && sudo apt-get install -y git python3 curl tar zstd coreutils docker.io util-linux-extra   # Debian, Ubuntu
+  sudo dnf install -y git python3 curl tar zstd coreutils docker util-linux                                       # Fedora, RHEL
+  sudo pacman -Sy --needed git python curl tar zstd coreutils docker util-linux                                   # Arch
+  sudo zypper install -y git python3 curl tar zstd coreutils docker util-linux                                    # openSUSE
   curl -LsSf https://astral.sh/uv/install.sh | sh   # uv, then: export PATH="$HOME/.local/bin:$PATH"
-  sudo usermod -aG docker "$USER" && newgrp docker  # only for scan-smoke
   ```
 
   Docker package names differ between distributions; the
   [upstream instructions](https://docs.docker.com/engine/install/) are authoritative.
+
+  Only `scan-smoke` needs the Docker daemon usable without `sudo`:
+
+  ```bash
+  sudo usermod -aG docker "$USER" && newgrp docker
+  ```
+
+  `newgrp` applies the new group to the current shell, so no logout is needed.
+  It lives in `util-linux-extra` on recent Ubuntu (the package is in the
+  `apt-get` line above; a desktop install does not always have it) and in
+  `util-linux` elsewhere. If it is still missing, log out and back in instead,
+  which has the same effect.
 
 - Analysis/figures: Python 3 stdlib + `matplotlib`/`numpy`, resolved
   automatically by `uv run` at first use (no manual install).
@@ -124,7 +148,16 @@ a claim states otherwise:
 - Everything runs locally; the main path is offline (no network).
 - `analysis` mode downloads one read-only archive from the GitHub release.
 - The optional re-scan pulls public images from Docker Hub; the token is read
-  from `config/accounts.json` (gitignored, never committed).
+  from `config/accounts.json`, which is gitignored and never committed. The
+  committed [`config/accounts.example.json`](config/accounts.example.json) shows
+  the expected shape (a list of `{username, password}` used round-robin, so the
+  free tier's per-account pull limit does not stop a long run) and carries
+  placeholders only. It is optional: with no `accounts.json` the pipeline pulls
+  anonymously, which is enough for the 10 images of Claim #2.
+
+  ```bash
+  cp config/accounts.example.json config/accounts.json   # then edit in a Docker Hub access token
+  ```
 
 ## Installation
 
@@ -142,16 +175,20 @@ One command (~10 s), offline, no Docker:
 ./reproduce.sh
 ```
 
-It regenerates the paper's 5 figures from the committed data and re-derives
-every number the paper asserts, checking each one against
-`expected/paper_values.json`.
+It regenerates the paper's 5 figures from the committed data (plus 2 extra ones,
+see [`figures/`](figures/)) and re-derives every number the paper asserts,
+checking each one against `expected/paper_values.json`.
 
-Expected: `fig_rq1 ok` ... `fig_repro2 ok`, the verification table (one row per
-number: name, paper section, expected, obtained, PASS), and the final line
+Expected: one `fig_… ok` line per figure, from `fig_rq1 ok` to `fig_repro2 ok`,
+then the verification table (columns `check | paper source | expected | obtained
+| result`, one row per number), then the final line
 `**65 PASS / 0 FAIL / 0 SKIP**` (exit code 0). Figures land in `figures/*.pdf`
-and the table is also written to `docs/REPRODUCIBILITY_REPORT.md`.
+and the table is also written to
+[`docs/REPRODUCIBILITY_REPORT.md`](docs/REPRODUCIBILITY_REPORT.md).
 
-Expected resources: <1 GB RAM, no extra disk.
+Expected resources: ~1 GB RAM (measured peak 938 MB); the only disk it adds is
+the ~150 MB `matplotlib`/`numpy` environment `uv` caches on first use (~250 MB
+in total with the clone, see [Basic information](#basic-information)).
 
 ## Experiments
 
@@ -164,7 +201,8 @@ Expected resources: <1 GB RAM, no extra disk.
 - **Expected time:** ~15 min on the reference machine (131 MB download + 8.6 GB
   extract + re-aggregation of 5,142 reports); dominated by the download, so a
   slower link takes proportionally longer.
-- **Expected resources:** ~9 GB disk, <2 GB RAM.
+- **Expected resources:** ~8.6 GB more disk for the extracted dataset (~9 GB in
+  total, see [Basic information](#basic-information)), <2 GB RAM.
 - **Expected result:** `data/analysis/per_image.csv` and the RQ3 sets are
   rebuilt from the raw `report.json` files, followed by the same 5 figures and
   the same `**65 PASS / 0 FAIL / 0 SKIP**` as the minimal test. This is what
@@ -182,7 +220,7 @@ git status --porcelain data/analysis/
 
 ### Claim #2 (optional): the scan pipeline itself, reduced
 
-**Optional, and not needed for any seal.** Claim #1 already re-derives every
+**Optional, and not needed for any badge.** Claim #1 already re-derives every
 number and figure in the paper from the raw dataset; this claim only exercises
 the collection side, the pipeline that produced that dataset, and it is long
 (see the time below). Run it only if you want to see the scanners execute.
@@ -201,8 +239,10 @@ directory; the census state in `data/` is not touched.
   scanner images, so it is bound by network bandwidth and CPU far more than by
   the 10 images themselves; scanning fewer images (`SMOKE_N=3 ./reproduce.sh
   scan-smoke`) therefore saves much less time than it looks.
-- **Expected resources:** Docker; ~15 GB disk for the scanner images. A Docker
-  Hub token in `config/accounts.json` is optional.
+- **Expected resources:** Docker; ~15 GB more disk for the 14 scanner images and
+  the Clair database (~24 GB in total, see [Basic information](#basic-information)).
+  A Docker Hub token in `config/accounts.json` is optional; without it the
+  images are pulled anonymously, which is enough for 10 images.
 - **Expected result:** the run ends with
   `[scan-smoke] 10/10 images with report.json in <repo>/scan-out/smoke/out`,
   then a line listing the invocations per scanner (10 for each of the 14
