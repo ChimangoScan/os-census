@@ -11,3 +11,13 @@ config/os.yaml
 config/smoke_scan.yaml
 scan-out/
 paper/
+
+# Paper sources never belong in the artifact repository.
+*.tex
+*.bib
+*.bbl
+*.sty
+*.bst
+*.aux
+*.blg
+*.synctex.gz
