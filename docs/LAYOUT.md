@@ -20,7 +20,7 @@ scripts/deploy_worker.sh distributed worker deploy (reverse-tunnel coordinator)
 scripts/analyze.py      report.json -> per_image.csv + rq3_sca_sets.json.gz
 scripts/export_job_status.py  work/os.db -> job_status.csv.gz
 scripts/make_figs.py    all figures (falls back to committed extracts when raw data absent)
-scripts/verify_values.py  60 exact checks of the paper's numbers (expected/paper_values.json)
+scripts/verify_values.py  65 exact checks of the paper's numbers (expected/paper_values.json)
 scripts/compress_outputs.py  incremental gzip of completed scan outputs
 expected/paper_values.json  every number the paper asserts, with its source locator
 docs/REPRODUCIBILITY_REPORT.md  known limitations + auto-generated verification table

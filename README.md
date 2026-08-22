@@ -19,6 +19,7 @@ Continuous integration ([`.github/workflows/artifact.yml`](.github/workflows/art
 | [Installation](#installation) | Clone; nothing else for the main path |
 | [Minimal test](#minimal-test) | One command, ~10 s |
 | [Experiments](#experiments) | Claim #1 (main, ~15 min) and Claim #2 (optional, long) |
+| [Inspecting the data](#inspecting-the-data) | Reading the aggregates the numbers come from |
 | [Cleaning up](#cleaning-up) | One command removes what a run created |
 | [LICENSE](#license) | MIT |
 | [How to cite](#how-to-cite) | The paper reference and the machine-readable `CITATION.cff` |
@@ -84,10 +85,19 @@ Disk is the one requirement that varies a lot between modes, so size the machine
   sudo dnf install -y git python3 curl tar zstd coreutils docker util-linux                                       # Fedora, RHEL
   sudo pacman -Sy --needed git python curl tar zstd coreutils docker util-linux                                   # Arch
   sudo zypper install -y git python3 curl tar zstd coreutils docker util-linux                                    # openSUSE
-  curl -LsSf https://astral.sh/uv/install.sh | sh   # uv, then: export PATH="$HOME/.local/bin:$PATH"
+  curl -LsSf https://astral.sh/uv/install.sh | sh   # uv; then read the PATH note right below
   ```
 
   Docker package names differ between distributions; the [upstream instructions](https://docs.docker.com/engine/install/) are authoritative.
+
+  `uv` is the one tool that does not come from the package manager, and its installer places the binary itself: in `$HOME/.local/bin` by default, or in `$UV_INSTALL_DIR` / `$XDG_BIN_HOME` when either of those is set. It then appends a line sourcing `$HOME/.local/bin/env` to the shell startup files it finds (`.profile`, `.bashrc`, `.zshrc`, and the fish equivalent). That line runs when a shell starts, so it does nothing for the shell that ran the installer: that session keeps the `PATH` it was created with and still answers `uv: command not found`, even though the binary is on disk. Open a new shell, or bring the change into the current one:
+
+  ```bash
+  source "$HOME/.local/bin/env" 2>/dev/null || export PATH="$HOME/.local/bin:$PATH"
+  uv --version   # confirms this shell finds it
+  ```
+
+  A `uv` installed before version 0.5.0 lives in `$HOME/.cargo/bin` instead, with its own `$HOME/.cargo/env`, and `uv self update` does not move it; `source "$HOME/.cargo/env"` covers that case. The same applies to any shell that did not come from your login: `reproduce.sh` calls `uv` by name, so a `cron` job, a `sudo` shell or a fresh terminal multiplexer pane needs the directory on `PATH` just as much. `UV=/full/path/to/uv ./reproduce.sh` is the way out when editing `PATH` is not an option.
 
   Only `scan-smoke` needs the Docker daemon usable without `sudo`:
 
@@ -119,7 +129,7 @@ Disk is the one requirement that varies a lot between modes, so size the machine
 git clone https://github.com/ChimangoScan/os-census && cd os-census
 ```
 
-Nothing else: `uv run` resolves the plotting dependencies on first use (~30 s).
+Nothing else: `uv run` resolves the plotting dependencies on first use (~30 s). If the shell answers `uv: command not found` right after installing `uv`, it is the `PATH` question covered in [Dependencies](#dependencies).
 
 ## Minimal test
 
@@ -170,6 +180,39 @@ git status --porcelain data/analysis/
 - **Cleanup:** the extracted-filesystem cache is written by containers as root, so `./cleanup.sh` (see *Cleaning up*) removes it through a throwaway container.
 
 Beyond the two claims, the whole census can be re-run from scratch with `./reproduce.sh all`: it crawls the Docker Hub API, rebuilds the queue of 5,606 images, runs the 14 scanners and then re-enters Claim #1. This takes **weeks of scanning** and needs Docker plus a Docker Hub token; see [`SETUP.md`](SETUP.md) for the one-time scanner preparation and the distributed workers.
+
+## Inspecting the data
+
+Everything the figures and the 65 checks are computed from is committed under [`data/analysis/`](data/analysis/) in plain formats, so the aggregates can be read directly instead of being taken on trust. `per_image.csv` is the main one: one row per analyzed image (5,142 rows) with the columns `image,repo,age_days,pull_count,size_mb,n_tags,packages,vuln_critical,vuln_high,vuln_medium,vuln_low,vuln_total,secrets,misconfig,malware`. `job_status.csv.gz` carries the scan-queue outcome of each of the 5,606 corpus images and is what the un-pullable rate of RQ4 is counted from, and `rq3_sca_sets.json.gz` the per-engine (image, CVE) sets behind the RQ3 Jaccards. [`docs/LAYOUT.md`](docs/LAYOUT.md) maps each paper number to the file it is derived from.
+
+`uv` is useful here beyond `reproduce.sh`: `uv run --with <package>` fetches a tool into a throwaway environment for that one command, so browsing the CSV costs nothing more than the download and leaves nothing behind in the clone (`uv cache clean` discards what it downloaded, `uv cache dir` says where that is). Opening `per_image.csv` in a spreadsheet-like terminal viewer, with sorting and frequency tables over any column:
+
+```bash
+source "$HOME/.local/bin/env" 2>/dev/null || export PATH="$HOME/.local/bin:$PATH"   # see Dependencies
+uv run --with visidata vd data/analysis/per_image.csv
+```
+
+The gzipped ones do not need to be unpacked first: `zcat data/analysis/job_status.csv.gz | uv run --with visidata vd -f csv -`. And nothing here requires a dependency at all; the stdlib is enough to interrogate the same file by hand, for instance to rank the repositories by their median vulnerability count:
+
+```bash
+python3 - <<'EOF'
+import csv, collections, statistics
+rows = list(csv.DictReader(open("data/analysis/per_image.csv")))
+by = collections.defaultdict(list)
+for r in rows:
+    by[r["repo"]].append(int(r["vuln_total"]))
+for repo, v in sorted(by.items(), key=lambda kv: -statistics.median(kv[1]))[:5]:
+    print(f"{repo:22} n={len(v):5}  median vuln_total={statistics.median(v):8.0f}")
+EOF
+```
+
+```
+library/centos         n=   10  median vuln_total=    2982
+library/sl             n=    2  median vuln_total=    1434
+library/rockylinux     n=   25  median vuln_total=     806
+rockylinux/rockylinux  n=   70  median vuln_total=     710
+library/debian         n= 2641  median vuln_total=     526
+```
 
 ## Cleaning up
 
