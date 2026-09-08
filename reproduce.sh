@@ -25,7 +25,8 @@ cd "$(dirname "$0")"
 MODE="${1:-figures}"
 UV="${UV:-uv}"
 
-DATASET_URL="https://github.com/ChimangoScan/os-census/releases/download/dataset-v1/os-census-per-image-reports.tar.zst"
+# Archived on Zenodo, DOI 10.5281/zenodo.22666259
+DATASET_URL="https://zenodo.org/records/22666260/files/os-census-per-image-reports.tar.zst"
 DATASET_SHA256="184e823e663a563608e0f0398a7aa095d533a41aefc1e7f7df30b8086909d963"
 
 ensure_dataset() {  # make sure the report.json files are present; download from the release and verify sha256 if not
