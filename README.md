@@ -121,7 +121,7 @@ Disk is the one requirement that varies a lot between modes, so size the machine
   `newgrp` applies the new group to the current shell, so no logout is needed. It lives in `util-linux-extra` on recent Ubuntu (the package is in the `apt-get` line above; a desktop install does not always have it) and in `util-linux` elsewhere. If it is still missing, log out and back in instead, which has the same effect.
 
 - Analysis/figures: Python 3 stdlib + `matplotlib`/`numpy`, resolved automatically by `uv run` at first use (no manual install).
-- Dataset: attached to the [GitHub release](../../releases/tag/dataset-v1), checksums in `SHA256SUMS`. `reproduce.sh analysis` downloads and verifies it automatically, with nothing to fetch by hand.
+- Dataset: attached to the [GitHub release](../../releases/tag/dataset-v1), checksums in `SHA256SUMS`. The per-image archive is also on Zenodo ([10.5281/zenodo.22666259](https://doi.org/10.5281/zenodo.22666259)), which is where `reproduce.sh analysis` downloads it from and verifies it automatically, with nothing to fetch by hand.
   - `os-census-per-image-reports.tar.zst` (131 MB, 8.6 GB extracted): the consolidated dataset: one `report.json` with the normalized findings of all 14 scanners, for each of the 5,142 images that produced one (the corpus has 5,606; 463 are un-pullable and one completed job wrote no report, see `docs/REPRODUCIBILITY_REPORT.md`).
   - `os-census-raw-outputs.tar.zst.part-*` (6 parts, 10.2 GB): the verbatim raw output of every scanner run, published for inspection. Reassemble with `cat os-census-raw-outputs.tar.zst.part-* | tar --zstd -x`. Its members are already individually gzipped, which is why it compresses far less than the per-image archive.
 - Optional re-scan: Docker Engine 24+, a Docker Hub token, and the vendored engine in `multiscan/` (image references and invocations in `config/scanners.yaml`; see `SETUP.md`).
@@ -129,7 +129,7 @@ Disk is the one requirement that varies a lot between modes, so size the machine
 ## Security concerns
 
 - Everything runs locally; the main path is offline (no network).
-- `analysis` mode downloads one read-only archive from the GitHub release.
+- `analysis` mode downloads one read-only archive from Zenodo.
 - The optional re-scan pulls public images from Docker Hub; the token is read from `config/accounts.json`, which is gitignored and never committed. The committed [`config/accounts.example.json`](config/accounts.example.json) shows the expected shape (a list of `{username, password}` used round-robin, so the free tier's per-account pull limit does not stop a long run) and carries placeholders only. It is optional: with no `accounts.json` the pipeline pulls anonymously, which is enough for the 10 images of Claim #2.
 
   ```bash
