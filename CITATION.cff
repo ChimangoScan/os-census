@@ -26,7 +26,10 @@ preferred-citation:
     given-names: Diego
     orcid: "https://orcid.org/0000-0003-0830-0238"
     affiliation: "AI Horizon Labs, Federal University of Pampa (UNIPAMPA)"
-  collection-title: "Anais do XXVII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg 2026)"
+  collection-title: "Anais do XXVI Simpósio Brasileiro de Cibersegurança (SBSeg 2026)"
   year: 2026
+  start: 1413
+  end: 1419
+  url: "https://sol.sbc.org.br/index.php/sbseg/article/view/44372"
   publisher:
     name: "Sociedade Brasileira de Computação (SBC)"

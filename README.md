@@ -1,5 +1,18 @@
 # os-census: a multi-scanner census of the Linux OS base images of Docker Hub
 
+<p align="center">
+  <a href="https://doc-artefatos.github.io/sbseg2026/results.html">
+    <img src="docs/assets/seals/SBRC25_SF_SeloD.png" alt="Artefatos Disponíveis / Available (SeloD)" width="110">
+    <img src="docs/assets/seals/SBRC25_SF_SeloF.png" alt="Artefatos Funcionais / Functional (SeloF)" width="110">
+    <img src="docs/assets/seals/SBRC25_SF_SeloS.png" alt="Artefatos Sustentáveis / Sustainable (SeloS)" width="110">
+    <img src="docs/assets/seals/SBRC25_SF_SeloR.png" alt="Experimentos Reprodutíveis / Reproducible (SeloR)" width="110">
+  </a>
+</p>
+
+<p align="center"><sub>Official SBSeg 2026 artifact-evaluation seals awarded to this artifact (Main Track): Available, Functional, Sustainable and Reproducible. <a href="https://doc-artefatos.github.io/sbseg2026/results.html">Official results</a>. Seal artwork by the SBSeg Artifact Evaluation Committee.</sub></p>
+
+> **Published** in the Anais do XXVI Simpósio Brasileiro de Cibersegurança (SBSeg 2026), pp. 1413-1419: [SBC OpenLib](https://sol.sbc.org.br/index.php/sbseg/article/view/44372).
+
 Reproduction artifact for the paper *"A Multi-Scanner Census of the Linux Operating-System Base Images of Docker Hub"*. It measures the **5,606** unique `amd64` images of the **20** Linux distributions in Docker Hub's *Operating systems* category with **14** open-source scanners, and finds that the vulnerability count varies by an order of magnitude across distributions and tracks image age rather than size or popularity, that about **one in twelve** historically published images can no longer be pulled by a current Docker Engine, and that the four package-vulnerability engines show low pairwise agreement (best pair Jaccard **0.36**).
 
 > Paper: SBSeg 2026. Authors: Cristhian Kapelinski, Diego Kreutz (UNIPAMPA).
@@ -238,7 +251,9 @@ Cite the paper, not the repository:
 @inproceedings{kapelinski2026,
   author    = {Kapelinski, Cristhian and Kreutz, Diego},
   title     = {A Multi-Scanner Census of the Linux Operating-System Base Images of Docker Hub},
-  booktitle = {Anais do XXVII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg 2026)},
+  booktitle = {Anais do XXVI Simpósio Brasileiro de Cibersegurança (SBSeg 2026)},
+  pages     = {1413--1419},
+  url       = {https://sol.sbc.org.br/index.php/sbseg/article/view/44372},
   year      = {2026},
   publisher = {Sociedade Brasileira de Computação},
 }
